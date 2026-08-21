@@ -13,6 +13,7 @@
 #include "components/directorymodel.h"
 #include "components/directorypresenter.h"
 #include "components/scriptmanager/scriptmanager.h"
+#include "components/updatechecker.h"
 #include "gui/mainwindow.h"
 #include "utils/randomizer.h"
 #include "gui/dialogs/printdialog.h"
@@ -54,9 +55,13 @@ private:
     void loadTranslation();
     void onUpdate();
     void onFirstRun();
+    void initUpdateChecker();
+    QString changelogForCurrentVersion();
 
     // ui stuff
     MW *mw;
+
+    UpdateChecker updateChecker;
 
     State state;
     bool loopSlideshow, slideshow, shuffle;

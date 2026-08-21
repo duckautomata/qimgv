@@ -2,6 +2,7 @@
 #include <QCommandLineParser>
 #include <QStyleFactory>
 #include <QEvent>
+#include <clocale>
 
 #include "appversion.h"
 #include "settings.h"
@@ -22,25 +23,22 @@ void saveSettings() {
     delete settings;
 }
 //------------------------------------------------------------------------------
-QDataStream& operator<<(QDataStream& out, const Script& v) {
-    out << v.command << v.blocking;
-    return out;
-}
-//------------------------------------------------------------------------------
-QDataStream& operator>>(QDataStream& in, Script& v) {
-    in >> v.command;
-    in >> v.blocking;
-    return in;
-}
-//------------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
 
     // force some env variables
 
 #ifdef _WIN32
     // if this is set by other app, platform plugin may fail to load
-    // https://github.com/easymodo/qimgv/issues/410
+    // https://github.com/easymodo/qimgv/issues/410 (upstream)
     qputenv("QT_PLUGIN_PATH","");
+
+    // Put the CRT's narrow-string functions in UTF-8 mode. exiv2 >= 0.28 has
+    // no wide-path API left, so DocumentInfo::loadExifTags() has to hand it a
+    // narrow path -- and the CRT would otherwise decode that as the ANSI
+    // codepage and fail on any name outside it. Set before any thread starts;
+    // setlocale mutates process-global state. LC_CTYPE only, so LC_NUMERIC
+    // keeps the C locale and number parsing is unaffected.
+    std::setlocale(LC_CTYPE, ".UTF8");
 #endif
 
     // for hidpi testing
@@ -50,18 +48,11 @@ int main(int argc, char *argv[]) {
     // do we still need this?
     qputenv("QT_AUTO_SCREEN_SCALE_FACTOR","0");
 
-#if (QT_VERSION_MAJOR == 5)
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
-#endif
-
     // Qt6 hidpi rendering on windows still has artifacts
     // This disables it for scale factors < 1.75
     // In this case only fonts are scaled
 #ifdef _WIN32
-#if (QT_VERSION_MAJOR == 6)
     QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::RoundPreferFloor);
-#endif
 #endif
 
     //qDebug() << qgetenv("QT_SCALE_FACTOR");
@@ -80,7 +71,7 @@ int main(int argc, char *argv[]) {
 #endif
 
     QCoreApplication::setOrganizationName("qimgv");
-    QCoreApplication::setOrganizationDomain("github.com/easymodo/qimgv");
+    QCoreApplication::setOrganizationDomain("github.com/duckautomata/qimgv");
     QCoreApplication::setApplicationName("qimgv");
     QCoreApplication::setApplicationVersion(appVersion.toString());
     QApplication::setEffectEnabled(Qt::UI_AnimateCombo, false);
@@ -101,9 +92,6 @@ int main(int argc, char *argv[]) {
     qRegisterMetaType<Script>("Script");
     qRegisterMetaType<std::shared_ptr<Image>>("std::shared_ptr<Image>");
     qRegisterMetaType<std::shared_ptr<Thumbnail>>("std::shared_ptr<Thumbnail>");
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    qRegisterMetaTypeStreamOperators<Script>("Script");
-#endif
 
     // globals
     inputMap = InputMap::getInstance();

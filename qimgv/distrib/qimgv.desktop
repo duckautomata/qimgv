@@ -1,12 +1,14 @@
 [Desktop Entry]
+Type=Application
 Version=1.0
 Name=qimgv
 GenericName=Image Viewer
-Comment=Qt image viewer
+Comment=Fast and configurable image viewer
 Exec=qimgv %f
 Icon=qimgv
 Terminal=false
-Type=Application
-Categories=Qt;Graphics;Viewer;
-MimeType=video/webm;image/jpeg;image/gif;image/png;image/bmp;image/webp;
-Keywords=image;view;qimgv;picture;gif;jpeg;webm;
+Categories=Qt;Graphics;Viewer;RasterGraphics;
+Keywords=image;view;viewer;picture;photo;gif;jpeg;webp;avif;video;
+StartupNotify=true
+StartupWMClass=qimgv
+MimeType=image/jpeg;image/pjpeg;image/png;image/apng;image/gif;image/bmp;image/x-bmp;image/x-ms-bmp;image/webp;image/tiff;image/x-tga;image/x-portable-pixmap;image/x-portable-bitmap;image/x-portable-graymap;image/x-xbitmap;image/x-xpixmap;image/svg+xml;image/x-icon;image/vnd.microsoft.icon;image/avif;image/heif;image/heic;image/jxl;image/jp2;image/x-canon-cr2;image/x-nikon-nef;image/x-sony-arw;image/x-adobe-dng;video/mp4;video/x-matroska;video/webm;video/quicktime;video/x-msvideo;video/mpeg;video/x-ms-wmv;video/x-flv;video/mp2t;video/3gpp;video/ogg;

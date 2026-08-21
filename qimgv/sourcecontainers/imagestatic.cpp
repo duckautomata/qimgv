@@ -38,9 +38,7 @@ void ImageStatic::loadGeneric() {
      * tldr: qimage bad
      */
     QImageReader r(mPath, mDocInfo->format().toStdString().c_str());
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     r.setAllocationLimit(settings->memoryAllocationLimit());
-#endif
     QImage *tmp = new QImage();
     r.read(tmp);
     std::unique_ptr<const QImage> img(tmp);

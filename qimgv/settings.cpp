@@ -2,6 +2,47 @@
 
 Settings *settings = nullptr;
 
+// Both helpers are for the non-Linux config path only. Linux keeps its config
+// in XDG locations by convention and installs to read-only prefixes, so there
+// is nothing there to detect and no portable layout to honour -- guarded rather
+// than left dead, since the Linux build treats an unused function as an error.
+#if !defined(__linux__) && !defined(__FreeBSD__)
+
+// qimgv is portable when a "conf" directory sits next to the executable. That
+// is exactly what the released zip ships, so unpacking it anywhere keeps every
+// file the app writes inside that one folder -- and an existing portable setup
+// keeps working untouched after an upgrade.
+//
+// An installed copy has no such directory and uses the platform's per-user
+// locations instead. That is what makes installing to a read-only prefix
+// possible at all: Program Files is not writable by a standard user, and on
+// macOS applicationDirPath() points inside qimgv.app/Contents/MacOS, where
+// writing would break the bundle's signature.
+static bool portableMode() {
+    static bool const portable = QDir(QCoreApplication::applicationDirPath() + "/conf").exists();
+    return portable;
+}
+
+// Per-user config directory, used when not running portable. Deliberately
+// GenericConfigLocation + applicationName() rather than AppConfigLocation:
+// organizationName and applicationName are both "qimgv", and Qt would build
+// that into a doubled qimgv/qimgv path. Mirrors how setupCache() has always
+// derived the cache directory.
+static QString userConfigDir() {
+    QString dir = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
+    if(dir.isEmpty())
+        dir = QDir::homePath() + "/.config";
+    return dir + "/" + QCoreApplication::applicationName();
+}
+
+#else
+
+static bool portableMode() {
+    return false;
+}
+
+#endif
+
 Settings::Settings(QObject *parent) : QObject(parent) {
 #if defined(__linux__) || defined(__FreeBSD__)
     // config files
@@ -10,8 +51,9 @@ Settings::Settings(QObject *parent) : QObject(parent) {
     stateConf = new QSettings(QCoreApplication::organizationName(), "savedState");
     themeConf = new QSettings(QCoreApplication::organizationName(), "theme");
 #else
-    mConfDir = new QDir(QApplication::applicationDirPath() + "/conf");
-    mConfDir->mkpath(QApplication::applicationDirPath() + "/conf");
+    QString confPath = portableMode() ? QApplication::applicationDirPath() + "/conf" : userConfigDir();
+    mConfDir = new QDir(confPath);
+    mConfDir->mkpath(confPath);
     settingsConf = new QSettings(mConfDir->absolutePath() + "/" + qApp->applicationName() + ".ini", QSettings::IniFormat);
     stateConf = new QSettings(mConfDir->absolutePath() + "/savedState.ini", QSettings::IniFormat);
     themeConf = new QSettings(mConfDir->absolutePath() + "/theme.ini", QSettings::IniFormat);
@@ -38,30 +80,39 @@ Settings *Settings::getInstance() {
 }
 //------------------------------------------------------------------------------
 void Settings::setupCache() {
-#if defined(__linux__) ||  defined(__FreeBSD__)
-    QString genericCacheLocation = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation);
-    if(genericCacheLocation.isEmpty())
-        genericCacheLocation = QDir::homePath() + "/.cache";
-    genericCacheLocation.append("/" + QApplication::applicationName());
-    QString cacheLocation = settings->settingsConf->value("cacheDir", genericCacheLocation).toString();
+    QString cacheLocation;
+    if(portableMode()) {
+        // Self-contained: everything stays beside the executable, and the
+        // cacheDir override is deliberately ignored so the folder stays movable.
+        cacheLocation = QApplication::applicationDirPath() + "/cache";
+    } else {
+        QString genericCacheLocation = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation);
+        if(genericCacheLocation.isEmpty())
+            genericCacheLocation = QDir::homePath() + "/.cache";
+        genericCacheLocation.append("/" + QApplication::applicationName());
+        cacheLocation = settings->settingsConf->value("cacheDir", genericCacheLocation).toString();
+    }
     mTmpDir = new QDir(cacheLocation);
     mTmpDir->mkpath(mTmpDir->absolutePath());
     QFileInfo dirTest(mTmpDir->absolutePath());
     if(!dirTest.isDir() || !dirTest.isWritable() || !dirTest.exists()) {
-        // fallback
+        // fallback. Used to be Linux-only, but an installed copy can just as
+        // easily be pointed at somewhere unwritable on any platform.
         qDebug() << "Error: cache dir is not writable" << mTmpDir->absolutePath();
-        qDebug() << "Trying to use" << genericCacheLocation << "instead";
-        mTmpDir->setPath(genericCacheLocation);
+        QString fallback = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation);
+        if(fallback.isEmpty())
+            fallback = QDir::homePath() + "/.cache";
+        fallback.append("/" + QApplication::applicationName());
+        qDebug() << "Trying to use" << fallback << "instead";
+        mTmpDir->setPath(fallback);
         mTmpDir->mkpath(mTmpDir->absolutePath());
     }
-    mThumbCacheDir = new QDir(mTmpDir->absolutePath() + "/thumbnails");
+    // Portable keeps thumbnails a sibling of cache/, which is the layout the
+    // released zip has always shipped; elsewhere they live inside it.
+    QString thumbPath =
+        portableMode() ? QApplication::applicationDirPath() + "/thumbnails" : mTmpDir->absolutePath() + "/thumbnails";
+    mThumbCacheDir = new QDir(thumbPath);
     mThumbCacheDir->mkpath(mThumbCacheDir->absolutePath());
-#else
-    mTmpDir = new QDir(QApplication::applicationDirPath() + "/cache");
-    mTmpDir->mkpath(mTmpDir->absolutePath());
-    mThumbCacheDir = new QDir(QApplication::applicationDirPath() + "/thumbnails");
-    mThumbCacheDir->mkpath(mThumbCacheDir->absolutePath());
-#endif
 }
 //------------------------------------------------------------------------------
 void Settings::sync() {
@@ -115,7 +166,6 @@ void Settings::loadStylesheet() {
         int font_large = (int)(fnt.pointSize() * 1.8f);
         int text_height = fm.height();
         int text_padding = (int)(text_height * 0.10f);
-        int text_padding_small = (int)(text_height * 0.05f);
         int text_padding_large = (int)(text_height * 0.25f);
 
         // folderview top panel item sizes
@@ -126,7 +176,6 @@ void Settings::loadStylesheet() {
         int top_panel_height = qMax((text_height + top_panel_text_padding * 2 + top_panel_v_margin * 2), 38);
 
         // overlay headers
-        int overlay_header_margin = 2;
         // 32px base size
         int overlay_header_size = qMax(text_height + text_padding * 2, 30);
 
@@ -274,17 +323,57 @@ void Settings::setColorTid(int tid) {
     mColorScheme.tid = tid;
 }
 //------------------------------------------------------------------------------
+// Container formats we hand to libmpv. mpv/ffmpeg decides which codecs inside
+// them it can decode -- that already covers H.264, H.265/HEVC, AV1, VP9,
+// ProRes (including 4444 with alpha) and everything else ffmpeg supports, so
+// this list is about containers, not codecs.
 void Settings::fillVideoFormats() {
-    mVideoFormatsMap.insert("video/webm",       "webm");
-    mVideoFormatsMap.insert("video/mp4",        "mp4");
-    mVideoFormatsMap.insert("video/mp4",        "m4v");
-    mVideoFormatsMap.insert("video/mpeg",       "mpg");
-    mVideoFormatsMap.insert("video/mpeg",       "mpeg");
+    // Modern / common
+    mVideoFormatsMap.insert("video/webm", "webm");
+    mVideoFormatsMap.insert("video/mp4", "mp4");
+    mVideoFormatsMap.insert("video/mp4", "m4v");
     mVideoFormatsMap.insert("video/x-matroska", "mkv");
-    mVideoFormatsMap.insert("video/x-ms-wmv",   "wmv");
-    mVideoFormatsMap.insert("video/x-msvideo",  "avi");
-    mVideoFormatsMap.insert("video/quicktime",  "mov");
-    mVideoFormatsMap.insert("video/x-flv",      "flv");
+    mVideoFormatsMap.insert("video/quicktime", "mov");
+    mVideoFormatsMap.insert("video/quicktime", "qt");
+
+    // Transport streams (camera / broadcast / Blu-ray)
+    mVideoFormatsMap.insert("video/mp2t", "ts");
+    mVideoFormatsMap.insert("video/mp2t", "m2ts");
+    mVideoFormatsMap.insert("video/mp2t", "mts");
+    mVideoFormatsMap.insert("video/mp2t", "m2t");
+
+    // MPEG program streams
+    mVideoFormatsMap.insert("video/mpeg", "mpg");
+    mVideoFormatsMap.insert("video/mpeg", "mpeg");
+    mVideoFormatsMap.insert("video/mpeg", "m2v");
+    mVideoFormatsMap.insert("video/mpeg", "mpv");
+
+    // Ogg / Matroska siblings
+    mVideoFormatsMap.insert("video/ogg", "ogv");
+    mVideoFormatsMap.insert("video/ogg", "ogg");
+
+    // Mobile
+    mVideoFormatsMap.insert("video/3gpp", "3gp");
+    mVideoFormatsMap.insert("video/3gpp2", "3g2");
+
+    // Professional / intermediate (ProRes, DNxHD often live here)
+    mVideoFormatsMap.insert("application/mxf", "mxf");
+
+    // Legacy
+    mVideoFormatsMap.insert("video/x-ms-wmv", "wmv");
+    mVideoFormatsMap.insert("video/x-ms-asf", "asf");
+    mVideoFormatsMap.insert("video/x-msvideo", "avi");
+    mVideoFormatsMap.insert("video/x-flv", "flv");
+    mVideoFormatsMap.insert("video/x-f4v", "f4v");
+    mVideoFormatsMap.insert("video/divx", "divx");
+    mVideoFormatsMap.insert("video/x-ms-vob", "vob");
+    mVideoFormatsMap.insert("video/vnd.rn-realvideo", "rmvb");
+
+    // Raw elementary streams -- no container, mpv sniffs them.
+    mVideoFormatsMap.insert("video/h264", "h264");
+    mVideoFormatsMap.insert("video/h265", "h265");
+    mVideoFormatsMap.insert("video/h265", "hevc");
+    mVideoFormatsMap.insert("video/av1", "av1");
 }
 //------------------------------------------------------------------------------
 QString Settings::mpvBinary() {
@@ -392,6 +481,25 @@ void Settings::setShowChangelogs(bool mode) {
 
 bool Settings::showChangelogs() {
     return settings->settingsConf->value("showChangelogs", true).toBool();
+}
+//------------------------------------------------------------------------------
+// Off by default, and deliberately so: qimgv is a local image viewer, and
+// contacting a server on launch is not something a user should have to find out
+// about after the fact. The About page can always check on demand.
+bool Settings::checkForUpdates() {
+    return settings->settingsConf->value("checkForUpdates", false).toBool();
+}
+
+void Settings::setCheckForUpdates(bool mode) {
+    settings->settingsConf->setValue("checkForUpdates", mode);
+}
+
+QDateTime Settings::lastUpdateCheck() {
+    return settings->settingsConf->value("lastUpdateCheck").toDateTime();
+}
+
+void Settings::setLastUpdateCheck(QDateTime time) {
+    settings->settingsConf->setValue("lastUpdateCheck", time);
 }
 //------------------------------------------------------------------------------
 qreal Settings::backgroundOpacity() {

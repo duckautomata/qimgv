@@ -21,9 +21,12 @@ public:
     void shuffle();
     void print();
     void setCurrent(int _current);
+    int count() const;
+
 private:
-    int currentIndex;
+    // -1 means "no current item"; every accessor must tolerate it.
+    int currentIndex = -1;
     std::vector<int> vec;
     void fill();
-    int indexOf(int n);
+    int indexOf(int n) const;
 };

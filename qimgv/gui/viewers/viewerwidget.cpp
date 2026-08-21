@@ -449,7 +449,7 @@ QRect ViewerWidget::videoControlsArea() {
 // we can't process mouse events in the overlay
 // cause they won't propagate to the ImageViewer, only to overlay's container (this widget)
 // so we just grab them before they reach ImageViewer and do the needful
-bool ViewerWidget::eventFilter(QObject *object, QEvent *event) {
+bool ViewerWidget::eventFilter(QObject * /*object*/, QEvent *event) {
     // catch press and doubleclick
     // force doubleclick to act as press event for click zones
     if(event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonDblClick) {
@@ -498,7 +498,7 @@ bool ViewerWidget::eventFilter(QObject *object, QEvent *event) {
                 return false;
         } else {
             auto enterEvent = dynamic_cast<QEnterEvent*>(event);
-            mousePos = enterEvent->pos();
+            mousePos = enterEvent->position().toPoint();
         }
         if(clickZoneOverlay->leftZone().contains(mousePos)) {
             clickZoneOverlay->setPressed(false);
@@ -551,6 +551,7 @@ void ViewerWidget::showContextMenu(QPoint pos) {
 
 void ViewerWidget::onFullscreenModeChanged(bool mode) {
     imageViewer->onFullscreenModeChanged(mode);
+    videoPlayer->onFullscreenModeChanged(mode);
     mIsFullscreen = mode;
 }
 
@@ -584,7 +585,7 @@ void ViewerWidget::hideEvent(QHideEvent *event) {
 }
 
 // block native tab-switching so we can use it in shortcuts
-bool ViewerWidget::focusNextPrevChild(bool mode) {
+bool ViewerWidget::focusNextPrevChild(bool /*mode*/) {
     return false;
 }
 

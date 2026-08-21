@@ -1,16 +1,10 @@
 #include "documentwidget.h"
 
-DocumentWidget::DocumentWidget(std::shared_ptr<ViewerWidget> viewWidget, std::shared_ptr<InfoBarProxy> infoBar, QWidget *parent)
-    : FloatingWidgetContainer(parent),
-      mainPanel(nullptr),
-      mPanelPinned(false),
-      mPanelEnabled(false),
-      mPanelFullscreenOnly(false),
-      avoidPanelFlag(false),
-      mIsFullscreen(false),
-      mInteractionEnabled(false),
-      mAllowPanelInit(false)
-{
+DocumentWidget::DocumentWidget(std::shared_ptr<ViewerWidget> viewWidget, std::shared_ptr<InfoBarProxy> infoBar,
+                               QWidget *parent)
+    : FloatingWidgetContainer(parent), mainPanel(nullptr), avoidPanelFlag(false), mPanelEnabled(false),
+      mPanelFullscreenOnly(false), mIsFullscreen(false), mPanelPinned(false), mInteractionEnabled(false),
+      mAllowPanelInit(false) {
     layoutRoot = new QVBoxLayout();
     layoutRoot->setContentsMargins(0,0,0,0);
     layoutRoot->setSpacing(0);
@@ -95,7 +89,7 @@ void DocumentWidget::hideFloatingPanel() {
     hideFloatingPanel(false);
 }
 
-void DocumentWidget::hideFloatingPanel(bool animated) {
+void DocumentWidget::hideFloatingPanel(bool /*animated*/) {
     if(!mPanelPinned)
         mainPanel->hideAnimated();
 }

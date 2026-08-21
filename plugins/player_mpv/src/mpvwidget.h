@@ -10,6 +10,8 @@
 #include "qthelper.hpp"
 
 #include <QDebug>
+#include <QColor>
+#include <QPainter>
 #include <ctime>
 #include <QSurfaceFormat>
 #include <QTimer>
@@ -35,6 +37,14 @@ public:
     }
     void setMuted(bool mode);
     void setRepeat(bool mode);
+    // Colour transparent video is composited onto. See paintGL().
+    void setBackgroundColor(QColor color);
+
+    // Returns the QSurfaceFormat qimgv must install before the first
+    // QOpenGLWidget is created, so that video with an alpha channel
+    // (ProRes 4444, VP9/AV1 with alpha, transparent WebM) composites
+    // against the app background instead of rendering on black.
+    static QSurfaceFormat surfaceFormat();
     bool muted();
     int volume();
     void setVolume(int vol);
@@ -49,6 +59,10 @@ protected:
     void initializeGL() override;
     void paintGL() override;
 
+private:
+    void renderMpv();
+    QColor mBackgroundColor = Qt::black;
+
 private slots:
     void on_mpv_events();
     void maybeUpdate();
@@ -57,6 +71,8 @@ private:
     void handle_mpv_event(mpv_event *event);
     static void on_update(void *ctx);
 
-    mpv_handle *mpv;
-    mpv_render_context *mpv_gl;
+    // Both must be null-initialized: the destructor may run without
+    // initializeGL() ever having been called (plugin loaded, never shown).
+    mpv_handle *mpv = nullptr;
+    mpv_render_context *mpv_gl = nullptr;
 };

@@ -8,8 +8,6 @@
 #include <windows.h>
 #include <QDebug>
 
-QString lastError();
-
 class WindowsWatcherPrivate : public DirectoryWatcherPrivate {
     Q_OBJECT
 public:

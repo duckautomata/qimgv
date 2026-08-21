@@ -17,6 +17,7 @@
 #include "gui/dialogs/scripteditordialog.h"
 #include "settings.h"
 #include "components/actionmanager/actionmanager.h"
+#include "components/updatechecker.h"
 
 namespace Ui {
 class SettingsDialog;
@@ -41,7 +42,9 @@ private:
     void readSettings();
     void readShortcuts();
     void readScripts();
+    void initUpdateCheck();
     Ui::SettingsDialog *ui;
+    UpdateChecker updateChecker;
 
     void saveShortcuts();
     void addShortcutToTable(const QString &action, const QString &shortcut);

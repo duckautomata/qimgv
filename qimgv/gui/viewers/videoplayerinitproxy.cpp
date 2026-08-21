@@ -15,6 +15,20 @@ VideoPlayerInitProxy::VideoPlayerInitProxy(QWidget *parent)
     layout.setContentsMargins(0,0,0,0);
     setLayout(&layout);
     connect(settings, &Settings::settingsChanged, this, &VideoPlayerInitProxy::onSettingsChanged);
+    updateBackgroundColor();
+
+#ifdef USE_MPV
+    // Adding the first QOpenGLWidget to a window that is already on screen makes
+    // Qt switch the backing store to a texture-composited one, and on Windows
+    // that destroys and recreates the native window -- qimgv visibly blinks shut
+    // and reopens the first time you land on a video. Parking an empty hidden
+    // QOpenGLWidget here means the window is already texture-backed before it is
+    // ever shown. It is never laid out and never painted, so it never creates a
+    // GL context; the cost is one QWidget.
+    glBackingStorePin = new QOpenGLWidget(this);
+    glBackingStorePin->hide();
+#endif
+
     libFile = QIMGV_PLAYER_PLUGIN;
 #ifdef _WIN32
     libDirs << QApplication::applicationDirPath() + "/plugins";
@@ -28,10 +42,33 @@ VideoPlayerInitProxy::~VideoPlayerInitProxy() {
 }
 
 void VideoPlayerInitProxy::onSettingsChanged() {
+    // Background first: it must track the theme even before a video is loaded.
+    updateBackgroundColor();
     if(!player)
         return;
     player->setMuted(!settings->playVideoSounds());
     player->setVideoUnscaled(!settings->expandImage());
+}
+
+// Mirrors ImageViewerV2::onFullscreenModeChanged so that switching between an
+// image and a video does not change the backdrop.
+void VideoPlayerInitProxy::onFullscreenModeChanged(bool mode) {
+    mIsFullscreen = mode;
+    updateBackgroundColor();
+}
+
+void VideoPlayerInitProxy::updateBackgroundColor() {
+    if(mIsFullscreen) {
+        bgColor = settings->colorScheme().background_fullscreen;
+        bgColor.setAlphaF(1.0);
+    } else {
+        bgColor = settings->colorScheme().background;
+        bgColor.setAlphaF(settings->backgroundOpacity());
+    }
+    // The player has to do the actual compositing -- see MpvWidget::paintGL().
+    if(player)
+        player->setBackgroundColor(bgColor);
+    update();
 }
 
 std::shared_ptr<VideoPlayer> VideoPlayerInitProxy::getPlayer() {
@@ -77,6 +114,7 @@ inline bool VideoPlayerInitProxy::initPlayer() {
     player->setMuted(!settings->playVideoSounds());
     player->setVideoUnscaled(!settings->expandImage());
     player->setVolume(settings->volume());
+    player->setBackgroundColor(bgColor);
 
     player->setParent(this);
     layout.addWidget(player.get());
@@ -215,8 +253,16 @@ void VideoPlayerInitProxy::hide() {
     VideoPlayer::hide();
 }
 
+// Nothing else in the video path paints a background: this widget, VideoPlayerMpv
+// and MpvWidget are all WA_TranslucentBackground, and with mpv's "background=none"
+// the decoder now hands us genuinely transparent pixels for ProRes 4444 / VP9 /
+// AV1 alpha. Without this fill those pixels go all the way through the window and
+// you see the desktop. The image path gets the equivalent from the graphics
+// scene's background brush.
 void VideoPlayerInitProxy::paintEvent(QPaintEvent *event) {
     Q_UNUSED(event)
+    QPainter p(this);
+    p.fillRect(rect(), bgColor);
 }
 
 void VideoPlayerInitProxy::installEventFilter(QObject *filterObj) {

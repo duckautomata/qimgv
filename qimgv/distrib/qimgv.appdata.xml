@@ -1,43 +1,76 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2019 Artem Polishchuk <ego.cordatus@gmail.com> -->
-<component type="desktop">
+<!-- Copyright 2024 qimgv contributors -->
+<component type="desktop-application">
   <id>qimgv</id>
-  <metadata_license>CC0</metadata_license>
+  <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <name>qimgv</name>
-  <summary>Image viewer. Fast, easy to use. Optional video support.</summary>
+  <summary>Fast and configurable image viewer with optional video support</summary>
+
   <description>
-    <p>Image viewer. Fast, easy to use. Optional video support.
-
-       Key features:
-
-        - Simple UI
-        - Fast
-        - Easy to use
-        - Fully configurable, including themes, shortcuts
-        - High quality scaling
-        - Basic image editing: Crop, Rotate and Resize
-        - Ability to quickly copy / move images to different folders
-        - Experimental video playback via libmpv
-        - Folder view mode
-        - Ability to run shell scripts</p>
+    <p>
+      qimgv is a fast, lightweight image viewer with a deliberately uncluttered
+      interface. UI elements appear only when you need them.
+    </p>
+    <p>Key features:</p>
+    <ul>
+      <li>Fast and lightweight</li>
+      <li>Fully configurable, including themes and shortcuts</li>
+      <li>High quality scaling</li>
+      <li>Basic image editing: crop, rotate and resize</li>
+      <li>Quickly copy or move images to different folders</li>
+      <li>Video playback via libmpv, including H.265, AV1 and ProRes</li>
+      <li>Modern image formats: AVIF (including animated), JPEG XL, HEIF, WebP, APNG</li>
+      <li>Folder view mode</li>
+      <li>Ability to run shell scripts on the current image</li>
+    </ul>
   </description>
+
+  <launchable type="desktop-id">qimgv.desktop</launchable>
+
   <provides>
     <binary>qimgv</binary>
   </provides>
+
+  <categories>
+    <category>Graphics</category>
+    <category>Viewer</category>
+  </categories>
+
+  <content_rating type="oars-1.1" />
+
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/easymodo/qimgv/master/qimgv/distrib/screenshots/qimgv0.9_1.jpg</image>
+      <caption>Main window with the thumbnail panel</caption>
+      <image>https://raw.githubusercontent.com/duckautomata/qimgv/master/qimgv/distrib/screenshots/qimgv0.9_1.jpg</image>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/easymodo/qimgv/master/qimgv/distrib/screenshots/qimgv0.9_2.jpg</image>
+      <caption>Folder view</caption>
+      <image>https://raw.githubusercontent.com/duckautomata/qimgv/master/qimgv/distrib/screenshots/qimgv0.9_2.jpg</image>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/easymodo/qimgv/master/qimgv/distrib/screenshots/qimgv_3.jpg</image>
+      <caption>Settings window</caption>
+      <image>https://raw.githubusercontent.com/duckautomata/qimgv/master/qimgv/distrib/screenshots/qimgv_3.jpg</image>
     </screenshot>
   </screenshots>
-  <developer_name>easymodo</developer_name>
-  <url type="homepage">https://github.com/easymodo/qimgv</url>
-  <url type="bugtracker">https://github.com/easymodo/qimgv/issues</url>
-  <url type="translate">https://github.com/easymodo/qimgv/tree/master/qimgv/res/translations</url>
+
+  <developer id="io.github.duckautomata">
+    <name>duckautomata</name>
+  </developer>
+
+  <url type="homepage">https://github.com/duckautomata/qimgv</url>
+  <url type="bugtracker">https://github.com/duckautomata/qimgv/issues</url>
+  <url type="translate">https://github.com/duckautomata/qimgv/tree/master/qimgv/res/translations</url>
+  <url type="vcs-browser">https://github.com/duckautomata/qimgv</url>
+
+  <releases>
+    <release version="2.0.0" date="2026-08-21">
+      <description>
+        <p>First release of the duckautomata fork. Qt 6 only, rebuilt CMake
+           build system with presets, and expanded codec support including
+           animated AVIF, HEIF and ProRes 4444 with alpha.</p>
+      </description>
+    </release>
+  </releases>
 </component>

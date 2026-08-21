@@ -1,0 +1,140 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build (e.g. v1.1.0). Publishes as a prerelease.'
+        required: true
+
+# Least privilege by default; the publish job opts up to write.
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Windows package
+    runs-on: windows-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: msys2 {0}
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0   # tags, for the version string
+
+      - uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884  # v2.32.0
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-qt6-base
+            mingw-w64-ucrt-x86_64-qt6-svg
+            mingw-w64-ucrt-x86_64-qt6-imageformats
+            mingw-w64-ucrt-x86_64-qt6-tools
+            mingw-w64-ucrt-x86_64-kimageformats
+            mingw-w64-ucrt-x86_64-libavif
+            mingw-w64-ucrt-x86_64-libheif
+            mingw-w64-ucrt-x86_64-libraw
+            mingw-w64-ucrt-x86_64-karchive
+            mingw-w64-ucrt-x86_64-opencv
+            mingw-w64-ucrt-x86_64-exiv2
+            mingw-w64-ucrt-x86_64-mpv
+            zip
+
+      - id: meta
+        name: Determine version
+        run: |
+          # Prefer the tag; fall back to the CMake project version so a
+          # manual run on an untagged tree still produces something sane.
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            v="${{ github.event.inputs.tag }}"
+          elif [ -n "${GITHUB_REF_NAME}" ] && [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            v="${GITHUB_REF_NAME}"
+          else
+            v="v$(grep -oP 'VERSION \K[0-9]+\.[0-9]+\.[0-9]+' CMakeLists.txt | head -1)-dev"
+            skip_check=1   # derived from CMakeLists, so it cannot disagree
+          fi
+
+          # Bumping project(VERSION) is a manual edit, easy to forget, and
+          # nothing else would notice: you would get a release named v2.0.1
+          # containing a binary that reports 2.0.0. Compare them and stop here
+          # instead. A -rc1 / -beta suffix on the tag is allowed.
+          project_version=$(grep -oP 'VERSION \K[0-9]+\.[0-9]+\.[0-9]+' CMakeLists.txt | head -1)
+          tag_version=${v#v}
+          tag_version=${tag_version%%-*}
+          if [ -z "${skip_check:-}" ] && [ "$tag_version" != "$project_version" ]; then
+            echo "::error::tag $v does not match project(VERSION) $project_version in CMakeLists.txt."
+            echo "::error::Bump CMakeLists.txt (and qimgv/distrib/qimgv.appdata.xml) or retag."
+            exit 1
+          fi
+
+          echo "version=${v}" >> $GITHUB_OUTPUT
+          echo "Building ${v} (project version ${project_version})"
+
+      - name: Build
+        run: |
+          cmake --preset windows-msys2
+          cmake --build --preset windows-msys2
+
+      # Not "|| true": a release that fails its own tests should not ship.
+      # The windows-msys2 preset builds them, so ctest has something to run;
+      # it previously pointed at a preset whose build tree had no tests and
+      # swallowed the resulting error.
+      - name: Test
+        run: ctest --test-dir build/windows-msys2 --output-on-failure
+
+      - name: Package
+        run: |
+          ./scripts/package-windows.sh
+          cd build
+          mv dist "qimgv-${{ steps.meta.outputs.version }}-win64"
+          zip -qr "qimgv-${{ steps.meta.outputs.version }}-win64.zip" \
+                  "qimgv-${{ steps.meta.outputs.version }}-win64"
+          ls -lh *.zip
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: qimgv-win64
+          path: build/*.zip
+          if-no-files-found: error
+
+  publish:
+    name: Publish release
+    needs: windows
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write   # creates the release
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
+        with:
+          name: qimgv-win64
+          path: dist
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum *.zip > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228  # v3.0.2
+        with:
+          tag_name: ${{ needs.windows.outputs.version }}
+          name: qimgv ${{ needs.windows.outputs.version }}
+          draft: true            # review before it goes public
+          prerelease: ${{ github.event_name == 'workflow_dispatch' }}
+          generate_release_notes: true
+          files: |
+            dist/*.zip
+            dist/SHA256SUMS.txt

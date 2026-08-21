@@ -73,10 +73,10 @@ void BookmarksWidget::onPathChanged(QString path) {
     }
 }
 
-void BookmarksWidget::dropEvent(QDropEvent *event) {
-//    QModelIndex dropIndex = indexAt(event->pos());
-//    if(dropIndex.isValid())
-//        emit droppedIn(event->mimeData()->urls(), dropIndex);
+void BookmarksWidget::dropEvent(QDropEvent * /*event*/) {
+    //    QModelIndex dropIndex = indexAt(event->pos());
+    //    if(dropIndex.isValid())
+    //        emit droppedIn(event->mimeData()->urls(), dropIndex);
 }
 
 void BookmarksWidget::dragEnterEvent(QDragEnterEvent *event) {

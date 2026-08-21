@@ -4,6 +4,9 @@
 #include <QSize>
 #include <QUrl>
 #include <QMimeDatabase>
+#include <QSet>
+#include <QtEndian>
+#include <limits>
 #include <QDebug>
 #include <QFileInfo>
 #include <QDateTime>
@@ -62,6 +65,8 @@ private:
     bool detectAnimatedWebP();
     bool detectAnimatedJxl();
     bool detectAnimatedAvif();
+    bool detectAnimatedHeif();
+    QSet<QByteArray> isoBmffBrands() const;
     QMap<QString, QString> exifTags;
     QMimeType mMimeType;
 };

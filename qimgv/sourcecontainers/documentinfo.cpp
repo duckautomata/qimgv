@@ -1,5 +1,17 @@
 #include "documentinfo.h"
 
+// Plugin availability cannot change while the process is running, so build
+// the set once. QImageReader::supportedImageFormats() walks the plugin loader
+// and allocates a fresh QList on every call, which is measurable when
+// scanning a directory of thousands of images.
+static const QSet<QByteArray> &readableFormats() {
+    static const QSet<QByteArray> formats = [] {
+        const QList<QByteArray> list = QImageReader::supportedImageFormats();
+        return QSet<QByteArray>(list.begin(), list.end());
+    }();
+    return formats;
+}
+
 DocumentInfo::DocumentInfo(QString path)
     : mDocumentType(DocumentType::NONE),
       mOrientation(0),
@@ -78,11 +90,32 @@ void DocumentInfo::detectFormat() {
     mMimeType = mimeDb.mimeTypeForFile(fileInfo.filePath(), QMimeDatabase::MatchContent);
     auto mimeName = mMimeType.name().toUtf8();
     auto suffix = fileInfo.suffix().toLower().toUtf8();
+
+    // Mime databases sniff an ISOBMFF container by its major brand, and an
+    // image *sequence* declares a brand they read as video: an animated AVIF
+    // out of ffmpeg has major brand 'avis' and comes back as video/quicktime,
+    // which would hand an animated image to the video player. Qt's built-in
+    // copy of freedesktop.org.xml does exactly this, so it happens on any
+    // system without an external shared-mime-info. The ftyp brands are
+    // authoritative and we already parse them -- let them correct the verdict
+    // before dispatch. Only these two mime names pay for the extra read.
+    if(mimeName == "video/quicktime" || mimeName == "video/mp4") {
+        const QSet<QByteArray> brands = isoBmffBrands();
+        const char *corrected = nullptr;
+        if(brands.contains(QByteArrayLiteral("avif")) || brands.contains(QByteArrayLiteral("avis")))
+            corrected = "image/avif";
+        else if(brands.contains(QByteArrayLiteral("mif1")) || brands.contains(QByteArrayLiteral("msf1")))
+            corrected = "image/heif";
+        if(corrected) {
+            mMimeType = mimeDb.mimeTypeForName(QString::fromLatin1(corrected));
+            mimeName = corrected;
+        }
+    }
     if(mimeName == "image/jpeg") {
         mFormat = "jpg";
         mDocumentType = DocumentType::STATIC;
     } else if(mimeName == "image/png") {
-        if(QImageReader::supportedImageFormats().contains("apng") && detectAPNG()) {
+        if(readableFormats().contains(QByteArrayLiteral("apng")) && detectAPNG()) {
             mFormat = "apng";
             mDocumentType = DocumentType::ANIMATED;
         } else {
@@ -105,6 +138,11 @@ void DocumentInfo::detectFormat() {
     } else if(mimeName == "image/avif") {
         mFormat = "avif";
         mDocumentType = detectAnimatedAvif() ? DocumentType::ANIMATED : DocumentType::STATIC;
+    } else if(mimeName == "image/heif" || mimeName == "image/heic" || mimeName == "image/heif-sequence" ||
+              mimeName == "image/heic-sequence") {
+        // Qt reports both under the "heic" reader name.
+        mFormat = "heic";
+        mDocumentType = detectAnimatedHeif() ? DocumentType::ANIMATED : DocumentType::STATIC;
     } else if(mimeName == "image/bmp") {
         mFormat = "bmp";
         mDocumentType = DocumentType::STATIC;
@@ -124,64 +162,140 @@ void DocumentInfo::detectFormat() {
     loadExifOrientation();
 }
 
-inline
-// dumb apng detector
+// ---------------------------------------------------------------------------
+// Format sniffers
+//
+// These run for every file in a directory listing, so they must stay cheap:
+// bounded reads, no full-file scans, no QImageReader unless there is no
+// cheaper option.
+// ---------------------------------------------------------------------------
+
+// Reads a big-endian uint32 from an open stream. Returns false at EOF.
+static bool readU32(QDataStream &in, quint32 &out) {
+    if(in.readRawData(reinterpret_cast<char *>(&out), 4) != 4)
+        return false;
+    out = qFromBigEndian(out);
+    return true;
+}
+
+// Walks PNG chunks looking for acTL (the APNG animation control chunk), which
+// the spec requires to appear before the first IDAT.
+//
+// The previous implementation only searched the first 120 bytes, so an APNG
+// carrying a colour profile or text chunks ahead of acTL was misdetected as a
+// still PNG.
 bool DocumentInfo::detectAPNG() {
     QFile f(fileInfo.filePath());
-    if(f.open(QFile::ReadOnly)) {
-        QDataStream in(&f);
-        const int len = 120;
-        QByteArray qbuf("\0", len);
-        if (in.readRawData(qbuf.data(), len) > 0) {
-            return qbuf.contains("acTL");
-        }
+    if(!f.open(QFile::ReadOnly))
+        return false;
+
+    static const char kPngSignature[8] = {'\x89', 'P', 'N', 'G', '\r', '\n', '\x1a', '\n'};
+    char signature[8];
+    QDataStream in(&f);
+    if(in.readRawData(signature, 8) != 8 || memcmp(signature, kPngSignature, 8) != 0)
+        return false;
+
+    // Bounded: a conformant encoder puts acTL within the first handful of
+    // chunks. This is a guard against a malformed file, not a real limit.
+    for(int chunk = 0; chunk < 64; chunk++) {
+        quint32 length;
+        char type[4];
+        if(!readU32(in, length))
+            return false;
+        if(in.readRawData(type, 4) != 4)
+            return false;
+        if(memcmp(type, "acTL", 4) == 0)
+            return true;
+        if(memcmp(type, "IDAT", 4) == 0 || memcmp(type, "IEND", 4) == 0)
+            return false; // acTL must precede IDAT
+        // Skip payload + CRC. Guard against a length that would overflow.
+        if(length > quint32(std::numeric_limits<int>::max()) - 4)
+            return false;
+        if(in.skipRawData(static_cast<int>(length) + 4) != static_cast<int>(length) + 4)
+            return false;
     }
     return false;
 }
 
 bool DocumentInfo::detectAnimatedWebP() {
     QFile f(fileInfo.filePath());
-    bool result = false;
-    if(f.open(QFile::ReadOnly)) {
-        QDataStream in(&f);
-        in.skipRawData(12);
-        char *buf = static_cast<char*>(malloc(5));
-        buf[4] = '\0';
-        in.readRawData(buf, 4);
-        if(strcmp(buf, "VP8X") == 0) {
-            in.skipRawData(4);
-            char flags;
-            in.readRawData(&flags, 1);
-            if(flags & (1 << 1)) {
-                result = true;
-            }
-        }
-        free(buf);
-    }
-    return result;
+    if(!f.open(QFile::ReadOnly))
+        return false;
+
+    // RIFF____WEBPVP8X, then flags; bit 1 of the first flag byte is ANIMATION.
+    char header[16];
+    QDataStream in(&f);
+    if(in.readRawData(header, 16) != 16)
+        return false;
+    if(memcmp(header, "RIFF", 4) != 0 || memcmp(header + 8, "WEBP", 4) != 0)
+        return false;
+    if(memcmp(header + 12, "VP8X", 4) != 0)
+        return false; // simple lossy/lossless WebP: never animated
+
+    in.skipRawData(4); // VP8X chunk size
+    char flags;
+    if(in.readRawData(&flags, 1) != 1)
+        return false;
+    return (flags & (1 << 1)) != 0;
 }
 
-// TODO avoid creating multiple QImageReader instances
+// JPEG XL animation cannot be sniffed cheaply -- the signature does not carry
+// it -- so we defer to the plugin.
 bool DocumentInfo::detectAnimatedJxl() {
     QImageReader r(fileInfo.filePath(), "jxl");
     return r.supportsAnimation();
 }
 
-bool DocumentInfo::detectAnimatedAvif() {
+// Collects the major brand plus every compatible brand from an ISOBMFF 'ftyp'
+// box. AVIF, HEIF and friends are all ISOBMFF, so one reader serves them all.
+QSet<QByteArray> DocumentInfo::isoBmffBrands() const {
+    QSet<QByteArray> brands;
     QFile f(fileInfo.filePath());
-    bool result = false;
-    if(f.open(QFile::ReadOnly)) {
-        QDataStream in(&f);
-        in.skipRawData(4); // skip box size
-        char *buf = static_cast<char*>(malloc(9));
-        buf[8] = '\0';
-        in.readRawData(buf, 8);
-        if(strcmp(buf, "ftypavis") == 0) {
-            result = true;
-        }
-        free(buf);
+    if(!f.open(QFile::ReadOnly))
+        return brands;
+
+    QDataStream in(&f);
+    quint32 boxSize;
+    char boxType[4];
+    if(!readU32(in, boxSize))
+        return brands;
+    if(in.readRawData(boxType, 4) != 4 || memcmp(boxType, "ftyp", 4) != 0)
+        return brands;
+
+    // size==1 means a 64-bit size follows; size==0 means "to end of file".
+    // Neither is plausible for an ftyp box, so treat them as malformed.
+    if(boxSize < 16 || boxSize > 1024)
+        return brands;
+
+    char brand[4];
+    if(in.readRawData(brand, 4) != 4) // major_brand
+        return brands;
+    brands.insert(QByteArray(brand, 4));
+    in.skipRawData(4); // minor_version
+
+    // Remaining bytes are a list of 4-byte compatible brands.
+    const int remaining = static_cast<int>(boxSize) - 16;
+    for(int i = 0; i + 4 <= remaining; i += 4) {
+        if(in.readRawData(brand, 4) != 4)
+            break;
+        brands.insert(QByteArray(brand, 4));
     }
-    return result;
+    return brands;
+}
+
+// An AVIF image sequence declares the 'avis' brand. Most encoders set it as
+// the major brand, but some set major='avif' and list 'avis' only among the
+// compatible brands -- checking just the major brand misses those.
+bool DocumentInfo::detectAnimatedAvif() {
+    return isoBmffBrands().contains(QByteArrayLiteral("avis"));
+}
+
+// HEIF image sequences use the 'msf1' brand (ISO/IEC 23008-12); 'hevc'/'avcs'
+// appear alongside it depending on the codec.
+bool DocumentInfo::detectAnimatedHeif() {
+    const QSet<QByteArray> brands = isoBmffBrands();
+    return brands.contains(QByteArrayLiteral("msf1")) || brands.contains(QByteArrayLiteral("hevc")) ||
+           brands.contains(QByteArrayLiteral("avcs"));
 }
 
 void DocumentInfo::loadExifTags() {
@@ -193,7 +307,15 @@ void DocumentInfo::loadExifTags() {
     try {
         std::unique_ptr<Exiv2::Image> image;
 
+#if EXIV2_TEST_VERSION(0, 28, 0)
+        // 0.28 dropped the wchar_t overloads of open(), so the only path API
+        // left is a narrow std::string that the CRT decodes with the process
+        // locale. main() puts that locale in UTF-8 mode on Windows, without
+        // which anything outside the ANSI codepage fails to open.
+        image = Exiv2::ImageFactory::open(fileInfo.filePath().toUtf8().toStdString());
+#else
         image = Exiv2::ImageFactory::open(toStdString(fileInfo.filePath()));
+#endif
 
         assert(image.get() != 0);
         image->readMetadata();
@@ -269,22 +391,11 @@ void DocumentInfo::loadExifTags() {
         }
     }
 
-// this should work with both 0.28 and <0.28
-#if not EXIV2_TEST_VERSION(0, 28, 0)
-#ifdef __WIN32
-    catch (Exiv2::BasicError<wchar_t>& e) {
-        qDebug() << "Caught Exiv2::BasicError exception:\n" << e.what() << "\n";
-        return;
-    }
-#else
-    catch (Exiv2::BasicError<char>& e) {
-        qDebug() << "Caught Exiv2::BasicError exception:\n" << e.what() << "\n";
-        return;
-    }
-#endif
-#endif
-
-    catch (Exiv2::Error& e) {
+    // One handler covers both exiv2 generations. Before 0.28 Exiv2::Error was
+    // a typedef for BasicError<char>, so the separate catch that used to sit
+    // here caught the same type and made this one unreachable -- which GCC
+    // rejects under -Wexceptions. 0.28 turned Error into a plain class.
+    catch(Exiv2::Error &e) {
         qDebug() << "Caught Exiv2 exception:\n" << e.what() << "\n";
         return;
     }

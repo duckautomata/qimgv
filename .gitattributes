@@ -1,0 +1,36 @@
+# Normalize line endings: LF in the repo, native on checkout for Windows-only files.
+* text=auto eol=lf
+
+*.bat        text eol=crlf
+*.cmd        text eol=crlf
+*.ps1        text eol=crlf
+*.rc         text eol=crlf
+
+# Qt / build files are text
+*.cpp        text
+*.h          text
+*.hpp        text
+*.ui         text
+*.qrc        text
+*.qss        text
+*.ts         text
+*.cmake      text
+CMakeLists.txt text
+*.json       text
+*.yml        text
+
+# Binary assets — never diff or convert these
+*.png        binary
+*.jpg        binary
+*.jpeg       binary
+*.ico        binary
+*.icns       binary
+*.gif        binary
+*.webp       binary
+*.avif       binary
+*.7z         binary
+*.zip        binary
+
+# Keep generated/vendored code out of language stats and diffs
+qimgv/3rdparty/**    linguist-vendored
+qimgv/res/translations/*.ts  linguist-generated=false

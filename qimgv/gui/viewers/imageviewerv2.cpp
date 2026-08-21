@@ -1,31 +1,12 @@
 #include "imageviewerv2.h"
 
-ImageViewerV2::ImageViewerV2(QWidget *parent) : QGraphicsView(parent),
-    pixmap(nullptr),
-    pixmapScaled(nullptr),
-    movie(nullptr),
-    transparencyGrid(false),
-    expandImage(false),
-    smoothAnimatedImages(true),
-    smoothUpscaling(true),
-    forceFastScale(false),
-    keepFitMode(false),
-    loopPlayback(true),
-    mIsFullscreen(false),
-    scrollBarWorkaround(true),
-    useFixedZoomLevels(false),
-    trackpadDetection(true),
-    mouseInteraction(MouseInteractionState::MOUSE_NONE),
-    minScale(0.01f),
-    maxScale(500.0f),
-    fitWindowScale(0.125f),
-    fitWindowStretchScale(0.125f),
-    mViewLock(LOCK_NONE),
-    imageFitMode(FIT_WINDOW),
-    mScalingFilter(QI_FILTER_BILINEAR),
-    imageFitModeDefault(FIT_WINDOW),
-    scene(nullptr)
-{
+ImageViewerV2::ImageViewerV2(QWidget *parent)
+    : QGraphicsView(parent), scene(nullptr), pixmap(nullptr), pixmapScaled(nullptr), movie(nullptr),
+      transparencyGrid(false), expandImage(false), smoothAnimatedImages(true), smoothUpscaling(true),
+      forceFastScale(false), keepFitMode(false), loopPlayback(true), mIsFullscreen(false), scrollBarWorkaround(true),
+      useFixedZoomLevels(false), trackpadDetection(true), mouseInteraction(MouseInteractionState::MOUSE_NONE),
+      minScale(0.01f), maxScale(500.0f), fitWindowScale(0.125f), fitWindowStretchScale(0.125f), mViewLock(LOCK_NONE),
+      imageFitMode(FIT_WINDOW), imageFitModeDefault(FIT_WINDOW), mScalingFilter(QI_FILTER_BILINEAR) {
     setViewportUpdateMode(QGraphicsView::MinimalViewportUpdate);
     this->viewport()->setAttribute(Qt::WA_OpaquePaintEvent, true);
     setFocusPolicy(Qt::NoFocus);
@@ -667,7 +648,6 @@ void ImageViewerV2::wheelEvent(QWheelEvent *event) {
             }
         } else if(isWheel && settings->imageScrolling() == SCROLL_BY_TRACKPAD_AND_WHEEL) {
             // scroll by interval
-            bool scrollable = false;
             QRect imgRect = scaledRectR();
             // shift by 2px in case of img edge misalignment
             // todo: maybe even increase it to skip small distance scrolls?
@@ -1278,7 +1258,6 @@ QPointF ImageViewerV2::sceneRoundPos(QPointF scenePoint) const {
 // rounds a rect in scene coordinates so it stays on the same spot on viewport
 // the result is what's actually drawn on screen (incl. size)
 QRectF ImageViewerV2::sceneRoundRect(QRectF sceneRect) const {
-    QRectF rounded = QRectF(sceneRoundPos(sceneRect.topLeft()), sceneRect.size());
     return QRectF(sceneRoundPos(sceneRect.topLeft()), sceneRect.size());
 }
 

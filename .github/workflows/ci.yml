@@ -1,0 +1,244 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main, dev]
+    paths-ignore: ['**.md', 'docs/**', 'LICENSE']
+  pull_request:
+    branches: [master, main, dev]
+    paths-ignore: ['**.md', 'docs/**', 'LICENSE']
+  workflow_dispatch:
+
+# A newer push to the same branch cancels the older run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  linux:
+    name: Linux (Qt ${{ matrix.qt }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The oldest Qt we claim to support. If this breaks, either fix the
+          # code or raise the floor in CMakeLists.txt -- do not just bump this.
+          - qt: '6.5.3'
+            preset: ci
+          - qt: '6.10.1'
+            preset: ci
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build \
+            libexiv2-dev \
+            libopencv-dev \
+            libmpv-dev \
+            libgl1-mesa-dev libxkbcommon-dev libvulkan-dev \
+            libcups2-dev
+          # No AVIF/HEIF plugins here, deliberately. They come from the KDE
+          # kimageformats project, which Ubuntu does not package in any
+          # release, so the install this used to attempt could only ever
+          # fail -- and it took qt6-image-formats-plugins down with it,
+          # because apt aborts the whole command on one unknown name.
+          # Even that package would be invisible: this job runs the Qt from
+          # install-qt-action, which scans its own plugin directory and not
+          # the system one. decodesAnimatedAvif() therefore QSKIPs on Linux,
+          # and Windows CI is what covers real AVIF decoding. The Qt-native
+          # extra formats arrive via the qtimageformats module below.
+
+      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730  # v4.3.1
+        with:
+          version: ${{ matrix.qt }}
+          modules: qtimageformats
+          cache: true
+
+      - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03  # v1.2.23
+        with:
+          key: linux-qt${{ matrix.qt }}
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }}
+
+      - name: Test
+        run: ctest --preset ${{ matrix.preset }}
+
+  # ---------------------------------------------------------------------------
+  windows:
+    name: Windows (MSYS2 UCRT64)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884  # v2.32.0
+        with:
+          msystem: UCRT64
+          update: true
+          # Everything qimgv needs is a prebuilt MSYS2 package. kimageformats
+          # supplies the AVIF / JPEG XL / HEIF Qt image plugins in one go, but
+          # only *optionally* depends on the libraries behind them -- without
+          # libavif/libheif/libraw/karchive those plugins install and then fail
+          # to load, and the AVIF tests silently skip. Keep in sync with
+          # scripts/setup-msys2.sh.
+          install: >-
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-ccache
+            mingw-w64-ucrt-x86_64-qt6-base
+            mingw-w64-ucrt-x86_64-qt6-svg
+            mingw-w64-ucrt-x86_64-qt6-imageformats
+            mingw-w64-ucrt-x86_64-qt6-tools
+            mingw-w64-ucrt-x86_64-kimageformats
+            mingw-w64-ucrt-x86_64-libavif
+            mingw-w64-ucrt-x86_64-libheif
+            mingw-w64-ucrt-x86_64-libraw
+            mingw-w64-ucrt-x86_64-karchive
+            mingw-w64-ucrt-x86_64-opencv
+            mingw-w64-ucrt-x86_64-exiv2
+            mingw-w64-ucrt-x86_64-mpv
+
+      # -Werror is deliberately OFF here so a new platform warning cannot block
+      # producing the binary. The Windows build is now warning-clean locally
+      # (GCC 16.1.0, Release); flip this on once CI has been green once and we
+      # know what the runner's toolchain emits.
+      - name: Configure
+        run: cmake --preset ci -DQIMGV_WERROR=OFF
+
+      - name: Build
+        run: cmake --build --preset ci
+
+      - name: Warning summary
+        if: always()
+        run: |
+          cmake --build --preset ci --clean-first 2>&1 | grep -E "warning:" | sort -u > warnings.txt || true
+          echo "::notice::$(wc -l < warnings.txt) unique warnings on Windows"
+          head -50 warnings.txt
+
+      - name: Test
+        run: ctest --preset ci
+
+      - name: Package
+        # This job builds the ci preset; package-windows.sh defaults to the
+        # windows-msys2 one, which only the release workflow produces.
+        run: BUILD_DIR=build/ci ./scripts/package-windows.sh
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: qimgv-windows-x64
+          path: build/dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  macos:
+    name: macOS
+    runs-on: macos-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Install dependencies
+        run: brew install ninja exiv2 opencv mpv pkgconf ccache
+
+      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730  # v4.3.1
+        with:
+          version: '6.10.1'
+          modules: qtimageformats
+          cache: true
+
+      - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03  # v1.2.23
+        with:
+          key: macos
+
+      - name: Configure
+        run: cmake --preset macos -DQIMGV_WERROR=OFF
+
+      - name: Build
+        run: cmake --build --preset macos
+
+      - name: Test
+        run: ctest --preset macos
+
+  # ---------------------------------------------------------------------------
+  format:
+    name: clang-format
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # The default shallow clone holds a single commit, so neither the PR
+          # base nor HEAD^ exists and every git diff below dies on "bad object".
+          fetch-depth: 0
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+        with:
+          python-version: '3.12'
+
+      - name: Check formatting of changed lines
+        run: |
+          # Pinned, and from PyPI rather than apt. clang-format's output shifts
+          # between releases -- Ubuntu's 18.1.3 and the 22.x in MSYS2 disagree
+          # about where to break a long operator<< chain, so an unpinned check
+          # fails on code that is correctly formatted for the other version.
+          # The wheel is the same binary on Linux, macOS and Windows, so
+          # contributors can install the exact version this job uses:
+          #     pip install clang-format==22.1.8
+          pip install "clang-format==22.1.8"
+          clang-format --version
+
+          base="${{ github.event.pull_request.base.sha }}"
+          [ -n "$base" ] || base=$(git rev-parse HEAD^ 2>/dev/null || git rev-parse HEAD)
+          echo "diffing against $base"
+
+          # Checked per changed LINE, not per changed file. The tree predates
+          # .clang-format: whole-file checking fails on thousands of untouched
+          # pre-existing lines, and reformatting them wholesale would bury the
+          # real diffs. This holds new code to the style without dragging its
+          # neighbours along.
+          files=$(git diff --name-only --diff-filter=ACM "$base" \
+                  | grep -E '\.(cpp|h|hpp)$' \
+                  | grep -v '3rdparty/' || true)
+          if [ -z "$files" ]; then echo "no C++ files changed"; exit 0; fi
+
+          status=0
+          for f in $files; do
+            # Each hunk header's "+start,count" becomes a --lines=start:end.
+            ranges=$(git diff -U0 "$base" -- "$f" \
+                     | sed -n 's/^@@ -[^ ]* +\([0-9]*\),\{0,1\}\([0-9]*\) @@.*/\1 \2/p' \
+                     | awk '{ n = ($2 == "" ? 1 : $2); if (n > 0) printf "--lines=%d:%d ", $1, $1 + n - 1 }')
+            [ -z "$ranges" ] && continue
+            if ! clang-format --dry-run --Werror $ranges "$f"; then
+              status=1
+            fi
+          done
+          if [ $status -ne 0 ]; then
+            echo "::error::changed lines are not clang-formatted. Fix with: git clang-format $base"
+          fi
+          exit $status

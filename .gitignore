@@ -1,21 +1,71 @@
-.kdev4/
-*.txt
-!CMakeLists.txt
-!msys2-build-deps.txt
-!msys2-dll-deps.txt
-#build*
-.kdev_include_paths
-*.xmi
-*.kdev*
-.dir*
-*.orig
-build
-qrc_resources.cpp
-debug/
-release/
-*.debug
-*.depends
-*.release
-*.user
-ui_settingsdialog.h
+# ---- Build output ----------------------------------------------------------
+/build/
+/build-*/
+/out/
+/_external/
+cmake-build-*/
+CMakeUserPresets.json
+install_manifest.txt
+compile_commands.json
+*.log
+
+# ---- CMake / Ninja leftovers ----------------------------------------------
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+.ninja_deps
+.ninja_log
+build.ninja
+rules.ninja
 Makefile
+
+# ---- Qt generated ----------------------------------------------------------
+*.moc
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.qm
+.qmake.stash
+*.pro.user
+*.pro.user.*
+
+# ---- Packaging -------------------------------------------------------------
+/qimgv-x64_*/
+/dist/
+*.7z
+*.zip
+*.tar.gz
+*.AppImage
+*.dmg
+*.exe
+*.msi
+
+# ---- Logs from pipeline runs -------------------------------------------------------------
+logs_*/
+
+# ---- Editors / IDEs --------------------------------------------------------
+# Note the trailing /* rather than /: git cannot re-include a file whose parent
+# directory is itself excluded, so ".vscode/" would make the two ! lines dead.
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+.idea/
+.vs/
+.cache/
+.kdev4/
+*.kdev4
+.kdev_include_paths
+.clangd/
+.ccls-cache/
+*.swp
+*~
+*.orig
+*.rej
+
+# ---- OS --------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini

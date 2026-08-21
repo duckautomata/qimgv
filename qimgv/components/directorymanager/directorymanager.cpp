@@ -216,7 +216,7 @@ QString DirectoryManager::prevOfFile(QString filePath) const {
 QString DirectoryManager::nextOfFile(QString filePath) const {
     QString nextFilePath = "";
     int currentIndex = indexOfFile(filePath);
-    if(currentIndex >= 0 && currentIndex < fileEntryVec.size() - 1)
+    if(currentIndex >= 0 && currentIndex + 1 < static_cast<int>(fileEntryVec.size()))
         nextFilePath = fileEntryVec.at(currentIndex + 1).path;
     return nextFilePath;
 }
@@ -232,7 +232,7 @@ QString DirectoryManager::prevOfDir(QString dirPath) const {
 QString DirectoryManager::nextOfDir(QString dirPath) const {
     QString nextDirectoryPath = "";
     int currentIndex = indexOfDir(dirPath);
-    if(currentIndex >= 0 && currentIndex < dirEntryVec.size() - 1)
+    if(currentIndex >= 0 && currentIndex + 1 < static_cast<int>(dirEntryVec.size()))
         nextDirectoryPath = dirEntryVec.at(currentIndex + 1).path;
     return nextDirectoryPath;
 }
@@ -320,20 +320,29 @@ void DirectoryManager::loadEntryList(QString directoryPath, bool recursive) {
 
 // both directories & files
 void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, QString directoryPath) {
-    QRegularExpressionMatch match;
+    // Hoisted out of the loop: this is a QSettings lookup, and reading it once
+    // per directory entry showed up as real cost on large directories.
+    const bool showHidden = settings->showHiddenFiles();
+
     for(const auto & entry : fs::directory_iterator(toStdString(directoryPath))) {
         QString name = QString::fromStdString(entry.path().filename().generic_string());
 #ifndef Q_OS_WIN32
         // ignore hidden files
-        if(!settings->showHiddenFiles() && name.startsWith("."))
+        if(!showHidden && name.startsWith("."))
             continue;
 #else
-        DWORD attributes = GetFileAttributes(entry.path().generic_string().c_str());
-        if(!settings->showHiddenFiles() && attributes & FILE_ATTRIBUTE_HIDDEN)
+        // UNICODE is defined, so the unsuffixed GetFileAttributes resolves to
+        // the wide variant; path::c_str() is already wchar_t* here and saves a
+        // string copy per entry. INVALID_FILE_ATTRIBUTES has every bit set, so
+        // an unreadable entry would otherwise look hidden and vanish.
+        DWORD attributes = GetFileAttributesW(entry.path().c_str());
+        if(!showHidden && attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN))
             continue;
 #endif
         QString path = QString::fromStdString(entry.path().generic_string());
-        match = regex.match(name);
+        // The format regex only applies to files; matching before the
+        // is_directory() test made every subdirectory pay for a match that
+        // was then thrown away.
         if(entry.is_directory()) { // this can still throw std::bad_alloc ..
             FSEntry newEntry;
             try {
@@ -347,7 +356,7 @@ void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, Q
                 continue;
             }
             dirEntryVec.emplace_back(newEntry);
-        } else if (match.hasMatch()) {
+        } else if(regex.match(name).hasMatch()) {
             FSEntry newEntry;
             try {
                 newEntry.name = name;
@@ -365,12 +374,16 @@ void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, Q
 }
 
 void DirectoryManager::addEntriesFromDirectoryRecursive(std::vector<FSEntry> &entryVec, QString directoryPath) {
-    QRegularExpressionMatch match;
     for(const auto & entry : fs::recursive_directory_iterator(toStdString(directoryPath))) {
         QString name = QString::fromStdString(entry.path().filename().generic_string());
+        // is_directory() first: it is the cheaper test, and it lets us skip
+        // the regex entirely for subdirectories.
+        if(entry.is_directory())
+            continue;
+        if(!regex.match(name).hasMatch())
+            continue;
         QString path = QString::fromStdString(entry.path().generic_string());
-        match = regex.match(name);
-        if(!entry.is_directory() && match.hasMatch()) {
+        {
             FSEntry newEntry;
             try {
                 newEntry.name = name;

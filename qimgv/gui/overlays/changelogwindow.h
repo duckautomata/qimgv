@@ -20,6 +20,7 @@ public:
     explicit ChangelogWindow(FloatingWidgetContainer *parent);
     ~ChangelogWindow();
     void setText(QString text);
+    void setMarkdown(QString text);
 
 public slots:
     void show();

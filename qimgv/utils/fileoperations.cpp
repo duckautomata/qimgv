@@ -115,10 +115,17 @@ void FileOperations::copyFileTo(const QString &srcFilePath, const QString &destD
         result = FileOpResult::SUCCESS;
         // restore timestamps
         QFile dstF(destFile.absoluteFilePath());
-        dstF.open(QIODevice::ReadWrite);
-        dstF.setFileTime(srcModTime, QFileDevice::FileModificationTime);
-        dstF.setFileTime(srcReadTime, QFileDevice::FileAccessTime);
-        dstF.close();
+        // The copy already succeeded, so a failure here only costs us the
+        // original timestamps -- not worth failing the operation over, but
+        // it should not pass silently either.
+        if(dstF.open(QIODevice::ReadWrite)) {
+            dstF.setFileTime(srcModTime, QFileDevice::FileModificationTime);
+            dstF.setFileTime(srcReadTime, QFileDevice::FileAccessTime);
+            dstF.close();
+        } else {
+            qDebug() << "[FileOperations] could not reopen" << destFile.absoluteFilePath()
+                     << "to restore timestamps:" << dstF.errorString();
+        }
         // ok; remove the backup
         if(exists)
             QFile::remove(tmpPath);
@@ -192,11 +199,17 @@ void FileOperations::moveFileTo(const QString &srcFilePath, const QString &destD
             result = FileOpResult::SUCCESS;
             // restore timestamps
             QFile dstF(destFile.absoluteFilePath());
-            dstF.open(QIODevice::ReadWrite);
-            // dstF.setFileTime(srcBirthTime, QFileDevice::FileBirthTime); // TODO: does not work (linux)
-            dstF.setFileTime(srcModTime, QFileDevice::FileModificationTime);
-            dstF.setFileTime(srcReadTime, QFileDevice::FileAccessTime);
-            dstF.close();
+            // As in copyFileTo(): the move already succeeded, so failing to
+            // reopen only costs the timestamps.
+            if(dstF.open(QIODevice::ReadWrite)) {
+                // dstF.setFileTime(srcBirthTime, QFileDevice::FileBirthTime); // TODO: does not work (linux)
+                dstF.setFileTime(srcModTime, QFileDevice::FileModificationTime);
+                dstF.setFileTime(srcReadTime, QFileDevice::FileAccessTime);
+                dstF.close();
+            } else {
+                qDebug() << "[FileOperations] could not reopen" << destFile.absoluteFilePath()
+                         << "to restore timestamps:" << dstF.errorString();
+            }
             // remove backup
             if(exists)
                 QFile::remove(tmpPath);
@@ -281,112 +294,6 @@ void FileOperations::moveToTrash(const QString &filePath, FileOpResult &result) 
     return;
 }
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
 bool FileOperations::moveToTrashImpl(const QString &filePath) {
     return QFile::moveToTrash(filePath);
 }
-#else
-#ifdef Q_OS_LINUX
-bool FileOperations::moveToTrashImpl(const QString &filePath) {
-    #ifdef QT_GUI_LIB
-    bool TrashInitialized = false;
-    QString TrashPath;
-    QString TrashPathInfo;
-    QString TrashPathFiles;
-    if(!TrashInitialized) {
-        QStringList paths;
-        const char* xdg_data_home = getenv( "XDG_DATA_HOME" );
-        if(xdg_data_home) {
-            qDebug() << "XDG_DATA_HOME not yet tested";
-            QString xdgTrash( xdg_data_home );
-            paths.append(xdgTrash + "/Trash");
-        }
-        QString home = QStandardPaths::writableLocation( QStandardPaths::HomeLocation );
-        paths.append( home + "/.local/share/Trash" );
-        paths.append( home + "/.trash" );
-        foreach( QString path, paths ){
-            if( TrashPath.isEmpty() ){
-                QDir dir( path );
-                if( dir.exists() ){
-                    TrashPath = path;
-                }
-            }
-        }
-        if( TrashPath.isEmpty() )
-            qDebug() << "Can`t detect trash folder";
-        TrashPathInfo = TrashPath + "/info";
-        TrashPathFiles = TrashPath + "/files";
-        if( !QDir( TrashPathInfo ).exists() || !QDir( TrashPathFiles ).exists() )
-            qDebug() << "Trash doesn`t look like FreeDesktop.org Trash specification";
-        TrashInitialized = true;
-    }
-    QFileInfo original( filePath );
-    if( !original.exists() )
-        qDebug() << "File doesn`t exist, cant move to trash";
-    QString info;
-    info += "[Trash Info]\nPath=";
-    info += original.absoluteFilePath();
-    info += "\nDeletionDate=";
-    info += QDateTime::currentDateTime().toString("yyyy-MM-ddThh:mm:ss");
-    info += "\n";
-    QString trashname = original.fileName();
-    QString infopath = TrashPathInfo + "/" + trashname + ".trashinfo";
-    QString filepath = TrashPathFiles + "/" + trashname;
-    int nr = 1;
-    while( QFileInfo( infopath ).exists() || QFileInfo( filepath ).exists() ){
-        nr++;
-        trashname = original.baseName() + "." + QString::number( nr );
-        if( !original.completeSuffix().isEmpty() ){
-            trashname += QString( "." ) + original.completeSuffix();
-        }
-        infopath = TrashPathInfo + "/" + trashname + ".trashinfo";
-        filepath = TrashPathFiles + "/" + trashname;
-    }
-    QDir dir;
-    if( !dir.rename( original.absoluteFilePath(), filepath ) ){
-        qDebug() << "move to trash failed";
-    }
-    QFile infoFile(infopath);
-    infoFile.open(QIODevice::WriteOnly | QIODevice::Text);
-    QTextStream out(&infoFile);
-    out.setCodec("UTF-8");
-    out.setGenerateByteOrderMark(false);
-    out << info;
-    infoFile.close();
-    #else
-    Q_UNUSED( file );
-    qDebug() << "Trash in server-mode not supported";
-    #endif
-    return true;
-}
-#endif
-
-#ifdef Q_OS_WIN32
-bool FileOperations::moveToTrashImpl(const QString &file) {
-    QFileInfo fileinfo( file );
-    if( !fileinfo.exists() )
-        return false;
-    WCHAR* from = (WCHAR*) calloc((size_t)fileinfo.absoluteFilePath().length() + 2, sizeof(WCHAR));
-    fileinfo.absoluteFilePath().toWCharArray(from);    
-    SHFILEOPSTRUCTW fileop;
-    memset( &fileop, 0, sizeof( fileop ) );
-    fileop.wFunc = FO_DELETE;
-    fileop.pFrom = from;
-    fileop.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT;
-    int rv = SHFileOperationW( &fileop );
-    free(from);
-    if( 0 != rv ){
-        qDebug() << rv << QString::number( rv ).toInt( nullptr, 8 );
-        qDebug() << "move to trash failed";
-        return false;
-    }
-    return true;
-}
-#endif
-
-#ifdef Q_OS_MAC
-bool FileOperations::moveToTrashImpl(const QString &file) { // todo
-    return false;
-}
-#endif
-#endif

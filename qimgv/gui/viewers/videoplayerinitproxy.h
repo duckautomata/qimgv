@@ -11,6 +11,7 @@
 #include <QLabel>
 #include <QFileInfo>
 #include <QDebug>
+#include <QOpenGLWidget>
 
 class VideoPlayerInitProxy : public VideoPlayer {
 public:
@@ -38,6 +39,9 @@ public:
     void installEventFilter(QObject *filterObj);
     void removeEventFilter(QObject *filterObj);
 
+    // Called by ViewerWidget so the video background matches the image one.
+    void onFullscreenModeChanged(bool mode);
+
 public slots:
     void show();
     void hide();
@@ -55,6 +59,14 @@ private:
 
     QString libFile;
     QStringList libDirs;
+
+    void updateBackgroundColor();
+    QColor bgColor;
+    bool mIsFullscreen = false;
+
+    // See the constructor: keeps the window's backing store texture-composited
+    // from startup so loading the player later does not recreate the window.
+    QOpenGLWidget *glBackingStorePin = nullptr;
 
 private slots:
     void onSettingsChanged();

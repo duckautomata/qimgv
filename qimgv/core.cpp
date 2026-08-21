@@ -6,19 +6,17 @@
  */
 
 #include "core.h"
+#include <QFile>
 
 #ifdef __WIN32
 #include <tchar.h>
 #endif
 
+// Initializer order matches the declaration order in core.h; the compiler
+// initializes members in declaration order regardless of what is written here.
 Core::Core()
-    : QObject(),
-      folderEndAction(FOLDER_END_NO_ACTION),
-      loopSlideshow(false),
-      mDrag(nullptr),
-      slideshow(false),
-      shuffle(false)
-{
+    : QObject(), loopSlideshow(false), slideshow(false), shuffle(false), folderEndAction(FOLDER_END_NO_ACTION),
+      mDrag(nullptr) {
     loadTranslation();
     initGui();
     initComponents();
@@ -33,6 +31,19 @@ Core::Core()
         onFirstRun();
     else if(appVersion > lastVersion)
         onUpdate();
+
+    initUpdateChecker();
+}
+
+// Opt-in, and off by default. Nothing here can delay startup: the request is
+// asynchronous and every failure is swallowed apart from a debug line, so being
+// offline or behind a proxy costs nothing and says nothing.
+void Core::initUpdateChecker() {
+    connect(&updateChecker, &UpdateChecker::updateAvailable, this, [this](QVersionNumber version, QString url) {
+        Q_UNUSED(url)
+        mw->showMessage(tr("Update available: ") + version.toString() + tr(" — see Settings > About"), 5000);
+    });
+    updateChecker.checkIfDue();
 }
 
 void Core::readSettings() {
@@ -250,11 +261,31 @@ void Core::onUpdate() {
     actionManager->adjustFromVersion(lastVer);
 
     qDebug() << "Updated: " << settings->lastVersion().toString() << ">" << appVersion.toString();
-    // TODO: finish changelogs
-    //if(settings->showChangelogs())
-    //    mw->showChangelogWindow();
-    mw->showMessage(tr("Updated: ") + settings->lastVersion().toString() + " > " + appVersion.toString(), 4000);
+    QString changes = changelogForCurrentVersion();
+    if(settings->showChangelogs() && !changes.isEmpty())
+        mw->showChangelogWindow(changes);
+    else
+        mw->showMessage(tr("Updated: ") + settings->lastVersion().toString() + " > " + appVersion.toString(), 4000);
     settings->setLastVersion(appVersion);
+}
+
+// Pulls this version's section out of the bundled CHANGELOG.md -- the same file
+// that sits at the repository root, referenced by resources.qrc rather than
+// copied, so there is only ever one to keep current. Returns empty if the file
+// or the section is missing, in which case onUpdate() just shows its one-line
+// message as before.
+QString Core::changelogForCurrentVersion() {
+    QFile file(QStringLiteral(":/CHANGELOG.md"));
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return {};
+    QString const heading = QStringLiteral("## ") + appVersion.toString();
+    QString const text = QString::fromUtf8(file.readAll());
+    qsizetype start = text.indexOf(heading);
+    if(start == -1)
+        return {};
+    // Up to the next version heading, so an upgrade does not replay history.
+    qsizetype end = text.indexOf(QStringLiteral("\n## "), start + heading.size());
+    return (end == -1 ? text.mid(start) : text.mid(start, end - start)).trimmed();
 }
 
 void Core::onFirstRun() {

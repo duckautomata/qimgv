@@ -5,6 +5,7 @@
 #include <QPen>
 #include <QDebug>
 #include <QPaintEvent>
+#include <QEnterEvent>
 
 class MapOverlay : public QWidget
 {
@@ -66,8 +67,8 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent* event);
     virtual void resizeEvent(QResizeEvent* event);
     virtual void leaveEvent(QEvent *);
-    virtual void enterEvent(QEvent *);
-    
+    void enterEvent(QEnterEvent *) override;
+
 private:
     bool visibilityEnabled, imageDoesNotFit;
     class MapOverlayPrivate;

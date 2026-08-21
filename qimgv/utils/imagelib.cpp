@@ -36,11 +36,21 @@ QImage* ImageLib::cropped(std::shared_ptr<const QImage> src, QRect newRect) {
     return croppedRaw(src.get(), newRect);
 }
 //------------------------------------------------------------------------------
+// QImage::flipped() arrived in Qt 6.9 and mirrored() is deprecated from 6.13,
+// so neither alone spans our supported range (6.5+). This picks the right one.
+static inline QImage flipImage(const QImage &src, Qt::Orientations orientations) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+    return src.flipped(orientations);
+#else
+    return src.mirrored(orientations.testFlag(Qt::Horizontal), orientations.testFlag(Qt::Vertical));
+#endif
+}
+//------------------------------------------------------------------------------
 QImage* ImageLib::flippedHRaw(const QImage *src) {
     if(!src)
         return new QImage();
     else
-        return new QImage(src->mirrored(true, false));
+        return new QImage(flipImage(*src, Qt::Horizontal));
 }
 //------------------------------------------------------------------------------
 QImage* ImageLib::flippedH(std::shared_ptr<const QImage> src) {
@@ -51,7 +61,7 @@ QImage* ImageLib::flippedVRaw(const QImage *src) {
     if(!src)
         return new QImage();
     else
-        return new QImage(src->mirrored(false, true));
+        return new QImage(flipImage(*src, Qt::Vertical));
 }
 //------------------------------------------------------------------------------
 QImage* ImageLib::flippedV(std::shared_ptr<const QImage> src) {

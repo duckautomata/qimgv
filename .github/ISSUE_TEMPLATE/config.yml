@@ -1,0 +1,7 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Upstream qimgv
+    url: https://github.com/easymodo/qimgv/issues
+    about: >-
+      This project is a fork. If your issue is with the original qimgv (from your
+      distro's repos, Chocolatey, or WinGet), report it upstream instead.

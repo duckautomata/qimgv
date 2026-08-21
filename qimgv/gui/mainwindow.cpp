@@ -3,19 +3,9 @@
 // TODO: nuke this and rewrite
 
 MW::MW(QWidget *parent)
-    : FloatingWidgetContainer(parent),
-      currentDisplay(0),
-      maximized(false),
-      activeSidePanel(SIDEPANEL_NONE),
-      copyOverlay(nullptr),
-      saveOverlay(nullptr),
-      renameOverlay(nullptr),
-      infoBarFullscreen(nullptr),
-      imageInfoOverlay(nullptr),
-      floatingMessage(nullptr),
-      cropPanel(nullptr),
-      cropOverlay(nullptr)
-{
+    : FloatingWidgetContainer(parent), currentDisplay(0), maximized(false), activeSidePanel(SIDEPANEL_NONE),
+      cropPanel(nullptr), cropOverlay(nullptr), saveOverlay(nullptr), changelogWindow(nullptr), copyOverlay(nullptr),
+      renameOverlay(nullptr), imageInfoOverlay(nullptr), infoBarFullscreen(nullptr), floatingMessage(nullptr) {
     setAttribute(Qt::WA_TranslucentBackground, true);
     layout.setContentsMargins(0,0,0,0);
     layout.setSpacing(0);
@@ -412,12 +402,8 @@ void MW::restoreWindowGeometry() {
 }
 
 void MW::updateCurrentDisplay() {
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-    currentDisplay = desktopWidget.screenNumber(this);
-#else
     auto screens = qApp->screens();
     currentDisplay = screens.indexOf(this->window()->screen());
-#endif
 }
 
 void MW::onWindowGeometryChanged() {
@@ -426,11 +412,7 @@ void MW::onWindowGeometryChanged() {
 }
 
 void MW::saveCurrentDisplay() {
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-    settings->setLastDisplay(desktopWidget.screenNumber(this));
-#else
     settings->setLastDisplay(qApp->screens().indexOf(this->window()->screen()));
-#endif
 }
 
 //#############################################################
@@ -474,14 +456,12 @@ void MW::mouseReleaseEvent(QMouseEvent *event) {
 
 void MW::mouseDoubleClickEvent(QMouseEvent *event) {
     event->accept();
-    QMouseEvent *fakePressEvent = new QMouseEvent(
-        QEvent::MouseButtonPress,
-        event->pos(),
-        event->button(),
-        event->buttons(),
-        event->modifiers()
-    );
-    actionManager->processEvent(fakePressEvent);
+    // Synthesize the press half of the double-click so that actions bound to
+    // a plain press still fire. Stack-allocated: the previous version used
+    // new without a matching delete, leaking one event per double-click.
+    QMouseEvent fakePressEvent(QEvent::MouseButtonPress, event->position(), event->globalPosition(), event->button(),
+                               event->buttons(), event->modifiers());
+    actionManager->processEvent(&fakePressEvent);
     actionManager->processEvent(event);
 }
 
@@ -490,9 +470,6 @@ void MW::close() {
     saveCurrentDisplay();
     // try to close window sooner
     // since qt6.3 QWidget::close() no longer works on hidden windows (bug?)
-#if QT_VERSION < QT_VERSION_CHECK(6, 3, 0)
-    this->hide();
-#endif
     if(copyOverlay)
         copyOverlay->saveSettings();
     QWidget::close();
@@ -641,11 +618,7 @@ void MW::showFullScreen() {
         saveWindowGeometry();
     auto screens = qApp->screens();
     // todo: why check the screen again?
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-    int _currentDisplay = desktopWidget.screenNumber(this);
-#else
     int _currentDisplay = screens.indexOf(this->window()->screen());
-#endif
     //move to target screen
     if(screens.count() > currentDisplay && currentDisplay != _currentDisplay) {
         this->move(screens.at(currentDisplay)->geometry().x(),
@@ -690,12 +663,23 @@ void MW::hideSaveOverlay() {
     saveOverlay->hide();
 }
 
+// Built on demand, like the other overlays. The member was declared but never
+// constructed, and never null-initialised either, so both of these dereferenced
+// whatever the member happened to hold -- which is why the caller in
+// Core::onUpdate() had been left commented out.
+void MW::setupChangelogWindow() {
+    if(!changelogWindow)
+        changelogWindow = new ChangelogWindow(viewerWidget.get());
+}
+
 void MW::showChangelogWindow() {
+    setupChangelogWindow();
     changelogWindow->show();
 }
 
 void MW::showChangelogWindow(QString text) {
-    changelogWindow->setText(text);
+    setupChangelogWindow();
+    changelogWindow->setMarkdown(text);
     changelogWindow->show();
 }
 
