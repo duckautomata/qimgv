@@ -12,6 +12,9 @@
 find_package(PkgConfig QUIET)
 if(PkgConfig_FOUND)
     pkg_check_modules(Mpv IMPORTED_TARGET mpv>=2.0)
+    # mpv drags in every Requires.private .pc, and some MSYS2 packages hardcode
+    # MSYS-style paths a native CMake cannot resolve. See cmake/PkgConfigFixup.cmake.
+    qimgv_fix_pkgconfig_paths(PkgConfig::Mpv)
 endif()
 
 if(NOT Mpv_FOUND)

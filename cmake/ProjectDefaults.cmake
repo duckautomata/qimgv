@@ -54,6 +54,19 @@ endif()
 # ============================================================================
 macro(qimgv_apply_build_tuning)
     # --- Link-time optimization -------------------------------------------------
+    # GCC's LTO mis-handles COMDAT sections for virtual-destructor thunks on
+    # MinGW. Any class with more than one base -- which is every QWidget that
+    # also implements one of our interfaces, plus everything deriving from
+    # QGraphicsWidget -- gets its .gnu.linkonce.t._ZN..D0Ev section emitted
+    # from two LTO partitions carrying different thunk offsets, and ld calls
+    # that a multiple definition. There is exactly one definition of each class
+    # in the tree, so this is a toolchain bug, not an ODR violation: drop LTO
+    # rather than the classes. Revisit when MinGW GCC fixes it, or link lld.
+    if(QIMGV_LTO AND MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        message(STATUS "LTO disabled: GCC/MinGW mis-links COMDAT thunks under -flto")
+        set(QIMGV_LTO OFF)
+    endif()
+
     if(QIMGV_LTO)
         include(CheckIPOSupported)
         check_ipo_supported(RESULT _qimgv_ipo_ok OUTPUT _qimgv_ipo_msg)

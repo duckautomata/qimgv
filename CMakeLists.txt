@@ -18,6 +18,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(ProjectDefaults)
 include(CompilerWarnings)
+include(PkgConfigFixup)
 include(FeatureSummary)
 
 # ---------------------------------------------------------------------------
@@ -70,6 +71,7 @@ message(STATUS "Qt version: ${Qt6_VERSION} (${Qt6_DIR})")
 if(QIMGV_EXIV2)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(Exiv2 REQUIRED IMPORTED_TARGET exiv2>=0.27)
+    qimgv_fix_pkgconfig_paths(PkgConfig::Exiv2)
 endif()
 
 if(QIMGV_OPENCV)
