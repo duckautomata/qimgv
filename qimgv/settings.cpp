@@ -2,6 +2,12 @@
 
 Settings *settings = nullptr;
 
+// Both helpers are for the non-Linux config path only. Linux keeps its config
+// in XDG locations by convention and installs to read-only prefixes, so there
+// is nothing there to detect and no portable layout to honour -- guarded rather
+// than left dead, since the Linux build treats an unused function as an error.
+#if !defined(__linux__) && !defined(__FreeBSD__)
+
 // qimgv is portable when a "conf" directory sits next to the executable. That
 // is exactly what the released zip ships, so unpacking it anywhere keeps every
 // file the app writes inside that one folder -- and an existing portable setup
@@ -28,6 +34,14 @@ static QString userConfigDir() {
         dir = QDir::homePath() + "/.config";
     return dir + "/" + QCoreApplication::applicationName();
 }
+
+#else
+
+static bool portableMode() {
+    return false;
+}
+
+#endif
 
 Settings::Settings(QObject *parent) : QObject(parent) {
 #if defined(__linux__) || defined(__FreeBSD__)
