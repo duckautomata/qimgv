@@ -289,7 +289,15 @@ void DocumentInfo::loadExifTags() {
     try {
         std::unique_ptr<Exiv2::Image> image;
 
+#if EXIV2_TEST_VERSION(0, 28, 0)
+        // 0.28 dropped the wchar_t overloads of open(), so the only path API
+        // left is a narrow std::string that the CRT decodes with the process
+        // locale. main() puts that locale in UTF-8 mode on Windows, without
+        // which anything outside the ANSI codepage fails to open.
+        image = Exiv2::ImageFactory::open(fileInfo.filePath().toUtf8().toStdString());
+#else
         image = Exiv2::ImageFactory::open(toStdString(fileInfo.filePath()));
+#endif
 
         assert(image.get() != 0);
         image->readMetadata();

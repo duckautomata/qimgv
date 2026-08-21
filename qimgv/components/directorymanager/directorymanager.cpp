@@ -331,8 +331,12 @@ void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, Q
         if(!showHidden && name.startsWith("."))
             continue;
 #else
-        DWORD attributes = GetFileAttributes(entry.path().generic_string().c_str());
-        if(!showHidden && attributes & FILE_ATTRIBUTE_HIDDEN)
+        // UNICODE is defined, so the unsuffixed GetFileAttributes resolves to
+        // the wide variant; path::c_str() is already wchar_t* here and saves a
+        // string copy per entry. INVALID_FILE_ATTRIBUTES has every bit set, so
+        // an unreadable entry would otherwise look hidden and vanish.
+        DWORD attributes = GetFileAttributesW(entry.path().c_str());
+        if(!showHidden && attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN))
             continue;
 #endif
         QString path = QString::fromStdString(entry.path().generic_string());

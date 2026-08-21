@@ -2,6 +2,7 @@
 #include <QCommandLineParser>
 #include <QStyleFactory>
 #include <QEvent>
+#include <clocale>
 
 #include "appversion.h"
 #include "settings.h"
@@ -30,6 +31,14 @@ int main(int argc, char *argv[]) {
     // if this is set by other app, platform plugin may fail to load
     // https://github.com/easymodo/qimgv/issues/410 (upstream)
     qputenv("QT_PLUGIN_PATH","");
+
+    // Put the CRT's narrow-string functions in UTF-8 mode. exiv2 >= 0.28 has
+    // no wide-path API left, so DocumentInfo::loadExifTags() has to hand it a
+    // narrow path -- and the CRT would otherwise decode that as the ANSI
+    // codepage and fail on any name outside it. Set before any thread starts;
+    // setlocale mutates process-global state. LC_CTYPE only, so LC_NUMERIC
+    // keeps the C locale and number parsing is unaffected.
+    std::setlocale(LC_CTYPE, ".UTF8");
 #endif
 
     // for hidpi testing
