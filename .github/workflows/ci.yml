@@ -41,7 +41,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             ninja-build \
             libexiv2-dev \
-            libopencv-core-dev libopencv-imgproc-dev \
+            libopencv-dev \
             libmpv-dev \
             libgl1-mesa-dev libxkbcommon-dev libvulkan-dev \
             libcups2-dev
@@ -129,7 +129,9 @@ jobs:
         run: ctest --preset ci
 
       - name: Package
-        run: ./scripts/package-windows.sh
+        # This job builds the ci preset; package-windows.sh defaults to the
+        # windows-msys2 one, which only the release workflow produces.
+        run: BUILD_DIR=build/ci ./scripts/package-windows.sh
 
       - uses: actions/upload-artifact@v7
         with:
@@ -178,9 +180,20 @@ jobs:
           # base nor HEAD^ exists and every git diff below dies on "bad object".
           fetch-depth: 0
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Check formatting of changed lines
         run: |
-          sudo apt-get update && sudo apt-get install -y clang-format
+          # Pinned, and from PyPI rather than apt. clang-format's output shifts
+          # between releases -- Ubuntu's 18.1.3 and the 22.x in MSYS2 disagree
+          # about where to break a long operator<< chain, so an unpinned check
+          # fails on code that is correctly formatted for the other version.
+          # The wheel is the same binary on Linux, macOS and Windows, so
+          # contributors can install the exact version this job uses:
+          #     pip install clang-format==22.1.8
+          pip install "clang-format==22.1.8"
           clang-format --version
 
           base="${{ github.event.pull_request.base.sha }}"
