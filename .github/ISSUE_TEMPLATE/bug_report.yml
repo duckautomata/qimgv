@@ -1,0 +1,71 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: if an image format won't open, run `qimgv --build-options`
+        and check whether the relevant image plugin is listed. Missing plugins are
+        the most common cause and are fixed by installing them, not by a code change.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what actually happened.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a folder containing ...
+        2. Press ...
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: qimgv version
+      description: Output of `qimgv --version`
+      placeholder: qimgv 1.1.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: How did you install it?
+      options:
+        - Windows release zip
+        - Built from source
+        - Distro package
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "Windows 11 24H2 / Fedora 42 / macOS 15.2"
+    validations:
+      required: true
+
+  - type: textarea
+    id: build-options
+    attributes:
+      label: Output of `qimgv --build-options`
+      description: Shows which optional features and image plugins are active.
+      render: text
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Console output, a sample file, screenshots.

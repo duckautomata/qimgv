@@ -1,0 +1,178 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main, dev]
+    paths-ignore: ['**.md', 'docs/**', 'LICENSE']
+  pull_request:
+    branches: [master, main, dev]
+    paths-ignore: ['**.md', 'docs/**', 'LICENSE']
+  workflow_dispatch:
+
+# A newer push to the same branch cancels the older run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  linux:
+    name: Linux (Qt ${{ matrix.qt }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The oldest Qt we claim to support. If this breaks, either fix the
+          # code or raise the floor in CMakeLists.txt -- do not just bump this.
+          - qt: '6.5.3'
+            preset: ci
+          - qt: '6.10.1'
+            preset: ci
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build \
+            libexiv2-dev \
+            libopencv-core-dev libopencv-imgproc-dev \
+            libmpv-dev \
+            libgl1-mesa-dev libxkbcommon-dev libvulkan-dev \
+            libcups2-dev
+          # Image plugins so the AVIF/HEIF/JXL tests actually run instead of
+          # skipping. Non-fatal: the tests QSKIP cleanly if these are absent.
+          sudo apt-get install -y --no-install-recommends \
+            kimageformats6-plugins qt6-image-formats-plugins || \
+            echo "::warning::image format plugins unavailable; codec tests will skip"
+
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ matrix.qt }}
+          modules: qtimageformats
+          cache: true
+
+      - uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: linux-qt${{ matrix.qt }}
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }}
+
+      - name: Test
+        run: ctest --preset ${{ matrix.preset }}
+
+  # ---------------------------------------------------------------------------
+  windows:
+    name: Windows (MSYS2 UCRT64)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          # Everything qimgv needs is a prebuilt MSYS2 package. kimageformats
+          # supplies the AVIF / JPEG XL / HEIF Qt image plugins in one go.
+          install: >-
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-ccache
+            mingw-w64-ucrt-x86_64-qt6-base
+            mingw-w64-ucrt-x86_64-qt6-svg
+            mingw-w64-ucrt-x86_64-qt6-imageformats
+            mingw-w64-ucrt-x86_64-qt6-tools
+            mingw-w64-ucrt-x86_64-kimageformats
+            mingw-w64-ucrt-x86_64-opencv
+            mingw-w64-ucrt-x86_64-exiv2
+            mingw-w64-ucrt-x86_64-mpv
+
+      # -Werror is deliberately OFF here. The Windows-only sources have never
+      # been built with -Wall -Wextra, and a new platform warning must not
+      # block producing the binary. Turn it on once Windows is warning-clean.
+      - name: Configure
+        run: cmake --preset ci -DQIMGV_WERROR=OFF
+
+      - name: Build
+        run: cmake --build --preset ci
+
+      - name: Warning summary
+        if: always()
+        run: |
+          cmake --build --preset ci --clean-first 2>&1 | grep -E "warning:" | sort -u > warnings.txt || true
+          echo "::notice::$(wc -l < warnings.txt) unique warnings on Windows"
+          head -50 warnings.txt
+
+      - name: Test
+        run: ctest --preset ci
+
+      - name: Package
+        run: ./scripts/package-windows.sh
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: qimgv-windows-x64
+          path: build/dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  macos:
+    name: macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: brew install ninja exiv2 opencv mpv pkgconf ccache
+
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.10.1'
+          modules: qtimageformats
+          cache: true
+
+      - uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: macos
+
+      - name: Configure
+        run: cmake --preset macos -DQIMGV_WERROR=OFF
+
+      - name: Build
+        run: cmake --build --preset macos
+
+      - name: Test
+        run: ctest --preset macos
+
+  # ---------------------------------------------------------------------------
+  format:
+    name: clang-format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check formatting of changed files
+        run: |
+          sudo apt-get update && sudo apt-get install -y clang-format
+          # Only check files this PR touched -- the tree is not fully
+          # formatted yet and a wholesale reformat would bury real diffs.
+          base="${{ github.event.pull_request.base.sha || 'HEAD~1' }}"
+          files=$(git diff --name-only --diff-filter=ACM "$base" \
+                  | grep -E '\.(cpp|h|hpp)$' \
+                  | grep -v '3rdparty/' || true)
+          if [ -z "$files" ]; then echo "no C++ files changed"; exit 0; fi
+          echo "$files"
+          clang-format --dry-run --Werror $files
