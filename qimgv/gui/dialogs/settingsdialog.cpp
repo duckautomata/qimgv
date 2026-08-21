@@ -113,6 +113,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->langComboBox->insertItem(0, "System language");
 
     connect(this, &SettingsDialog::settingsChanged, settings, &Settings::sendChangeNotification);
+    initUpdateCheck();
     readSettings();
 
     adjustSizeToContents();
@@ -164,6 +165,7 @@ void SettingsDialog::setupSidebar() {
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::readSettings() {
+    ui->checkUpdatesCheckBox->setChecked(settings->checkForUpdates());
     ui->loopSlideshowCheckBox->setChecked(settings->loopSlideshow());
     ui->videoPlaybackCheckBox->setChecked(settings->videoPlayback());
     ui->videoPlaybackGroupContents->setEnabled(settings->videoPlayback());
@@ -301,6 +303,7 @@ void SettingsDialog::saveSettings() {
         QThreadPool::globalInstance()->waitForDone();
     }
 
+    settings->setCheckForUpdates(ui->checkUpdatesCheckBox->isChecked());
     settings->setLoopSlideshow(ui->loopSlideshowCheckBox->isChecked());
     settings->setFullscreenMode(ui->fullscreenCheckBox->isChecked());
     if(ui->fitModeWindow->isChecked())
@@ -413,6 +416,30 @@ void SettingsDialog::saveSettings() {
 void SettingsDialog::saveSettingsAndClose() {
     saveSettings();
     this->close();
+}
+//------------------------------------------------------------------------------
+// The manual check on the About page. This is the only place an update check
+// ever reports anything: a result is a line of text next to the button, never a
+// dialog, and a newer version is offered as a link rather than opened for you.
+void SettingsDialog::initUpdateCheck() {
+    connect(ui->checkUpdatesButton, &QPushButton::clicked, this, [this]() {
+        ui->checkUpdatesButton->setEnabled(false);
+        ui->updateStatusLabel->setText(tr("Checking..."));
+        updateChecker.check();
+    });
+    connect(&updateChecker, &UpdateChecker::updateAvailable, this, [this](QVersionNumber version, QString url) {
+        ui->checkUpdatesButton->setEnabled(true);
+        ui->updateStatusLabel->setText(
+            tr("Version %1 is available - <a href=\"%2\">open releases page</a>").arg(version.toString(), url));
+    });
+    connect(&updateChecker, &UpdateChecker::upToDate, this, [this]() {
+        ui->checkUpdatesButton->setEnabled(true);
+        ui->updateStatusLabel->setText(tr("%1 is up to date").arg(QApplication::applicationVersion()));
+    });
+    connect(&updateChecker, &UpdateChecker::checkFailed, this, [this](QString reason) {
+        ui->checkUpdatesButton->setEnabled(true);
+        ui->updateStatusLabel->setText(tr("Could not check: %1").arg(reason));
+    });
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::readColorScheme() {
