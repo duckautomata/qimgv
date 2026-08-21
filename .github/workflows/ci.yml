@@ -173,15 +173,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Check formatting of changed files
+        with:
+          # The default shallow clone holds a single commit, so neither the PR
+          # base nor HEAD^ exists and every git diff below dies on "bad object".
+          fetch-depth: 0
+
+      - name: Check formatting of changed lines
         run: |
           sudo apt-get update && sudo apt-get install -y clang-format
-          # Only check files this PR touched -- the tree is not fully
-          # formatted yet and a wholesale reformat would bury real diffs.
-          base="${{ github.event.pull_request.base.sha || 'HEAD~1' }}"
+          clang-format --version
+
+          base="${{ github.event.pull_request.base.sha }}"
+          [ -n "$base" ] || base=$(git rev-parse HEAD^ 2>/dev/null || git rev-parse HEAD)
+          echo "diffing against $base"
+
+          # Checked per changed LINE, not per changed file. The tree predates
+          # .clang-format: whole-file checking fails on thousands of untouched
+          # pre-existing lines, and reformatting them wholesale would bury the
+          # real diffs. This holds new code to the style without dragging its
+          # neighbours along.
           files=$(git diff --name-only --diff-filter=ACM "$base" \
                   | grep -E '\.(cpp|h|hpp)$' \
                   | grep -v '3rdparty/' || true)
           if [ -z "$files" ]; then echo "no C++ files changed"; exit 0; fi
-          echo "$files"
-          clang-format --dry-run --Werror $files
+
+          status=0
+          for f in $files; do
+            # Each hunk header's "+start,count" becomes a --lines=start:end.
+            ranges=$(git diff -U0 "$base" -- "$f" \
+                     | sed -n 's/^@@ -[^ ]* +\([0-9]*\),\{0,1\}\([0-9]*\) @@.*/\1 \2/p' \
+                     | awk '{ n = ($2 == "" ? 1 : $2); if (n > 0) printf "--lines=%d:%d ", $1, $1 + n - 1 }')
+            [ -z "$ranges" ] && continue
+            if ! clang-format --dry-run --Werror $ranges "$f"; then
+              status=1
+            fi
+          done
+          if [ $status -ne 0 ]; then
+            echo "::error::changed lines are not clang-formatted. Fix with: git clang-format $base"
+          fi
+          exit $status
