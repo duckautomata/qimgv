@@ -30,15 +30,34 @@ means CI will almost certainly agree.
 
 ## Code style
 
-`.clang-format` matches the existing codebase — 4 spaces, attached braces, `if(cond)` with no space
-before the paren, 120 column limit. Format only the lines you touch:
+`.clang-format` matches the codebase — 4 spaces, attached braces, `if(cond)` with no space before the
+paren, 120 column limit. The whole tree conforms, and CI checks every file, so run it before you push:
+
+```bash
+clang-format -i $(git ls-files '*.cpp' '*.h' '*.hpp' | grep -v 3rdparty/)
+```
+
+Or just the files you touched, which is usually enough:
 
 ```bash
 git clang-format
 ```
 
-**Please don't reformat files wholesale.** The tree isn't fully formatted yet, and a blanket reformat
-buries real changes in noise. CI only checks files your PR modifies.
+**Use the version CI uses**, or you will chase differences that are not yours — clang-format changes
+its mind between releases about things like where to break a long `operator<<` chain:
+
+```bash
+pip install clang-format==22.1.8
+```
+
+One-time setup so `git blame` skips the commit that reformatted the tree, and points at whoever last
+changed a line's meaning instead:
+
+```bash
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
+`qimgv/3rdparty/` is vendored and deliberately left unformatted.
 
 Other conventions:
 

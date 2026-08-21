@@ -1,0 +1,12 @@
+# Commits that changed formatting and nothing else. `git blame` skips them, so
+# a line's history points at whoever last changed its meaning rather than at a
+# mass reformat.
+#
+# GitHub honours this file automatically. For local git, once per clone:
+#
+#     git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# Only add commits that are purely mechanical.
+
+# style: clang-format the entire tree
+230e1ef3a461326285fc1de381d8d17d4d229e1a
