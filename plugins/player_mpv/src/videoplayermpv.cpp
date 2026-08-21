@@ -27,6 +27,10 @@ VideoPlayerMpv::VideoPlayerMpv(QWidget *parent) : VideoPlayer(parent) {
     connect(m_mpv, SIGNAL(playbackFinished()), this, SIGNAL(playbackFinished()));
 }
 
+void VideoPlayerMpv::setBackgroundColor(QColor color) {
+    m_mpv->setBackgroundColor(color);
+}
+
 bool VideoPlayerMpv::showVideo(QString file) {
     if(file.isEmpty())
         return false;

@@ -10,6 +10,8 @@
 #include "qthelper.hpp"
 
 #include <QDebug>
+#include <QColor>
+#include <QPainter>
 #include <ctime>
 #include <QSurfaceFormat>
 #include <QTimer>
@@ -35,6 +37,8 @@ public:
     }
     void setMuted(bool mode);
     void setRepeat(bool mode);
+    // Colour transparent video is composited onto. See paintGL().
+    void setBackgroundColor(QColor color);
 
     // Returns the QSurfaceFormat qimgv must install before the first
     // QOpenGLWidget is created, so that video with an alpha channel
@@ -54,6 +58,10 @@ signals:
 protected:
     void initializeGL() override;
     void paintGL() override;
+
+private:
+    void renderMpv();
+    QColor mBackgroundColor = Qt::black;
 
 private slots:
     void on_mpv_events();

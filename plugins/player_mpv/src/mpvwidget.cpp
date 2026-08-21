@@ -19,6 +19,17 @@ static bool setMpvOption(mpv_handle *mpv, const char *name, const char *value) {
     return true;
 }
 
+// Same rationale as setMpvOption(), for properties set after mpv_initialize().
+static bool setMpvProperty(mpv_handle *mpv, const char *name, const QString &value) {
+    const int rc = mpv::qt::set_property(mpv, QString::fromLatin1(name), value);
+    if(rc < 0) {
+        qDebug() << "[mpv] property" << name << "=" << value
+                 << "rejected:" << mpv_error_string(rc);
+        return false;
+    }
+    return true;
+}
+
 static void wakeup(void *ctx) {
     QMetaObject::invokeMethod((MpvWidget*)ctx, "on_mpv_events", Qt::QueuedConnection);
 }
@@ -129,7 +140,22 @@ void MpvWidget::initializeGL() {
     mpv_render_context_set_update_callback(mpv_gl, MpvWidget::on_update, reinterpret_cast<void *>(this));
 }
 
-void MpvWidget::paintGL() {
+void MpvWidget::setBackgroundColor(QColor color) {
+    if(mBackgroundColor == color)
+        return;
+    mBackgroundColor = color;
+    // The composite in paintGL() only reaches pixels mpv left transparent. The
+    // letterbox bars mpv draws around a video whose aspect does not match the
+    // widget are opaque, so they stay black however we composite underneath --
+    // a visible seam against the rest of the window. Hand mpv the same colour.
+    if(mpv)
+        setMpvProperty(mpv, "background-color", color.name(QColor::HexRgb));
+    update();
+}
+
+// Draws the current frame. Split out of paintGL() because the minimized-window
+// path in maybeUpdate() drives it directly, with no QPainter in scope.
+void MpvWidget::renderMpv() {
     // Tell mpv the target has 8 bits of alpha so it emits transparent pixels
     // rather than compositing onto black itself.
     mpv_opengl_fbo mpfbo{static_cast<int>(defaultFramebufferObject()),
@@ -144,6 +170,24 @@ void MpvWidget::paintGL() {
     // See render_gl.h on what OpenGL environment mpv expects, and
     // other API details.
     mpv_render_context_render(mpv_gl, params);
+}
+
+void MpvWidget::paintGL() {
+    QPainter painter(this);
+
+    painter.beginNativePainting();
+    renderMpv();
+    painter.endNativePainting();
+
+    // With "background=none" mpv leaves genuinely transparent pixels wherever
+    // the video carries alpha (ProRes 4444, VP9/AV1 alpha, transparent WebM).
+    // Qt hands this widget's alpha straight to the translucent top-level
+    // window, so those pixels show the user's desktop rather than qimgv --
+    // and painting a background on an ancestor widget does not help, because
+    // the GL content is not blended against the backing store. It has to be
+    // composited here, under what mpv just drew, while we still own the alpha.
+    painter.setCompositionMode(QPainter::CompositionMode_DestinationOver);
+    painter.fillRect(rect(), mBackgroundColor);
 }
 
 void MpvWidget::on_mpv_events() {
@@ -195,7 +239,7 @@ void MpvWidget::maybeUpdate() {
     //       to a different workspace with a reparenting window manager.
     if(window()->isMinimized()) {
         makeCurrent();
-        paintGL();
+        renderMpv();   // nothing is visible; skip the QPainter composite
         context()->swapBuffers(context()->surface());
         doneCurrent();
     } else {

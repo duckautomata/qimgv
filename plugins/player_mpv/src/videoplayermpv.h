@@ -18,6 +18,7 @@ public:
     bool showVideo(QString file);
     void setVideoUnscaled(bool mode);
     int volume();
+    void setBackgroundColor(QColor color) override;
 
 public slots:
     void seek(int pos);

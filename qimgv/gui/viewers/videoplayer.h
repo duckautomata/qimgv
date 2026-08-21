@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include <QColor>
 
 class VideoPlayer : public QWidget {
     Q_OBJECT
@@ -22,6 +23,9 @@ public:
     virtual int volume() = 0;
     virtual void setVideoUnscaled(bool mode) = 0;
     virtual void setLoopPlayback(bool mode) = 0;
+    // The colour the player must composite transparent video onto. Not pure:
+    // a backend without alpha support can simply ignore it.
+    virtual void setBackgroundColor(QColor) {}
 
 signals:
     void durationChanged(int value);

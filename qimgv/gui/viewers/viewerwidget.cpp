@@ -551,6 +551,7 @@ void ViewerWidget::showContextMenu(QPoint pos) {
 
 void ViewerWidget::onFullscreenModeChanged(bool mode) {
     imageViewer->onFullscreenModeChanged(mode);
+    videoPlayer->onFullscreenModeChanged(mode);
     mIsFullscreen = mode;
 }
 
