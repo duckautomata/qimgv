@@ -48,11 +48,16 @@ jobs:
             libmpv-dev \
             libgl1-mesa-dev libxkbcommon-dev libvulkan-dev \
             libcups2-dev
-          # Image plugins so the AVIF/HEIF/JXL tests actually run instead of
-          # skipping. Non-fatal: the tests QSKIP cleanly if these are absent.
-          sudo apt-get install -y --no-install-recommends \
-            kimageformats6-plugins qt6-image-formats-plugins || \
-            echo "::warning::image format plugins unavailable; codec tests will skip"
+          # No AVIF/HEIF plugins here, deliberately. They come from the KDE
+          # kimageformats project, which Ubuntu does not package in any
+          # release, so the install this used to attempt could only ever
+          # fail -- and it took qt6-image-formats-plugins down with it,
+          # because apt aborts the whole command on one unknown name.
+          # Even that package would be invisible: this job runs the Qt from
+          # install-qt-action, which scans its own plugin directory and not
+          # the system one. decodesAnimatedAvif() therefore QSKIPs on Linux,
+          # and Windows CI is what covers real AVIF decoding. The Qt-native
+          # extra formats arrive via the qtimageformats module below.
 
       - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730  # v4.3.1
         with:
@@ -192,7 +197,7 @@ jobs:
           # base nor HEAD^ exists and every git diff below dies on "bad object".
           fetch-depth: 0
 
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
         with:
           python-version: '3.12'
 
