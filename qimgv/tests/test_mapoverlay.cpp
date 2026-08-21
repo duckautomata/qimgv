@@ -1,53 +1,65 @@
 #include "test_mapoverlay.h"
 
 #include <QtTest>
-#include "../overlays/mapoverlay.h"
+#include "gui/overlays/mapoverlay.h"
 
-QTEST_MAIN(Test_MapOverlay);
+namespace {
+// MapOverlay computes its geometry in float but exposes QSizeF (double), so
+// the low bits never match a double-precision expectation exactly.
+constexpr qreal kEpsilon = 1e-4;
+
+bool sizesAreClose(QSizeF a, QSizeF b) {
+    return qAbs(a.width() - b.width()) < kEpsilon
+        && qAbs(a.height() - b.height()) < kEpsilon;
+}
+} // namespace
+
+// Reports both sizes on failure, unlike a bare QVERIFY.
+#define COMPARE_SIZES(actual, expected)                                        \
+    QVERIFY2(sizesAreClose((actual), (expected)),                              \
+             qPrintable(QStringLiteral("actual %1x%2 != expected %3x%4")       \
+                            .arg((actual).width()).arg((actual).height())      \
+                            .arg((expected).width()).arg((expected).height())))
 
 void Test_MapOverlay::initTestCase() {
-    // Called before the first testfunction is executed
-    QSize windowSize(200, 100);
-    QSizeF drawingSize(1400, 1200);
-
-    QWidget *parent = new QWidget();
-    parent->resize(windowSize);
+    parent = new QWidget();
+    parent->resize(kWindowSize);
 
     minimap = new MapOverlay(parent);
-    minimap->updateMap(QRectF(QPoint(0, 0), drawingSize));
-
-    /**
-     * Drawing area scaled to fit 100x100 rectangle
-     * ScaleFactor = 14
-     * width  = 100
-     * height = 1200 / 14
-     */
-    compare(minimap->outer(), QSizeF(100, (float) 1200 / 14));
-
-    /**
-     * Windows area scaled relative drawing area
-     * ScaleFactor = 14
-     * width  = 200 / 14
-     * height = 100 / 14
-     */
-    compare(minimap->inner(), QSizeF((float) 200 / 14, (float) 100 / 14));
-}
-
-bool Test_MapOverlay::compare(const QSizeF &a, const QSizeF &b) const {
-    return (qFuzzyCompare(a.width(), b.width()) && qFuzzyCompare(a.height(), b.height()));
+    minimap->updateMap(QRectF(QPointF(0, 0), kDrawingSize));
 }
 
 void Test_MapOverlay::cleanupTestCase() {
-    // Called after the last testfunction was executed
-    delete minimap;
+    delete parent; // owns minimap
+    parent = nullptr;
+    minimap = nullptr;
 }
 
-void Test_MapOverlay::init() {
-    // Called before each testfunction is executed
+// The drawing area is scaled down to fit a square of minimap->size(),
+// preserving aspect ratio. The longest side therefore lands exactly on
+// the map size.
+void Test_MapOverlay::outerFitsMapPreservingAspect() {
+    const qreal mapSize = minimap->size();
+    const qreal scale = kDrawingSize.width() / mapSize; // width is the long side here
+    const QSizeF expected(kDrawingSize.width() / scale, kDrawingSize.height() / scale);
+
+    COMPARE_SIZES(minimap->outer(), expected);
+    QVERIFY(qAbs(minimap->outer().width() - mapSize) < kEpsilon);
 }
 
-void Test_MapOverlay::cleanup() {
-    // Called after every testfunction
+// The inner rect represents the visible window, expressed in the same scale
+// as the outer rect.
+void Test_MapOverlay::innerMatchesScaledWindowArea() {
+    const qreal scale = kDrawingSize.width() / qreal(minimap->size());
+    const QSizeF expected(kWindowSize.width() / scale, kWindowSize.height() / scale);
+
+    COMPARE_SIZES(minimap->inner(), expected);
 }
 
-#include "test_mapoverlay.moc"
+// The inner rect can never escape the outer rect.
+void Test_MapOverlay::innerNeverExceedsOuter() {
+    QVERIFY(minimap->inner().width()  <= minimap->outer().width());
+    QVERIFY(minimap->inner().height() <= minimap->outer().height());
+}
+
+QTEST_MAIN(Test_MapOverlay)
