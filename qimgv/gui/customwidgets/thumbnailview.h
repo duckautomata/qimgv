@@ -72,6 +72,11 @@ private:
     QTimer loadTimer;
     bool blockThumbnailLoading;
 
+    // populate() drains the event queue while it rebuilds, so it can be
+    // re-entered. See the comment on its definition.
+    bool populating = false;
+    int pendingPopulateCount = -1;
+
     int mDrawScrollbarIndicator, lastScrollFrameTime;
     QList<int> mSelection;
 

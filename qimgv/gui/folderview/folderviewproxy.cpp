@@ -6,7 +6,9 @@ FolderViewProxy::FolderViewProxy(QWidget *parent) : QWidget(parent), folderView(
 }
 
 void FolderViewProxy::init() {
-    qApp->processEvents(); // chew through events in case we have something that alters stateBuf in queue
+    // Non-user events only: this runs before the lock below, so letting a click
+    // or a keypress through here could start a second init of the same widget.
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents); // drain anything queued that alters stateBuf
     QMutexLocker ml(&m);
     if(folderView)
         return;
@@ -38,7 +40,7 @@ void FolderViewProxy::init() {
     folderView->select(stateBuf.selection);
     // wait till layout stuff happens
     // before calling focusOn()
-    qApp->processEvents();
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
     folderView->focusOnSelection();
     folderView->onSortingChanged(stateBuf.sortingMode);
 }

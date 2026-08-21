@@ -198,14 +198,33 @@ void ThumbnailView::show() {
 void ThumbnailView::showEvent(QShowEvent *event) {
     QGraphicsView::showEvent(event);
     // ensure we are properly resized
-    qApp->processEvents();
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
     updateScrollbarIndicator();
     loadVisibleThumbnails();
 }
 
+// Rebuilds the item list for a directory of newCount files.
+//
+// This drains the event queue twice, to let queued layout work settle before it
+// deletes items and again before it repaints. Draining means anything queued can
+// run here, including another populate() -- and removeAll() is scene.clear(),
+// which deletes every widget the outer call is working with. Re-entering was
+// easiest to hit exactly where it hurt most: a slow directory, a user who keeps
+// clicking because it is slow, and a rebuild in progress.
+//
+// Two things stop that. Only non-user events are drained, so a click or a
+// keypress can no longer start a second rebuild from inside this one. And if a
+// re-entrant call arrives anyway -- a queued signal, a file watcher event -- it
+// is recorded rather than run, and applied once the outer call has unwound.
 void ThumbnailView::populate(int newCount) {
+    if(populating) {
+        pendingPopulateCount = newCount;
+        return;
+    }
+    populating = true;
+
     // wait for possible queued layout events before removing items
-    qApp->processEvents();
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 
     clearSelection();
     // reset
@@ -264,9 +283,16 @@ void ThumbnailView::populate(int newCount) {
     resetViewport();
     // qDebug() << "_______POPULATE" << this << t.elapsed();
     //  wait for layout before updating
-    qApp->processEvents();
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
     this->setUpdatesEnabled(true);
     loadVisibleThumbnails();
+
+    populating = false;
+    if(pendingPopulateCount >= 0) {
+        int const pending = pendingPopulateCount;
+        pendingPopulateCount = -1;
+        populate(pending);
+    }
 }
 
 void ThumbnailView::addItem() {
