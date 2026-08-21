@@ -33,7 +33,7 @@ jobs:
           - qt: '6.10.1'
             preset: ci
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Install system dependencies
         run: |
@@ -51,13 +51,13 @@ jobs:
             kimageformats6-plugins qt6-image-formats-plugins || \
             echo "::warning::image format plugins unavailable; codec tests will skip"
 
-      - uses: jurplel/install-qt-action@v4
+      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730  # v4.3.1
         with:
           version: ${{ matrix.qt }}
           modules: qtimageformats
           cache: true
 
-      - uses: hendrikmuhs/ccache-action@v1
+      - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03  # v1.2.23
         with:
           key: linux-qt${{ matrix.qt }}
 
@@ -78,9 +78,9 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - uses: msys2/setup-msys2@v2
+      - uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884  # v2.32.0
         with:
           msystem: UCRT64
           update: true
@@ -133,7 +133,7 @@ jobs:
         # windows-msys2 one, which only the release workflow produces.
         run: BUILD_DIR=build/ci ./scripts/package-windows.sh
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: qimgv-windows-x64
           path: build/dist/
@@ -145,18 +145,18 @@ jobs:
     name: macOS
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Install dependencies
         run: brew install ninja exiv2 opencv mpv pkgconf ccache
 
-      - uses: jurplel/install-qt-action@v4
+      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730  # v4.3.1
         with:
           version: '6.10.1'
           modules: qtimageformats
           cache: true
 
-      - uses: hendrikmuhs/ccache-action@v1
+      - uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03  # v1.2.23
         with:
           key: macos
 
@@ -174,13 +174,13 @@ jobs:
     name: clang-format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           # The default shallow clone holds a single commit, so neither the PR
           # base nor HEAD^ exists and every git diff below dies on "bad object".
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
         with:
           python-version: '3.12'
 
