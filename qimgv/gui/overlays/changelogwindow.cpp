@@ -28,6 +28,12 @@ void ChangelogWindow::setText(QString text) {
     ui->textBrowser->setText(text);
 }
 
+// The changelog ships as markdown (see resources.qrc), so let QTextBrowser
+// render the headings and bullets instead of showing the raw source.
+void ChangelogWindow::setMarkdown(QString text) {
+    ui->textBrowser->setMarkdown(text);
+}
+
 void ChangelogWindow::paintEvent(QPaintEvent *) {
     QStyleOption opt;
     opt.initFrom(this);

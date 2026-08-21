@@ -121,6 +121,7 @@ private:
     void setupCropPanel();
     void setupCopyOverlay();
     void setupSaveOverlay();
+    void setupChangelogWindow();
     void setupRenameOverlay();
     void preShowResize(QSize sz);
     void setInteractionEnabled(bool mode);

@@ -4,8 +4,8 @@
 
 MW::MW(QWidget *parent)
     : FloatingWidgetContainer(parent), currentDisplay(0), maximized(false), activeSidePanel(SIDEPANEL_NONE),
-      cropPanel(nullptr), cropOverlay(nullptr), saveOverlay(nullptr), copyOverlay(nullptr), renameOverlay(nullptr),
-      imageInfoOverlay(nullptr), infoBarFullscreen(nullptr), floatingMessage(nullptr) {
+      cropPanel(nullptr), cropOverlay(nullptr), saveOverlay(nullptr), changelogWindow(nullptr), copyOverlay(nullptr),
+      renameOverlay(nullptr), imageInfoOverlay(nullptr), infoBarFullscreen(nullptr), floatingMessage(nullptr) {
     setAttribute(Qt::WA_TranslucentBackground, true);
     layout.setContentsMargins(0,0,0,0);
     layout.setSpacing(0);
@@ -663,12 +663,23 @@ void MW::hideSaveOverlay() {
     saveOverlay->hide();
 }
 
+// Built on demand, like the other overlays. The member was declared but never
+// constructed, and never null-initialised either, so both of these dereferenced
+// whatever the member happened to hold -- which is why the caller in
+// Core::onUpdate() had been left commented out.
+void MW::setupChangelogWindow() {
+    if(!changelogWindow)
+        changelogWindow = new ChangelogWindow(viewerWidget.get());
+}
+
 void MW::showChangelogWindow() {
+    setupChangelogWindow();
     changelogWindow->show();
 }
 
 void MW::showChangelogWindow(QString text) {
-    changelogWindow->setText(text);
+    setupChangelogWindow();
+    changelogWindow->setMarkdown(text);
     changelogWindow->show();
 }
 

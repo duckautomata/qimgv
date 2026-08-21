@@ -56,6 +56,7 @@ private:
     void onUpdate();
     void onFirstRun();
     void initUpdateChecker();
+    QString changelogForCurrentVersion();
 
     // ui stuff
     MW *mw;
