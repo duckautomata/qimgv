@@ -85,7 +85,11 @@ jobs:
           msystem: UCRT64
           update: true
           # Everything qimgv needs is a prebuilt MSYS2 package. kimageformats
-          # supplies the AVIF / JPEG XL / HEIF Qt image plugins in one go.
+          # supplies the AVIF / JPEG XL / HEIF Qt image plugins in one go, but
+          # only *optionally* depends on the libraries behind them -- without
+          # libavif/libheif/libraw/karchive those plugins install and then fail
+          # to load, and the AVIF tests silently skip. Keep in sync with
+          # scripts/setup-msys2.sh.
           install: >-
             mingw-w64-ucrt-x86_64-toolchain
             mingw-w64-ucrt-x86_64-cmake
@@ -96,13 +100,18 @@ jobs:
             mingw-w64-ucrt-x86_64-qt6-imageformats
             mingw-w64-ucrt-x86_64-qt6-tools
             mingw-w64-ucrt-x86_64-kimageformats
+            mingw-w64-ucrt-x86_64-libavif
+            mingw-w64-ucrt-x86_64-libheif
+            mingw-w64-ucrt-x86_64-libraw
+            mingw-w64-ucrt-x86_64-karchive
             mingw-w64-ucrt-x86_64-opencv
             mingw-w64-ucrt-x86_64-exiv2
             mingw-w64-ucrt-x86_64-mpv
 
-      # -Werror is deliberately OFF here. The Windows-only sources have never
-      # been built with -Wall -Wextra, and a new platform warning must not
-      # block producing the binary. Turn it on once Windows is warning-clean.
+      # -Werror is deliberately OFF here so a new platform warning cannot block
+      # producing the binary. The Windows build is now warning-clean locally
+      # (GCC 16.1.0, Release); flip this on once CI has been green once and we
+      # know what the runner's toolchain emits.
       - name: Configure
         run: cmake --preset ci -DQIMGV_WERROR=OFF
 

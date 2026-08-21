@@ -23,7 +23,11 @@ PACKAGES=(
     # Qt
     "$P-qt6-base" "$P-qt6-svg" "$P-qt6-imageformats" "$P-qt6-tools"
     # image codecs: AVIF (incl. animated), HEIF, JPEG XL, QOI, PSD, RAW, ...
-    "$P-kimageformats"
+    # kimageformats ships kimg_avif/kimg_heif/kimg_raw/kimg_kra unconditionally
+    # but only *optionally* depends on the libraries behind them. Without these
+    # the plugins install and then fail to load, so avif/heic/raw silently
+    # disappear from QImageReader::supportedImageFormats().
+    "$P-kimageformats" "$P-libavif" "$P-libheif" "$P-libraw" "$P-karchive"
     # features
     "$P-opencv" "$P-exiv2" "$P-mpv"
     # convenience
@@ -42,6 +46,11 @@ printf '    %-10s %s\n' qt6    "$(qmake6 -query QT_VERSION 2>/dev/null || echo '
 printf '    %-10s %s\n' mpv    "$(pkg-config --modversion mpv 2>/dev/null || echo '?')"
 printf '    %-10s %s\n' exiv2  "$(pkg-config --modversion exiv2 2>/dev/null || echo '?')"
 printf '    %-10s %s\n' opencv "$(pkg-config --modversion opencv4 2>/dev/null || echo '?')"
+
+echo
+echo "==> Note: after building, check the codecs actually loaded with"
+echo "      ./build/dev/bin/qimgv.exe --build-options"
+echo "    avif, heic, jxl and webp should all be [x]."
 
 echo
 echo "==> Done. Next:"
