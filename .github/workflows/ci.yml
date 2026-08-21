@@ -22,6 +22,9 @@ jobs:
   linux:
     name: Linux (Qt ${{ matrix.qt }})
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -74,6 +77,9 @@ jobs:
   windows:
     name: Windows (MSYS2 UCRT64)
     runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
     defaults:
       run:
         shell: msys2 {0}
@@ -144,6 +150,9 @@ jobs:
   macos:
     name: macOS
     runs-on: macos-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
@@ -173,6 +182,9 @@ jobs:
   format:
     name: clang-format
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:

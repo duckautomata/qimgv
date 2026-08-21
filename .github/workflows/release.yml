@@ -9,13 +9,17 @@ on:
         description: 'Tag to build (e.g. v1.1.0). Publishes as a prerelease.'
         required: true
 
+# Least privilege by default; the publish job opts up to write.
 permissions:
-  contents: write   # needed to create the release
+  contents: read
 
 jobs:
   windows:
     name: Windows package
     runs-on: windows-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
     defaults:
       run:
         shell: msys2 {0}
@@ -90,6 +94,9 @@ jobs:
     name: Publish release
     needs: windows
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write   # creates the release
     steps:
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         with:
