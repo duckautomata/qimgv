@@ -51,6 +51,7 @@ target_link_libraries(qimgv PRIVATE
     Qt6::Svg
     Qt6::PrintSupport
     Qt6::OpenGLWidgets
+    Qt6::Network
     qimgv::warnings
 )
 

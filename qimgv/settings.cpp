@@ -469,6 +469,25 @@ bool Settings::showChangelogs() {
     return settings->settingsConf->value("showChangelogs", true).toBool();
 }
 //------------------------------------------------------------------------------
+// Off by default, and deliberately so: qimgv is a local image viewer, and
+// contacting a server on launch is not something a user should have to find out
+// about after the fact. The About page can always check on demand.
+bool Settings::checkForUpdates() {
+    return settings->settingsConf->value("checkForUpdates", false).toBool();
+}
+
+void Settings::setCheckForUpdates(bool mode) {
+    settings->settingsConf->setValue("checkForUpdates", mode);
+}
+
+QDateTime Settings::lastUpdateCheck() {
+    return settings->settingsConf->value("lastUpdateCheck").toDateTime();
+}
+
+void Settings::setLastUpdateCheck(QDateTime time) {
+    settings->settingsConf->setValue("lastUpdateCheck", time);
+}
+//------------------------------------------------------------------------------
 qreal Settings::backgroundOpacity() {
     bool ok = false;
     qreal value = settings->settingsConf->value("backgroundOpacity", 1.0).toReal(&ok);

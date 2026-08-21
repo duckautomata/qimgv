@@ -30,6 +30,19 @@ Core::Core()
         onFirstRun();
     else if(appVersion > lastVersion)
         onUpdate();
+
+    initUpdateChecker();
+}
+
+// Opt-in, and off by default. Nothing here can delay startup: the request is
+// asynchronous and every failure is swallowed apart from a debug line, so being
+// offline or behind a proxy costs nothing and says nothing.
+void Core::initUpdateChecker() {
+    connect(&updateChecker, &UpdateChecker::updateAvailable, this, [this](QVersionNumber version, QString url) {
+        Q_UNUSED(url)
+        mw->showMessage(tr("Update available: ") + version.toString() + tr(" — see Settings > About"), 5000);
+    });
+    updateChecker.checkIfDue();
 }
 
 void Core::readSettings() {

@@ -3,6 +3,7 @@
 target_sources(qimgv PRIVATE
     directorymodel.cpp
     directorypresenter.cpp
+    updatechecker.cpp
 
     scriptmanager/scriptmanager.cpp
     actionmanager/actionmanager.cpp

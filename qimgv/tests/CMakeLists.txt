@@ -72,6 +72,38 @@ add_test(NAME qimgv_format_tests COMMAND qimgv_format_tests)
 set_tests_properties(qimgv_format_tests PROPERTIES ENVIRONMENT "${QIMGV_TEST_ENV}")
 
 # ---------------------------------------------------------------------------
+# Update check. Only the tag -> version step is unit-testable; the rest of
+# UpdateChecker is network I/O. It drags in settings because the reply handler
+# records the last check time, hence the extra translation units.
+# ---------------------------------------------------------------------------
+qt_add_executable(qimgv_update_tests
+    test_updatechecker.cpp
+    "${CMAKE_SOURCE_DIR}/qimgv/components/updatechecker.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/settings.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/themestore.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/utils/stuff.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/utils/script.cpp"
+    "${CMAKE_BINARY_DIR}/qimgv/appversion.cpp"
+)
+
+target_include_directories(qimgv_update_tests PRIVATE
+    "${CMAKE_SOURCE_DIR}"
+    "${CMAKE_SOURCE_DIR}/qimgv"
+)
+
+target_link_libraries(qimgv_update_tests PRIVATE
+    Qt6::Test
+    Qt6::Widgets
+    Qt6::Network
+    qimgv::warnings
+)
+
+add_test(NAME qimgv_update_tests COMMAND qimgv_update_tests)
+set_tests_properties(qimgv_update_tests PROPERTIES
+    TIMEOUT 30
+    ENVIRONMENT "${QIMGV_TEST_ENV}")
+
+# ---------------------------------------------------------------------------
 # Randomizer regression tests (shuffle-mode hang on 0/1-image directories).
 # TIMEOUT is deliberate: if the hang regresses we want a failure, not a
 # wedged CI job.

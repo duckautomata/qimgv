@@ -15,6 +15,7 @@
 #include <QFont>
 #include <QFontMetrics>
 #include <QVersionNumber>
+#include <QDateTime>
 #include <QThread>
 #include "utils/script.h"
 #include "themestore.h"
@@ -160,6 +161,10 @@ public:
     void setLastVersion(QVersionNumber &ver);
     void setShowChangelogs(bool mode);
     bool showChangelogs();
+    bool checkForUpdates();
+    void setCheckForUpdates(bool mode);
+    QDateTime lastUpdateCheck();
+    void setLastUpdateCheck(QDateTime time);
     qreal backgroundOpacity();
     void setBackgroundOpacity(qreal value);
     bool blurBackground();
