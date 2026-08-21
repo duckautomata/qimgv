@@ -72,8 +72,12 @@ jobs:
           cmake --preset windows-msys2
           cmake --build --preset windows-msys2
 
+      # Not "|| true": a release that fails its own tests should not ship.
+      # The windows-msys2 preset builds them, so ctest has something to run;
+      # it previously pointed at a preset whose build tree had no tests and
+      # swallowed the resulting error.
       - name: Test
-        run: ctest --preset ci --test-dir build/windows-msys2 || true
+        run: ctest --test-dir build/windows-msys2 --output-on-failure
 
       - name: Package
         run: |
