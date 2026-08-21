@@ -65,7 +65,14 @@ LicenseFile=..\LICENSE
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
+; Start menu is checked by default on purpose. Desktop and Open with are not:
+; both are clutter if unwanted, and neither is needed to launch the app. A
+; Start menu entry effectively is -- with all three off, a fresh install leaves
+; no way to find qimgv short of browsing to the install directory. Flip it with
+; "Flags: unchecked" if you would rather it be opt-in too.
+Name: "startmenuicon"; Description: "Create a &Start menu shortcut"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "openwith"; Description: "Add qimgv to the ""Open with"" menu"; GroupDescription: "File associations:"; Flags: unchecked
 
 [Files]
 ; Everything the packaging script assembled, minus the portable-mode folders.
@@ -77,7 +84,7 @@ Source: "{#DistDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs cr
     Excludes: "conf,cache,thumbnails"
 
 [Icons]
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
+Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: startmenuicon
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Registry]
@@ -103,8 +110,8 @@ Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Video\DefaultIcon"; ValueT
 Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Video\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""
 
 ; --- Advertise in "Open with" without touching any default ------------------
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "{#AppName}"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "{#AppName}"; Flags: uninsdeletekey; Tasks: openwith
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""; Tasks: openwith
 
 ; --- Capabilities: what qimgv offers to handle -----------------------------
 Root: HKCU; Subkey: "Software\qimgv"; Flags: uninsdeletekeyifempty
