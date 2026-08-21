@@ -115,7 +115,6 @@ void Settings::loadStylesheet() {
         int font_large = (int)(fnt.pointSize() * 1.8f);
         int text_height = fm.height();
         int text_padding = (int)(text_height * 0.10f);
-        int text_padding_small = (int)(text_height * 0.05f);
         int text_padding_large = (int)(text_height * 0.25f);
 
         // folderview top panel item sizes
@@ -126,7 +125,6 @@ void Settings::loadStylesheet() {
         int top_panel_height = qMax((text_height + top_panel_text_padding * 2 + top_panel_v_margin * 2), 38);
 
         // overlay headers
-        int overlay_header_margin = 2;
         // 32px base size
         int overlay_header_size = qMax(text_height + text_padding * 2, 30);
 
@@ -274,17 +272,57 @@ void Settings::setColorTid(int tid) {
     mColorScheme.tid = tid;
 }
 //------------------------------------------------------------------------------
+// Container formats we hand to libmpv. mpv/ffmpeg decides which codecs inside
+// them it can decode -- that already covers H.264, H.265/HEVC, AV1, VP9,
+// ProRes (including 4444 with alpha) and everything else ffmpeg supports, so
+// this list is about containers, not codecs.
 void Settings::fillVideoFormats() {
-    mVideoFormatsMap.insert("video/webm",       "webm");
-    mVideoFormatsMap.insert("video/mp4",        "mp4");
-    mVideoFormatsMap.insert("video/mp4",        "m4v");
-    mVideoFormatsMap.insert("video/mpeg",       "mpg");
-    mVideoFormatsMap.insert("video/mpeg",       "mpeg");
-    mVideoFormatsMap.insert("video/x-matroska", "mkv");
-    mVideoFormatsMap.insert("video/x-ms-wmv",   "wmv");
-    mVideoFormatsMap.insert("video/x-msvideo",  "avi");
-    mVideoFormatsMap.insert("video/quicktime",  "mov");
-    mVideoFormatsMap.insert("video/x-flv",      "flv");
+    // Modern / common
+    mVideoFormatsMap.insert("video/webm",         "webm");
+    mVideoFormatsMap.insert("video/mp4",          "mp4");
+    mVideoFormatsMap.insert("video/mp4",          "m4v");
+    mVideoFormatsMap.insert("video/x-matroska",   "mkv");
+    mVideoFormatsMap.insert("video/quicktime",    "mov");
+    mVideoFormatsMap.insert("video/quicktime",    "qt");
+
+    // Transport streams (camera / broadcast / Blu-ray)
+    mVideoFormatsMap.insert("video/mp2t",         "ts");
+    mVideoFormatsMap.insert("video/mp2t",         "m2ts");
+    mVideoFormatsMap.insert("video/mp2t",         "mts");
+    mVideoFormatsMap.insert("video/mp2t",         "m2t");
+
+    // MPEG program streams
+    mVideoFormatsMap.insert("video/mpeg",         "mpg");
+    mVideoFormatsMap.insert("video/mpeg",         "mpeg");
+    mVideoFormatsMap.insert("video/mpeg",         "m2v");
+    mVideoFormatsMap.insert("video/mpeg",         "mpv");
+
+    // Ogg / Matroska siblings
+    mVideoFormatsMap.insert("video/ogg",          "ogv");
+    mVideoFormatsMap.insert("video/ogg",          "ogg");
+
+    // Mobile
+    mVideoFormatsMap.insert("video/3gpp",         "3gp");
+    mVideoFormatsMap.insert("video/3gpp2",        "3g2");
+
+    // Professional / intermediate (ProRes, DNxHD often live here)
+    mVideoFormatsMap.insert("application/mxf",    "mxf");
+
+    // Legacy
+    mVideoFormatsMap.insert("video/x-ms-wmv",     "wmv");
+    mVideoFormatsMap.insert("video/x-ms-asf",     "asf");
+    mVideoFormatsMap.insert("video/x-msvideo",    "avi");
+    mVideoFormatsMap.insert("video/x-flv",        "flv");
+    mVideoFormatsMap.insert("video/x-f4v",        "f4v");
+    mVideoFormatsMap.insert("video/divx",         "divx");
+    mVideoFormatsMap.insert("video/x-ms-vob",     "vob");
+    mVideoFormatsMap.insert("video/vnd.rn-realvideo", "rmvb");
+
+    // Raw elementary streams -- no container, mpv sniffs them.
+    mVideoFormatsMap.insert("video/h264",         "h264");
+    mVideoFormatsMap.insert("video/h265",         "h265");
+    mVideoFormatsMap.insert("video/h265",         "hevc");
+    mVideoFormatsMap.insert("video/av1",          "av1");
 }
 //------------------------------------------------------------------------------
 QString Settings::mpvBinary() {
