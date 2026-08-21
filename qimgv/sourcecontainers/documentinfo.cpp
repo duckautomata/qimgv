@@ -391,22 +391,11 @@ void DocumentInfo::loadExifTags() {
         }
     }
 
-// this should work with both 0.28 and <0.28
-#if not EXIV2_TEST_VERSION(0, 28, 0)
-#ifdef __WIN32
-    catch (Exiv2::BasicError<wchar_t>& e) {
-        qDebug() << "Caught Exiv2::BasicError exception:\n" << e.what() << "\n";
-        return;
-    }
-#else
-    catch (Exiv2::BasicError<char>& e) {
-        qDebug() << "Caught Exiv2::BasicError exception:\n" << e.what() << "\n";
-        return;
-    }
-#endif
-#endif
-
-    catch (Exiv2::Error& e) {
+    // One handler covers both exiv2 generations. Before 0.28 Exiv2::Error was
+    // a typedef for BasicError<char>, so the separate catch that used to sit
+    // here caught the same type and made this one unreachable -- which GCC
+    // rejects under -Wexceptions. 0.28 turned Error into a plain class.
+    catch(Exiv2::Error &e) {
         qDebug() << "Caught Exiv2 exception:\n" << e.what() << "\n";
         return;
     }
