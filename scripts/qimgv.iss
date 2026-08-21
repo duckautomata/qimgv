@@ -55,6 +55,7 @@ OutputBaseFilename=qimgv-{#AppVersion}-win64-setup
 SetupIconFile=..\qimgv\res\icons\common\logo\app\qimgv.ico
 UninstallDisplayIcon={app}\{#AppExeName}
 UninstallDisplayName={#AppName} {#AppVersion}
+ChangesAssociations=yes
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -80,35 +81,86 @@ Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Registry]
-; Deliberately does NOT take over any file association. This only advertises
-; qimgv in the "Open with" list, leaving whatever the user already chose as the
-; default alone. Windows' own Default Apps UI is the right place to change that.
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}"; \
-    ValueType: string; ValueName: "FriendlyAppName"; ValueData: "{#AppName}"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\shell\open\command"; \
-    ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\SupportedTypes"; \
-    ValueType: string; ValueName: ".jpg";  ValueData: ""
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\SupportedTypes"; \
-    ValueType: string; ValueName: ".jpeg"; ValueData: ""
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\SupportedTypes"; \
-    ValueType: string; ValueName: ".png";  ValueData: ""
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\SupportedTypes"; \
-    ValueType: string; ValueName: ".gif";  ValueData: ""
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\SupportedTypes"; \
-    ValueType: string; ValueName: ".webp"; ValueData: ""
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\SupportedTypes"; \
-    ValueType: string; ValueName: ".avif"; ValueData: ""
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\SupportedTypes"; \
-    ValueType: string; ValueName: ".heic"; ValueData: ""
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\SupportedTypes"; \
-    ValueType: string; ValueName: ".jxl";  ValueData: ""
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\SupportedTypes"; \
-    ValueType: string; ValueName: ".bmp";  ValueData: ""
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\SupportedTypes"; \
-    ValueType: string; ValueName: ".tif";  ValueData: ""
-Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\SupportedTypes"; \
-    ValueType: string; ValueName: ".tiff"; ValueData: ""
+; Two things happen here, and only one of them is about defaults.
+;
+; 1. ProgIDs + the Applications key: qimgv shows up in "Open with" with a
+;    real name and icon. This changes no existing association.
+; 2. Capabilities + RegisteredApplications: this is what makes qimgv
+;    appear in Settings > Default apps as an app you can assign types to.
+;
+; The installer deliberately does not set any default itself. Since Windows 8
+; that is not possible for an application to do -- the real association lives
+; in a hash-protected UserChoice key, and programs that forge it get reset by
+; Windows and flagged by AV. Declaring capabilities is the supported path: it
+; makes qimgv assignable, and leaves the choice with the user.
+
+; --- ProgIDs the associations point at -------------------------------------
+Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Image"; ValueType: string; ValueName: ""; ValueData: "Image"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Image\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExeName},0"
+Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Image\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""
+Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Video"; ValueType: string; ValueName: ""; ValueData: "Video"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Video\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExeName},0"
+Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Video\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""
+
+; --- Advertise in "Open with" without touching any default ------------------
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "{#AppName}"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""
+
+; --- Capabilities: what qimgv offers to handle -----------------------------
+Root: HKCU; Subkey: "Software\qimgv"; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\qimgv\Capabilities"; ValueType: string; ValueName: "ApplicationName"; ValueData: "{#AppName}"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\qimgv\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "Fast, configurable image viewer with optional video support."
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".avif"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".avifs"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".bmp"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".cur"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".dds"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".exr"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".gif"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".hdr"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".heic"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".heif"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ico"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".j2k"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jfif"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jp2"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jpe"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jpeg"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jpg"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jxl"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".mng"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".pbm"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".pcx"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".pgm"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".png"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ppm"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".psd"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".qoi"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ras"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".sgi"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".svg"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".svgz"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".tga"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".tif"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".tiff"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".wbmp"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".webp"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".xbm"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".xcf"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".xpm"; ValueData: "qimgv.AssocFile.Image"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".3gp"; ValueData: "qimgv.AssocFile.Video"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".m2ts"; ValueData: "qimgv.AssocFile.Video"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".m4v"; ValueData: "qimgv.AssocFile.Video"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".mkv"; ValueData: "qimgv.AssocFile.Video"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".mov"; ValueData: "qimgv.AssocFile.Video"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".mp4"; ValueData: "qimgv.AssocFile.Video"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".mpeg"; ValueData: "qimgv.AssocFile.Video"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".mpg"; ValueData: "qimgv.AssocFile.Video"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ts"; ValueData: "qimgv.AssocFile.Video"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".webm"; ValueData: "qimgv.AssocFile.Video"
+
+; --- Tell Windows where those capabilities live ----------------------------
+Root: HKCU; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueName: "{#AppName}"; ValueData: "Software\qimgv\Capabilities"; Flags: uninsdeletevalue
 
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#AppName}}"; \
