@@ -346,6 +346,15 @@ void Core::syncRandomizer() {
 }
 
 void Core::onModelLoaded() {
+    // See modelDelayLoad(): the image was loaded before its directory existed,
+    // so give the freshly listed entry the image we already have rather than
+    // decoding it a second time.
+    if(reattachCurrentImageOnLoad) {
+        reattachCurrentImageOnLoad = false;
+        if(state.currentImg && !state.currentFilePath.isEmpty())
+            model->updateImage(state.currentFilePath, state.currentImg);
+        updateInfoString();
+    }
     thumbPanelPresenter.reloadModel();
     folderViewPresenter.reloadModel();
     thumbPanelPresenter.selectAndFocus(state.currentFilePath);
@@ -1339,8 +1348,11 @@ void Core::nextDirectory() {
     QFileInfo currentDir(model->directoryPath());
     QFileInfo parentDir(currentDir.absolutePath());
     if(parentDir.exists() && parentDir.isReadable()) {
+        // Blocking on purpose: this manager exists only to answer one
+        // question and is gone on the next line, so there is nothing to wait
+        // for a signal with.
         DirectoryManager dm;
-        if(!dm.setDirectory(parentDir.absoluteFilePath()))
+        if(!dm.setDirectoryBlocking(parentDir.absoluteFilePath()))
             return;
         QString next = dm.nextOfDir(model->directoryPath());
         if(!next.isEmpty()) {
@@ -1362,8 +1374,9 @@ void Core::prevDirectory(bool selectLast) {
     QFileInfo currentDir(model->directoryPath());
     QFileInfo parentDir(currentDir.absolutePath());
     if(parentDir.exists() && parentDir.isReadable()) {
+        // Blocking, for the same reason as nextDirectory().
         DirectoryManager dm;
-        dm.setDirectory(parentDir.absoluteFilePath());
+        dm.setDirectoryBlocking(parentDir.absoluteFilePath());
         QString prev = dm.prevOfDir(model->directoryPath());
         if(!prev.isEmpty()) {
             if(!setDirectory(prev))
@@ -1505,11 +1518,15 @@ void Core::onModelItemReady(std::shared_ptr<Image> img, const QString &path) {
     }
 }
 
+// Opening a single file shows it first and lists its directory afterwards, so
+// the window is up immediately instead of waiting on the folder. The listing is
+// asynchronous now, so the entry for the image already on screen does not exist
+// when this returns -- re-attaching it here would drop it and blank the window.
+// onModelLoaded() does it once the entries are actually there.
 void Core::modelDelayLoad() {
+    reattachCurrentImageOnLoad = true;
     model->setDirectory(state.directoryPath);
     mw->setDirectoryPath(state.directoryPath);
-    model->updateImage(state.currentFilePath, state.currentImg);
-    updateInfoString();
 }
 
 void Core::onModelItemUpdated(QString filePath) {

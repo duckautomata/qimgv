@@ -13,6 +13,7 @@
 #include "sharedresources.h"
 #include "proxystyle.h"
 #include "core.h"
+#include "components/directorymanager/directoryscanner.h"
 
 #ifdef __APPLE__
 #include "macosapplication.h"
@@ -91,6 +92,7 @@ int main(int argc, char *argv[]) {
     qRegisterMetaType<Script>("Script");
     qRegisterMetaType<std::shared_ptr<Image>>("std::shared_ptr<Image>");
     qRegisterMetaType<std::shared_ptr<Thumbnail>>("std::shared_ptr<Thumbnail>");
+    qRegisterMetaType<std::shared_ptr<DirectoryScanResult>>("std::shared_ptr<DirectoryScanResult>");
 
     // globals
     inputMap = InputMap::getInstance();

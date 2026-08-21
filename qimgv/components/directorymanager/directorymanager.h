@@ -3,6 +3,8 @@
 #include <QObject>
 #include <QCollator>
 #include <QHash>
+#include <QThreadPool>
+#include <memory>
 #include <QElapsedTimer>
 #include <QString>
 #include <QSize>
@@ -18,6 +20,7 @@
 
 #include "settings.h"
 #include "watchers/directorywatcher.h"
+#include "directoryscanner.h"
 #include "utils/stuff.h"
 #include "sourcecontainers/fsentry.h"
 
@@ -41,6 +44,15 @@ class DirectoryManager : public QObject {
     Q_OBJECT
 public:
     DirectoryManager();
+    ~DirectoryManager() override;
+
+    // Lists the directory on this thread and returns with the entries in place.
+    //
+    // For the throwaway managers used to answer "what is the next folder along"
+    // -- the caller builds one, asks one question and drops it, so waiting is
+    // both simpler and what it wants. setDirectory() is the asynchronous one and
+    // is what the application uses for the directory it is showing.
+    bool setDirectoryBlocking(QString dirPath);
     // ignored if the same dir is already opened
     bool setDirectory(QString);
     bool setDirectoryRecursive(QString);
@@ -129,12 +141,22 @@ private:
     void startFileWatcher(QString directoryPath);
     void stopFileWatcher();
 
-    void addEntriesFromDirectory(std::vector<FSEntry> &entryVec, QString directoryPath);
-    void addEntriesFromDirectoryRecursive(std::vector<FSEntry> &entryVec, QString directoryPath);
+    void startScan(QString const &directoryPath, bool recursive);
+
+    // A scan runs on a worker, so its result can arrive after the user has
+    // already moved on. Every request carries a generation; a result whose
+    // generation is stale belongs to a directory nobody is looking at any more
+    // and is dropped. Without this, switching folders while a slow share is
+    // being listed installs the wrong listing.
+    quint64 scanGeneration = 0;
+    // One thread: scans are I/O bound, and running two at once would only make
+    // both slower while adding an ordering problem to reason about.
+    QThreadPool scanPool;
     bool checkFileRange(int index) const;
     bool checkDirRange(int index) const;
 
 private slots:
+    void onScanFinished(std::shared_ptr<DirectoryScanResult> result);
     void onFileAddedExternal(QString fileName);
     void onFileRemovedExternal(QString fileName);
     void onFileModifiedExternal(QString fileName);

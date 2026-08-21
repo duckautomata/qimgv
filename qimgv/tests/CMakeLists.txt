@@ -79,6 +79,7 @@ set_tests_properties(qimgv_format_tests PROPERTIES ENVIRONMENT "${QIMGV_TEST_ENV
 qt_add_executable(qimgv_directory_tests
     test_directorymanager.cpp
     "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/directorymanager.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/directoryscanner.cpp"
     "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/watchers/directorywatcher.cpp"
     "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/watchers/watcherevent.cpp"
     "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/watchers/watcherworker.cpp"

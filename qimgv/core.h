@@ -60,6 +60,9 @@ private:
 
     UpdateChecker updateChecker;
 
+    // See Core::modelDelayLoad().
+    bool reattachCurrentImageOnLoad = false;
+
     State state;
     bool loopSlideshow, slideshow, shuffle;
     FolderEndAction folderEndAction;

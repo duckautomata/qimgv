@@ -8,6 +8,7 @@
 // that reorders or resizes the lists underneath them. Each one mutates, then
 // checks the whole mapping still agrees with filePathAt().
 #include <QtTest>
+#include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QFile>
 #include <QImage>
@@ -28,6 +29,8 @@ private slots:
     void indexSurvivesResort();
     void missingPathIsNotFound();
     void navigationAgreesWithOrder();
+    void staleScanIsDiscarded();
+    void blockingLoadIsImmediate();
 
 private:
     QTemporaryDir dir;
@@ -36,6 +39,16 @@ private:
         img.fill(Qt::blue);
         QVERIFY(img.save(dir.filePath(name), "png"));
     }
+    // setDirectory() now lists on a worker, so a test that reads the entries on
+    // the next line would see an empty directory. Wait for loaded() the way the
+    // application does.
+    bool loadDirectory(DirectoryManager &dm, QString const &path) {
+        QSignalSpy spy(&dm, &DirectoryManager::loaded);
+        if(!dm.setDirectory(path))
+            return false;
+        return spy.wait(10000);
+    }
+
     // The property that matters: for every index, indexOfFile(pathAt(i)) == i.
     void verifyMappingIsConsistent(DirectoryManager &dm) {
         for(int i = 0; i < static_cast<int>(dm.fileCount()); i++) {
@@ -57,14 +70,14 @@ void Test_DirectoryManager::initTestCase() {
 
 void Test_DirectoryManager::indexMatchesOrderAfterScan() {
     DirectoryManager dm;
-    QVERIFY(dm.setDirectory(dir.path()));
+    QVERIFY(loadDirectory(dm, dir.path()));
     QCOMPARE(static_cast<int>(dm.fileCount()), 12);
     verifyMappingIsConsistent(dm);
 }
 
 void Test_DirectoryManager::indexSurvivesInsert() {
     DirectoryManager dm;
-    QVERIFY(dm.setDirectory(dir.path()));
+    QVERIFY(loadDirectory(dm, dir.path()));
     // Warm the cache first: inserting without a prior lookup would pass even
     // with the invalidation missing.
     QCOMPARE(dm.indexOfFile(dm.filePathAt(0)), 0);
@@ -79,7 +92,7 @@ void Test_DirectoryManager::indexSurvivesInsert() {
 
 void Test_DirectoryManager::indexSurvivesRemove() {
     DirectoryManager dm;
-    QVERIFY(dm.setDirectory(dir.path()));
+    QVERIFY(loadDirectory(dm, dir.path()));
     int const before = static_cast<int>(dm.fileCount());
     QString const doomed = dm.filePathAt(0);
     QCOMPARE(dm.indexOfFile(doomed), 0); // warm
@@ -92,7 +105,7 @@ void Test_DirectoryManager::indexSurvivesRemove() {
 
 void Test_DirectoryManager::indexSurvivesRename() {
     DirectoryManager dm;
-    QVERIFY(dm.setDirectory(dir.path()));
+    QVERIFY(loadDirectory(dm, dir.path()));
     QString const oldPath = dm.filePathAt(1);
     QCOMPARE(dm.indexOfFile(oldPath), 1); // warm
 
@@ -113,7 +126,7 @@ void Test_DirectoryManager::indexSurvivesRename() {
 
 void Test_DirectoryManager::indexSurvivesResort() {
     DirectoryManager dm;
-    QVERIFY(dm.setDirectory(dir.path()));
+    QVERIFY(loadDirectory(dm, dir.path()));
     QString const first = dm.filePathAt(0);
     QCOMPARE(dm.indexOfFile(first), 0); // warm
 
@@ -130,7 +143,7 @@ void Test_DirectoryManager::indexSurvivesResort() {
 
 void Test_DirectoryManager::missingPathIsNotFound() {
     DirectoryManager dm;
-    QVERIFY(dm.setDirectory(dir.path()));
+    QVERIFY(loadDirectory(dm, dir.path()));
     QCOMPARE(dm.indexOfFile(dir.filePath(QStringLiteral("nope.png"))), -1);
     QCOMPARE(dm.indexOfFile(QString()), -1);
     QCOMPARE(dm.indexOfDir(dir.filePath(QStringLiteral("nope"))), -1);
@@ -140,7 +153,7 @@ void Test_DirectoryManager::missingPathIsNotFound() {
 // here as navigation that skips or repeats files.
 void Test_DirectoryManager::navigationAgreesWithOrder() {
     DirectoryManager dm;
-    QVERIFY(dm.setDirectory(dir.path()));
+    QVERIFY(loadDirectory(dm, dir.path()));
     QCOMPARE(dm.prevOfFile(dm.firstFile()), QString());
     QCOMPARE(dm.nextOfFile(dm.lastFile()), QString());
 
@@ -153,6 +166,41 @@ void Test_DirectoryManager::navigationAgreesWithOrder() {
         cur = dm.prevOfFile(cur);
         QCOMPARE(cur, dm.filePathAt(i));
     }
+}
+
+// A worker result must not be installed once the user has moved on, or opening
+// a slow directory and changing your mind leaves the wrong listing on screen.
+void Test_DirectoryManager::staleScanIsDiscarded() {
+    QTemporaryDir other;
+    QVERIFY(other.isValid());
+    QImage img(8, 8, QImage::Format_RGB32);
+    img.fill(Qt::red);
+    for(int i = 0; i < 3; i++)
+        QVERIFY(img.save(other.filePath(QStringLiteral("other%1.png").arg(i)), "png"));
+
+    DirectoryManager dm;
+    QSignalSpy spy(&dm, &DirectoryManager::loaded);
+    // Two requests back to back: the first result is stale before it lands.
+    QVERIFY(dm.setDirectory(dir.path()));
+    QVERIFY(dm.setDirectory(other.path()));
+    QVERIFY(spy.wait(10000));
+
+    // Whatever arrives, the manager must end up showing the directory that was
+    // asked for last -- never a mixture, and never the abandoned one.
+    QTRY_COMPARE_WITH_TIMEOUT(dm.directoryPath(), other.path(), 10000);
+    QTRY_COMPARE_WITH_TIMEOUT(static_cast<int>(dm.fileCount()), 3, 10000);
+    verifyMappingIsConsistent(dm);
+    for(int i = 0; i < static_cast<int>(dm.fileCount()); i++)
+        QVERIFY2(dm.filePathAt(i).startsWith(other.path()), qPrintable(dm.filePathAt(i)));
+}
+
+// The throwaway managers in Core::nextDirectory() ask one question and are gone
+// on the next line, so this one has to return with its entries in place.
+void Test_DirectoryManager::blockingLoadIsImmediate() {
+    DirectoryManager dm;
+    QVERIFY(dm.setDirectoryBlocking(dir.path()));
+    QVERIFY2(dm.fileCount() > 0, "setDirectoryBlocking returned before the listing was ready");
+    verifyMappingIsConsistent(dm);
 }
 
 QTEST_MAIN(Test_DirectoryManager)
