@@ -63,9 +63,24 @@ jobs:
             v="${GITHUB_REF_NAME}"
           else
             v="v$(grep -oP 'VERSION \K[0-9]+\.[0-9]+\.[0-9]+' CMakeLists.txt | head -1)-dev"
+            skip_check=1   # derived from CMakeLists, so it cannot disagree
           fi
+
+          # Bumping project(VERSION) is a manual edit, easy to forget, and
+          # nothing else would notice: you would get a release named v2.0.1
+          # containing a binary that reports 2.0.0. Compare them and stop here
+          # instead. A -rc1 / -beta suffix on the tag is allowed.
+          project_version=$(grep -oP 'VERSION \K[0-9]+\.[0-9]+\.[0-9]+' CMakeLists.txt | head -1)
+          tag_version=${v#v}
+          tag_version=${tag_version%%-*}
+          if [ -z "${skip_check:-}" ] && [ "$tag_version" != "$project_version" ]; then
+            echo "::error::tag $v does not match project(VERSION) $project_version in CMakeLists.txt."
+            echo "::error::Bump CMakeLists.txt (and qimgv/distrib/qimgv.appdata.xml) or retag."
+            exit 1
+          fi
+
           echo "version=${v}" >> $GITHUB_OUTPUT
-          echo "Building ${v}"
+          echo "Building ${v} (project version ${project_version})"
 
       - name: Build
         run: |
