@@ -31,9 +31,11 @@ mkdir -p "$DIST_DIR"
 
 echo "==> Copying qimgv"
 cp "$BUILD_DIR/bin/qimgv.exe" "$DIST_DIR/"
+HAVE_VIDEO=0
 if [[ -f "$BUILD_DIR/bin/plugins/player_mpv.dll" ]]; then
     mkdir -p "$DIST_DIR/plugins"
     cp "$BUILD_DIR/bin/plugins/player_mpv.dll" "$DIST_DIR/plugins/"
+    HAVE_VIDEO=1
 fi
 if [[ -d "$BUILD_DIR/bin/translations" ]]; then
     cp -r "$BUILD_DIR/bin/translations" "$DIST_DIR/"
@@ -87,8 +89,15 @@ while [[ ${#QUEUE[@]} -gt 0 ]]; do
 done
 echo "    ${#SEEN[@]} DLLs copied"
 
-echo "==> Adding mpv.exe (used for thumbnailing)"
-[[ -f "$MSYS_BIN/mpv.exe" ]] && cp "$MSYS_BIN/mpv.exe" "$DIST_DIR/" || true
+# mpv.exe is what qimgv shells out to for video thumbnails, so it only belongs
+# in a build that has the player plugin. It used to be copied unconditionally,
+# which put a 2.9 MB video player into the minimal package that cannot use it.
+if [[ $HAVE_VIDEO -eq 1 && -f "$MSYS_BIN/mpv.exe" ]]; then
+    echo "==> Adding mpv.exe (used for video thumbnailing)"
+    cp "$MSYS_BIN/mpv.exe" "$DIST_DIR/"
+else
+    echo "==> No video support in this build; skipping mpv.exe"
+fi
 
 echo "==> Portable-mode directories"
 mkdir -p "$DIST_DIR/conf" "$DIST_DIR/cache" "$DIST_DIR/thumbnails"
