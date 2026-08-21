@@ -91,6 +91,27 @@ void DocumentInfo::detectFormat() {
     mMimeType = mimeDb.mimeTypeForFile(fileInfo.filePath(), QMimeDatabase::MatchContent);
     auto mimeName = mMimeType.name().toUtf8();
     auto suffix = fileInfo.suffix().toLower().toUtf8();
+
+    // Mime databases sniff an ISOBMFF container by its major brand, and an
+    // image *sequence* declares a brand they read as video: an animated AVIF
+    // out of ffmpeg has major brand 'avis' and comes back as video/quicktime,
+    // which would hand an animated image to the video player. Qt's built-in
+    // copy of freedesktop.org.xml does exactly this, so it happens on any
+    // system without an external shared-mime-info. The ftyp brands are
+    // authoritative and we already parse them -- let them correct the verdict
+    // before dispatch. Only these two mime names pay for the extra read.
+    if(mimeName == "video/quicktime" || mimeName == "video/mp4") {
+        const QSet<QByteArray> brands = isoBmffBrands();
+        const char *corrected = nullptr;
+        if(brands.contains(QByteArrayLiteral("avif")) || brands.contains(QByteArrayLiteral("avis")))
+            corrected = "image/avif";
+        else if(brands.contains(QByteArrayLiteral("mif1")) || brands.contains(QByteArrayLiteral("msf1")))
+            corrected = "image/heif";
+        if(corrected) {
+            mMimeType = mimeDb.mimeTypeForName(QString::fromLatin1(corrected));
+            mimeName = corrected;
+        }
+    }
     if(mimeName == "image/jpeg") {
         mFormat = "jpg";
         mDocumentType = DocumentType::STATIC;
