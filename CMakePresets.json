@@ -105,7 +105,7 @@
         "rhs": "Darwin"
       },
       "cacheVariables": {
-        "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "13.0",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/dist",
         "QIMGV_BUILD_TESTS": "ON"
       }
