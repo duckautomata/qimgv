@@ -1,58 +1,77 @@
-cmake_minimum_required(VERSION 3.11)
-project(player_mpv
-    DESCRIPTION "video player widget for qimgv (using mpv)"
-    LANGUAGES CXX)
+# ============================================================================
+#  player_mpv — video playback plugin backed by libmpv.
+#
+#  Loaded at runtime by qimgv (see gui/viewers/videoplayerinitproxy.cpp), so
+#  it is a MODULE, not a shared library.
+# ============================================================================
 
-set(CMAKE_AUTOMOC ON)
-
-# only export CreatePlayerWidget function
-ADD_DEFINITIONS(-DQIMGV_PLAYER_MPV_LIBRARY)
-
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets)
-
-if(NOT WIN32)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(Mpv REQUIRED IMPORTED_TARGET mpv)
+# --- Find libmpv ------------------------------------------------------------
+# pkg-config works on every platform we support, including MSYS2/MinGW on
+# Windows. QIMGV_MPV_DIR is an escape hatch for a hand-placed libmpv SDK
+# (e.g. the prebuilt Windows package from mpv.io).
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+    pkg_check_modules(Mpv IMPORTED_TARGET mpv>=2.0)
 endif()
 
-include(GNUInstallDirs)
+if(NOT Mpv_FOUND)
+    set(QIMGV_MPV_DIR "" CACHE PATH "Path to a libmpv SDK (containing include/ and lib/)")
+    if(NOT QIMGV_MPV_DIR AND DEFINED MPV_DIR)
+        set(QIMGV_MPV_DIR "${MPV_DIR}")  # legacy name
+    endif()
+    if(NOT QIMGV_MPV_DIR)
+        message(FATAL_ERROR
+            "libmpv not found.\n"
+            "  Linux:   install libmpv-dev / mpv-devel\n"
+            "  MSYS2:   pacman -S mingw-w64-ucrt-x86_64-mpv\n"
+            "  macOS:   brew install mpv\n"
+            "Or point -DQIMGV_MPV_DIR=<path> at a libmpv SDK, "
+            "or disable video with -DQIMGV_VIDEO_SUPPORT=OFF.")
+    endif()
+    message(STATUS "Using libmpv SDK from ${QIMGV_MPV_DIR}")
+endif()
 
-add_library(player_mpv MODULE
+# --- Target -----------------------------------------------------------------
+qt_add_library(player_mpv MODULE
     src/videoplayer.cpp
     src/mpvwidget.cpp
     src/videoplayermpv.cpp
-    src/qthelper.hpp)
-
-target_compile_features(player_mpv PRIVATE cxx_std_11)
-
-if(WIN32)
-    target_link_libraries(player_mpv PRIVATE
-        Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets Mpv)
-else()
-    target_link_libraries(player_mpv PRIVATE
-        Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets PkgConfig::Mpv)
-endif()
-
-if(QT_VERSION_MAJOR GREATER_EQUAL 6)
-    target_link_libraries(player_mpv PRIVATE Qt${QT_VERSION_MAJOR}::OpenGLWidgets)
-endif()
-
-set_target_properties(player_mpv PROPERTIES
-    CXX_EXTENSIONS OFF
-    PREFIX "")
+)
 
 target_include_directories(player_mpv PRIVATE src)
 
-if(WIN32)
-    target_include_directories(player_mpv PRIVATE
-        ${MPV_DIR}/include)
+target_link_libraries(player_mpv PRIVATE
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::OpenGLWidgets
+    qimgv::warnings
+)
+
+if(Mpv_FOUND)
+    target_link_libraries(player_mpv PRIVATE PkgConfig::Mpv)
+else()
+    target_include_directories(player_mpv PRIVATE "${QIMGV_MPV_DIR}/include")
     target_link_directories(player_mpv PRIVATE
-        ${MPV_DIR}/lib/$<IF:$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>,x86_64,i686>)
+        "${QIMGV_MPV_DIR}/lib"
+        "${QIMGV_MPV_DIR}/lib/$<IF:$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>,x86_64,i686>")
+    target_link_libraries(player_mpv PRIVATE mpv)
 endif()
 
+# Only CreatePlayerWidget() is part of the plugin ABI.
+target_compile_definitions(player_mpv PRIVATE QIMGV_PLAYER_MPV_LIBRARY)
+
+set_target_properties(player_mpv PROPERTIES
+    PREFIX ""
+    # qimgv looks for the plugin in a "plugins" dir next to the exe on Windows.
+    LIBRARY_OUTPUT_DIRECTORY
+        "$<IF:$<BOOL:${WIN32}>,${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/plugins,${CMAKE_RUNTIME_OUTPUT_DIRECTORY}>"
+)
+
+# --- Install ----------------------------------------------------------------
+include(GNUInstallDirs)
 if(WIN32)
     install(TARGETS player_mpv LIBRARY DESTINATION "${CMAKE_INSTALL_BINDIR}/plugins")
-else()
+elseif(NOT APPLE)
     install(TARGETS player_mpv LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/qimgv")
 endif()

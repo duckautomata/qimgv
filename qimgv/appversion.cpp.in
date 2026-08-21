@@ -1,0 +1,6 @@
+// Generated from appversion.cpp.in by CMake — do not edit.
+// The single source of truth for the version is project(VERSION ...) in the
+// top-level CMakeLists.txt.
+#include "appversion.h"
+
+QVersionNumber appVersion(@PROJECT_VERSION_MAJOR@, @PROJECT_VERSION_MINOR@, @PROJECT_VERSION_PATCH@);

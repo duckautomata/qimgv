@@ -1,82 +1,121 @@
-# qimgv root
-cmake_minimum_required(VERSION 3.13)
+# ============================================================================
+#  qimgv — fast, configurable image viewer
+#  https://github.com/duckautomata/qimgv
+#
+#  Quick start:
+#      cmake --preset dev && cmake --build --preset dev
+#  See docs/BUILDING.md for dependencies and platform notes.
+# ============================================================================
+cmake_minimum_required(VERSION 3.21)
+
 project(qimgv
-    VERSION 1.0.2
-    HOMEPAGE_URL "https://github.com/easymodo/qimgv"
+    VERSION 1.1.0
+    DESCRIPTION "Fast and configurable image viewer with optional video support"
+    HOMEPAGE_URL "https://github.com/duckautomata/qimgv"
     LANGUAGES CXX)
 
-message(STATUS "Build configuration: " ${CMAKE_BUILD_TYPE})
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-# check for gcc
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
-        CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
-    message(FATAL_ERROR "\n!!! THIS PROJECT REQUIRES GCC 9.0 OR LATER !!!\n")
+include(ProjectDefaults)
+include(CompilerWarnings)
+include(FeatureSummary)
+
+# ---------------------------------------------------------------------------
+# Options
+# ---------------------------------------------------------------------------
+option(QIMGV_VIDEO_SUPPORT "Enable video playback via libmpv"          ON)
+option(QIMGV_EXIV2         "Read/write EXIF metadata via exiv2"        ON)
+option(QIMGV_OPENCV        "High quality scaling via OpenCV"           ON)
+option(QIMGV_KDE_BLUR      "Enable KDE/KWin background blur"           OFF)
+option(QIMGV_BUILD_TESTS   "Build the unit test suite"                 OFF)
+option(QIMGV_LTO           "Enable link-time optimization in Release"  ON)
+option(QIMGV_WERROR        "Treat compiler warnings as errors"         OFF)
+option(QIMGV_SANITIZE      "Build with ASan+UBSan (debug builds only)" OFF)
+
+# Backwards compatibility with the pre-fork option names, so existing
+# packaging scripts (AUR PKGBUILD, distro recipes) keep working.
+qimgv_compat_option(VIDEO_SUPPORT  QIMGV_VIDEO_SUPPORT)
+qimgv_compat_option(EXIV2          QIMGV_EXIV2)
+qimgv_compat_option(OPENCV_SUPPORT QIMGV_OPENCV)
+qimgv_compat_option(KDE_SUPPORT    QIMGV_KDE_BLUR)
+
+if(DEFINED USE_QT5)
+    message(WARNING
+        "USE_QT5 is no longer supported — qimgv requires Qt 6.5 or newer. "
+        "The option is ignored.")
 endif()
 
-# AUTOMOC
+# LTO / linker / sanitizer selection depends on the options above.
+qimgv_apply_build_tuning()
+
+# ---------------------------------------------------------------------------
+# Qt
+# ---------------------------------------------------------------------------
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# USER OPTIONS
-# Usage: cmake -DVIDEO_SUPPORT=ON [...]
-option(EXIV2 "For reading/writing exif tags" ON)
-option(VIDEO_SUPPORT "Enable video support" ON)
-option(OPENCV_SUPPORT "Enable HQ scaling via OpenCV" ON)
-option(KDE_SUPPORT "Support blur when using KDE" OFF)
-option(USE_QT5 "Build with Qt5 if available" ON)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets Svg PrintSupport OpenGLWidgets)
+find_package(Qt6 6.5 QUIET    COMPONENTS LinguistTools)
 
-if(UNIX AND NOT APPLE)
-    set(QT_EXTERN_PATH "" CACHE STRING "Tell compile external QT path, example: (/opt/Qt/6.2.0/gcc_64)")
-    string(COMPARE EQUAL "${QT_EXTERN_PATH}" "" result)
-    if (NOT result)
-        set(CMAKE_INSTALL_RPATH "${QT_EXTERN_PATH}/lib")
-    endif()
-endif()
+# Qt 6.3+ can strip unused Qt code and speed up moc; harmless when absent.
+qt_standard_project_setup(REQUIRES 6.5)
 
-# FIND PACKAGES
-if(USE_QT5) # Try Qt5 first if USE_QT5 is set
-    find_package(Qt5 COMPONENTS Widgets QUIET)
-    if(Qt5_FOUND)
-        find_package(QT NAMES Qt5 REQUIRED COMPONENTS Core Widgets Svg PrintSupport)
-    else()
-        find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Widgets Svg PrintSupport OpenGLWidgets)
-    endif()
-else() # Try Qt6 otherwise
-    find_package(Qt6 COMPONENTS Widgets QUIET)
-    if(Qt6_FOUND)
-        find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Widgets Svg PrintSupport OpenGLWidgets)
-    else()
-        find_package(QT NAMES Qt5 REQUIRED COMPONENTS Core Widgets Svg PrintSupport)
-    endif()
-endif()
+message(STATUS "Qt version: ${Qt6_VERSION} (${Qt6_DIR})")
 
-message(STATUS "Qt Version: " ${QT_VERSION})
-if(QT_VERSION_MAJOR GREATER_EQUAL 6)
-    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Svg PrintSupport OpenGLWidgets)
-else()
-    find_package(Qt${QT_VERSION_MAJOR} 5.12 REQUIRED COMPONENTS Core Widgets Svg PrintSupport)
-endif()
-
-if(EXIV2)
+# ---------------------------------------------------------------------------
+# Optional dependencies
+# ---------------------------------------------------------------------------
+if(QIMGV_EXIV2)
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(Exiv2 REQUIRED IMPORTED_TARGET exiv2)
+    pkg_check_modules(Exiv2 REQUIRED IMPORTED_TARGET exiv2>=0.27)
 endif()
 
-if(KDE_SUPPORT)
+if(QIMGV_OPENCV)
+    find_package(OpenCV REQUIRED COMPONENTS core imgproc)
+endif()
+
+if(QIMGV_KDE_BLUR)
     find_package(KF6WindowSystem REQUIRED)
 endif()
 
-if(OPENCV_SUPPORT)
-    find_package(PkgConfig REQUIRED)
-    find_package(OpenCV REQUIRED core imgproc)
-endif()
-
-##############################################################
-
+# ---------------------------------------------------------------------------
+# Targets
+# ---------------------------------------------------------------------------
 add_subdirectory(qimgv)
 
-if(VIDEO_SUPPORT)
+if(QIMGV_VIDEO_SUPPORT)
     add_subdirectory(plugins/player_mpv)
+endif()
+
+if(QIMGV_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(qimgv/tests)
+endif()
+
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+add_feature_info("Video playback (libmpv)" QIMGV_VIDEO_SUPPORT "H.264/H.265/AV1/VP9/ProRes via mpv")
+add_feature_info("EXIF metadata (exiv2)"   QIMGV_EXIV2         "read/write image metadata")
+add_feature_info("HQ scaling (OpenCV)"     QIMGV_OPENCV        "bicubic / bilinear+sharpen filters")
+add_feature_info("KDE blur"                QIMGV_KDE_BLUR      "translucent background under KWin")
+add_feature_info("Unit tests"              QIMGV_BUILD_TESTS   "ctest suite")
+add_feature_info("LTO"                     QIMGV_LTO           "link-time optimization")
+
+feature_summary(WHAT ENABLED_FEATURES DISABLED_FEATURES
+                INCLUDE_QUIET_PACKAGES
+                DESCRIPTION "\n---- qimgv ${PROJECT_VERSION} build configuration ----\n")
+
+# ---------------------------------------------------------------------------
+# Uninstall target (for `cmake --install` users; packages handle their own)
+# ---------------------------------------------------------------------------
+if(NOT TARGET uninstall)
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+        IMMEDIATE @ONLY)
+    add_custom_target(uninstall
+        COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 endif()
