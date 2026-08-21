@@ -44,22 +44,22 @@ void Test_FormatDetect::detectsType_data() {
     // metadata ahead of acTL. The old 120-byte window missed it.
     // qimgv only reports APNG as animated when an "apng" reader is present,
     // so these rows are skipped on a system without that plugin.
-    QTest::newRow("apng, acTL past 120 bytes") << "apng_late_actl.png"  << int(ANIMATED) << QByteArray("apng");
-    QTest::newRow("apng, acTL early")          << "apng_early_actl.png" << int(ANIMATED) << QByteArray("apng");
-    QTest::newRow("png, no acTL")              << "png_still.png"       << int(STATIC)   << QByteArray();
+    QTest::newRow("apng, acTL past 120 bytes") << "apng_late_actl.png" << int(ANIMATED) << QByteArray("apng");
+    QTest::newRow("apng, acTL early") << "apng_early_actl.png" << int(ANIMATED) << QByteArray("apng");
+    QTest::newRow("png, no acTL") << "png_still.png" << int(STATIC) << QByteArray();
 
     // The regression that motivated rewriting detectAnimatedAvif(): major
     // brand is 'avif', 'avis' appears only among the compatible brands.
     QTest::newRow("avif seq via compat brand") << "avif_seq_compat.avif" << int(ANIMATED) << QByteArray();
-    QTest::newRow("avif seq via major brand")  << "avif_seq_major.avif"  << int(ANIMATED) << QByteArray();
-    QTest::newRow("avif still")                << "avif_still.avif"      << int(STATIC)   << QByteArray();
+    QTest::newRow("avif seq via major brand") << "avif_seq_major.avif" << int(ANIMATED) << QByteArray();
+    QTest::newRow("avif still") << "avif_still.avif" << int(STATIC) << QByteArray();
 
-    QTest::newRow("webp animated")             << "webp_animated.webp"   << int(ANIMATED) << QByteArray();
-    QTest::newRow("webp still")                << "webp_still.webp"      << int(STATIC)   << QByteArray();
+    QTest::newRow("webp animated") << "webp_animated.webp" << int(ANIMATED) << QByteArray();
+    QTest::newRow("webp still") << "webp_still.webp" << int(STATIC) << QByteArray();
 
     // Real files produced by ffmpeg/libaom, not hand-built headers.
-    QTest::newRow("real avif sequence")        << "real_anim.avif"       << int(ANIMATED) << QByteArray();
-    QTest::newRow("real avif still")           << "real_still.avif"      << int(STATIC)   << QByteArray();
+    QTest::newRow("real avif sequence") << "real_anim.avif" << int(ANIMATED) << QByteArray();
+    QTest::newRow("real avif still") << "real_still.avif" << int(STATIC) << QByteArray();
 }
 
 void Test_FormatDetect::detectsType() {
@@ -67,10 +67,9 @@ void Test_FormatDetect::detectsType() {
     QFETCH(int, expectedType);
     QFETCH(QByteArray, requiresReader);
 
-    if(!requiresReader.isEmpty()
-       && !QImageReader::supportedImageFormats().contains(requiresReader)) {
-        QSKIP(qPrintable(QStringLiteral("no '%1' image plugin on this system")
-                             .arg(QString::fromLatin1(requiresReader))));
+    if(!requiresReader.isEmpty() && !QImageReader::supportedImageFormats().contains(requiresReader)) {
+        QSKIP(
+            qPrintable(QStringLiteral("no '%1' image plugin on this system").arg(QString::fromLatin1(requiresReader))));
     }
 
     const QString path = dataPath(file);
@@ -104,8 +103,7 @@ void Test_FormatDetect::decodesAnimatedAvif() {
 
     for(int i = 0; i < 10; i++) {
         QVERIFY(movie.jumpToFrame(i));
-        QVERIFY2(!movie.currentImage().isNull(),
-                 qPrintable(QStringLiteral("frame %1 decoded to a null image").arg(i)));
+        QVERIFY2(!movie.currentImage().isNull(), qPrintable(QStringLiteral("frame %1 decoded to a null image").arg(i)));
     }
 }
 

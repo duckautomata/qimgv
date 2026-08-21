@@ -132,7 +132,7 @@ void CropPanel::onAspectRatioSelected() {
     }
     case 3:
     {
-        QScreen* screen = nullptr;
+        QScreen *screen = nullptr;
         screen = QGuiApplication::screenAt(mapToGlobal(ui->ARcomboBox->geometry().topLeft()));
         if(!screen)
             screen = QGuiApplication::primaryScreen();

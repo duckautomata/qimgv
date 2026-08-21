@@ -22,6 +22,7 @@ public:
     void print();
     void setCurrent(int _current);
     int count() const;
+
 private:
     // -1 means "no current item"; every accessor must tolerate it.
     int currentIndex = -1;

@@ -68,7 +68,7 @@ protected:
     virtual void resizeEvent(QResizeEvent* event);
     virtual void leaveEvent(QEvent *);
     void enterEvent(QEnterEvent *) override;
-    
+
 private:
     bool visibilityEnabled, imageDoesNotFit;
     class MapOverlayPrivate;

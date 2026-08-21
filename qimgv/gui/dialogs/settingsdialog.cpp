@@ -80,7 +80,6 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->scalingQualityComboBox->addItem("Bicubic+sharpen (OpenCV)");
 #endif
 
-
     if(!settings->supportedFormats().contains("jxl"))
         ui->animatedJxlCheckBox->hide();
 

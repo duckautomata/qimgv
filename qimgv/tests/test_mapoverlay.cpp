@@ -9,17 +9,17 @@ namespace {
 constexpr qreal kEpsilon = 1e-4;
 
 bool sizesAreClose(QSizeF a, QSizeF b) {
-    return qAbs(a.width() - b.width()) < kEpsilon
-        && qAbs(a.height() - b.height()) < kEpsilon;
+    return qAbs(a.width() - b.width()) < kEpsilon && qAbs(a.height() - b.height()) < kEpsilon;
 }
 } // namespace
 
 // Reports both sizes on failure, unlike a bare QVERIFY.
-#define COMPARE_SIZES(actual, expected)                                        \
-    QVERIFY2(sizesAreClose((actual), (expected)),                              \
-             qPrintable(QStringLiteral("actual %1x%2 != expected %3x%4")       \
-                            .arg((actual).width()).arg((actual).height())      \
-                            .arg((expected).width()).arg((expected).height())))
+#define COMPARE_SIZES(actual, expected)                                                                                \
+    QVERIFY2(sizesAreClose((actual), (expected)), qPrintable(QStringLiteral("actual %1x%2 != expected %3x%4")          \
+                                                                 .arg((actual).width())                                \
+                                                                 .arg((actual).height())                               \
+                                                                 .arg((expected).width())                              \
+                                                                 .arg((expected).height())))
 
 void Test_MapOverlay::initTestCase() {
     parent = new QWidget();
@@ -58,7 +58,7 @@ void Test_MapOverlay::innerMatchesScaledWindowArea() {
 
 // The inner rect can never escape the outer rect.
 void Test_MapOverlay::innerNeverExceedsOuter() {
-    QVERIFY(minimap->inner().width()  <= minimap->outer().width());
+    QVERIFY(minimap->inner().width() <= minimap->outer().width());
     QVERIFY(minimap->inner().height() <= minimap->outer().height());
 }
 

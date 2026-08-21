@@ -10,7 +10,6 @@
 #include <QImageWriter>
 #include <QWindow>
 
-
 #include "gui/customwidgets/floatingwidgetcontainer.h"
 #include "gui/viewers/viewerwidget.h"
 #include "gui/overlays/controlsoverlay.h"

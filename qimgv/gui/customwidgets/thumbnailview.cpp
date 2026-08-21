@@ -1,17 +1,9 @@
 #include "thumbnailview.h"
 
 ThumbnailView::ThumbnailView(Qt::Orientation _orientation, QWidget *parent)
-    : QGraphicsView(parent),
-      blockThumbnailLoading(false),
-      mDrawScrollbarIndicator(true),
-      lastScrollFrameTime(0),
-      mCropThumbnails(false),
-      mouseReleaseSelect(false),
-      selectMode(ACTIVATE_BY_PRESS),
-      scrollTimeLine(nullptr),
-      mThumbnailSize(120),
-      rangeSelection(false)
-{
+    : QGraphicsView(parent), blockThumbnailLoading(false), mDrawScrollbarIndicator(true), lastScrollFrameTime(0),
+      mCropThumbnails(false), mouseReleaseSelect(false), selectMode(ACTIVATE_BY_PRESS), scrollTimeLine(nullptr),
+      mThumbnailSize(120), rangeSelection(false) {
     setAccessibleName("thumbnailView");
     this->setMouseTracking(true);
     this->setAcceptDrops(false);
@@ -338,9 +330,7 @@ void ThumbnailView::reloadItem(int index) {
     emit thumbnailsRequested(QList<int>() << index, static_cast<int>(qApp->devicePixelRatio() * mThumbnailSize), mCropThumbnails, true);
 }
 
-void ThumbnailView::setDragHover(int /*index*/) {
-
-}
+void ThumbnailView::setDragHover(int /*index*/) {}
 
 void ThumbnailView::setCropThumbnails(bool mode) {
     if(mode != mCropThumbnails) {

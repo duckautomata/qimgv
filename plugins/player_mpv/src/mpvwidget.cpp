@@ -12,8 +12,7 @@
 static bool setMpvOption(mpv_handle *mpv, const char *name, const char *value) {
     const int rc = mpv_set_option_string(mpv, name, value);
     if(rc < 0) {
-        qDebug() << "[mpv] option" << name << "=" << value
-                 << "rejected:" << mpv_error_string(rc);
+        qDebug() << "[mpv] option" << name << "=" << value << "rejected:" << mpv_error_string(rc);
         return false;
     }
     return true;
@@ -23,8 +22,7 @@ static bool setMpvOption(mpv_handle *mpv, const char *name, const char *value) {
 static bool setMpvProperty(mpv_handle *mpv, const char *name, const QString &value) {
     const int rc = mpv::qt::set_property(mpv, QString::fromLatin1(name), value);
     if(rc < 0) {
-        qDebug() << "[mpv] property" << name << "=" << value
-                 << "rejected:" << mpv_error_string(rc);
+        qDebug() << "[mpv] property" << name << "=" << value << "rejected:" << mpv_error_string(rc);
         return false;
     }
     return true;
@@ -68,8 +66,8 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f)
 
     this->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
-    //setMpvOption(mpv, "terminal", "yes");
-    //setMpvOption(mpv, "msg-level", "all=v");
+    // setMpvOption(mpv, "terminal", "yes");
+    // setMpvOption(mpv, "msg-level", "all=v");
     setMpvOption(mpv, "vo", "libmpv");
 
     // Preserve the alpha channel when the codec provides one, so ProRes 4444,
@@ -158,8 +156,7 @@ void MpvWidget::setBackgroundColor(QColor color) {
 void MpvWidget::renderMpv() {
     // Tell mpv the target has 8 bits of alpha so it emits transparent pixels
     // rather than compositing onto black itself.
-    mpv_opengl_fbo mpfbo{static_cast<int>(defaultFramebufferObject()),
-                         width(), height(), GL_RGBA8};
+    mpv_opengl_fbo mpfbo{static_cast<int>(defaultFramebufferObject()), width(), height(), GL_RGBA8};
     int flip_y{1};
 
     mpv_render_param params[] = {
@@ -239,7 +236,7 @@ void MpvWidget::maybeUpdate() {
     //       to a different workspace with a reparenting window manager.
     if(window()->isMinimized()) {
         makeCurrent();
-        renderMpv();   // nothing is visible; skip the QPainter composite
+        renderMpv(); // nothing is visible; skip the QPainter composite
         context()->swapBuffers(context()->surface());
         doneCurrent();
     } else {

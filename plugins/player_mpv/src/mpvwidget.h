@@ -73,6 +73,6 @@ private:
 
     // Both must be null-initialized: the destructor may run without
     // initializeGL() ever having been called (plugin loaded, never shown).
-    mpv_handle         *mpv    = nullptr;
+    mpv_handle *mpv = nullptr;
     mpv_render_context *mpv_gl = nullptr;
 };

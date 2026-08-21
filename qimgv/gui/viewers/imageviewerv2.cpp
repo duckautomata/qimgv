@@ -1,31 +1,12 @@
 #include "imageviewerv2.h"
 
-ImageViewerV2::ImageViewerV2(QWidget *parent) : QGraphicsView(parent),
-    scene(nullptr),
-    pixmap(nullptr),
-    pixmapScaled(nullptr),
-    movie(nullptr),
-    transparencyGrid(false),
-    expandImage(false),
-    smoothAnimatedImages(true),
-    smoothUpscaling(true),
-    forceFastScale(false),
-    keepFitMode(false),
-    loopPlayback(true),
-    mIsFullscreen(false),
-    scrollBarWorkaround(true),
-    useFixedZoomLevels(false),
-    trackpadDetection(true),
-    mouseInteraction(MouseInteractionState::MOUSE_NONE),
-    minScale(0.01f),
-    maxScale(500.0f),
-    fitWindowScale(0.125f),
-    fitWindowStretchScale(0.125f),
-    mViewLock(LOCK_NONE),
-    imageFitMode(FIT_WINDOW),
-    imageFitModeDefault(FIT_WINDOW),
-    mScalingFilter(QI_FILTER_BILINEAR)
-{
+ImageViewerV2::ImageViewerV2(QWidget *parent)
+    : QGraphicsView(parent), scene(nullptr), pixmap(nullptr), pixmapScaled(nullptr), movie(nullptr),
+      transparencyGrid(false), expandImage(false), smoothAnimatedImages(true), smoothUpscaling(true),
+      forceFastScale(false), keepFitMode(false), loopPlayback(true), mIsFullscreen(false), scrollBarWorkaround(true),
+      useFixedZoomLevels(false), trackpadDetection(true), mouseInteraction(MouseInteractionState::MOUSE_NONE),
+      minScale(0.01f), maxScale(500.0f), fitWindowScale(0.125f), fitWindowStretchScale(0.125f), mViewLock(LOCK_NONE),
+      imageFitMode(FIT_WINDOW), imageFitModeDefault(FIT_WINDOW), mScalingFilter(QI_FILTER_BILINEAR) {
     setViewportUpdateMode(QGraphicsView::MinimalViewportUpdate);
     this->viewport()->setAttribute(Qt::WA_OpaquePaintEvent, true);
     setFocusPolicy(Qt::NoFocus);

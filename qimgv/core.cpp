@@ -14,13 +14,8 @@
 // Initializer order matches the declaration order in core.h; the compiler
 // initializes members in declaration order regardless of what is written here.
 Core::Core()
-    : QObject(),
-      loopSlideshow(false),
-      slideshow(false),
-      shuffle(false),
-      folderEndAction(FOLDER_END_NO_ACTION),
-      mDrag(nullptr)
-{
+    : QObject(), loopSlideshow(false), slideshow(false), shuffle(false), folderEndAction(FOLDER_END_NO_ACTION),
+      mDrag(nullptr) {
     loadTranslation();
     initGui();
     initComponents();

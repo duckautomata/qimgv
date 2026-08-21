@@ -42,8 +42,7 @@ static inline QImage flipImage(const QImage &src, Qt::Orientations orientations)
 #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
     return src.flipped(orientations);
 #else
-    return src.mirrored(orientations.testFlag(Qt::Horizontal),
-                        orientations.testFlag(Qt::Vertical));
+    return src.mirrored(orientations.testFlag(Qt::Horizontal), orientations.testFlag(Qt::Vertical));
 #endif
 }
 //------------------------------------------------------------------------------

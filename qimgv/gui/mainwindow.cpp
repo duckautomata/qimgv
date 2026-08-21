@@ -3,19 +3,9 @@
 // TODO: nuke this and rewrite
 
 MW::MW(QWidget *parent)
-    : FloatingWidgetContainer(parent),
-      currentDisplay(0),
-      maximized(false),
-      activeSidePanel(SIDEPANEL_NONE),
-      cropPanel(nullptr),
-      cropOverlay(nullptr),
-      saveOverlay(nullptr),
-      copyOverlay(nullptr),
-      renameOverlay(nullptr),
-      imageInfoOverlay(nullptr),
-      infoBarFullscreen(nullptr),
-      floatingMessage(nullptr)
-{
+    : FloatingWidgetContainer(parent), currentDisplay(0), maximized(false), activeSidePanel(SIDEPANEL_NONE),
+      cropPanel(nullptr), cropOverlay(nullptr), saveOverlay(nullptr), copyOverlay(nullptr), renameOverlay(nullptr),
+      imageInfoOverlay(nullptr), infoBarFullscreen(nullptr), floatingMessage(nullptr) {
     setAttribute(Qt::WA_TranslucentBackground, true);
     layout.setContentsMargins(0,0,0,0);
     layout.setSpacing(0);
@@ -469,14 +459,8 @@ void MW::mouseDoubleClickEvent(QMouseEvent *event) {
     // Synthesize the press half of the double-click so that actions bound to
     // a plain press still fire. Stack-allocated: the previous version used
     // new without a matching delete, leaking one event per double-click.
-    QMouseEvent fakePressEvent(
-        QEvent::MouseButtonPress,
-        event->position(),
-        event->globalPosition(),
-        event->button(),
-        event->buttons(),
-        event->modifiers()
-    );
+    QMouseEvent fakePressEvent(QEvent::MouseButtonPress, event->position(), event->globalPosition(), event->button(),
+                               event->buttons(), event->modifiers());
     actionManager->processEvent(&fakePressEvent);
     actionManager->processEvent(event);
 }

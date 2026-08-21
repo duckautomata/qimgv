@@ -19,8 +19,8 @@ int Randomizer::count() const {
 }
 
 void Randomizer::shuffle() {
-    std::mt19937 rng(static_cast<std::mt19937::result_type>(
-        std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::mt19937 rng(
+        static_cast<std::mt19937::result_type>(std::chrono::steady_clock::now().time_since_epoch().count()));
     std::shuffle(vec.begin(), vec.end(), rng);
 }
 

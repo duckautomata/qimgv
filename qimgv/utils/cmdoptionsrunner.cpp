@@ -37,9 +37,8 @@ void CmdOptionsRunner::generateThumbs(QString dirPath, int size) {
     }
 
     auto list = dm.fileList();
-    out() << "\nDirectory:  " << dirPath
-          << "\nFile count: " << list.size()
-          << "\nSize limit: " << size << "x" << size << " px"
+    out() << "\nDirectory:  " << dirPath << "\nFile count: " << list.size() << "\nSize limit: " << size << "x" << size
+          << " px"
           << "\nGenerating thumbnails...\n";
     out().flush();
 
@@ -88,24 +87,22 @@ void CmdOptionsRunner::showBuildOptions() {
     QStringList formats;
     for(const auto &f : QImageReader::supportedImageFormats())
         formats << QString::fromLatin1(f);
-    out() << "\nReadable image formats (" << formats.size() << "):\n   "
-          << formats.join(QStringLiteral(" ")) << "\n";
+    out() << "\nReadable image formats (" << formats.size() << "):\n   " << formats.join(QStringLiteral(" ")) << "\n";
 
     // Where each notable format comes from, so a missing one points at the
     // package that supplies it rather than at a bug.
-    static const struct { const char *format; const char *source; } kNotable[] = {
-        {"webp", "qt6-imageformats"},
-        {"tiff", "qt6-imageformats"},
-        {"avif", "kimageformats"},
-        {"heic", "kimageformats"},
-        {"jxl",  "kimageformats"},
-        {"apng", "QtApng (github.com/Skycoder42/QtApng) -- not packaged by most distros"},
+    static const struct {
+        const char *format;
+        const char *source;
+    } kNotable[] = {
+        {"webp", "qt6-imageformats"}, {"tiff", "qt6-imageformats"},
+        {"avif", "kimageformats"},    {"heic", "kimageformats"},
+        {"jxl", "kimageformats"},     {"apng", "QtApng (github.com/Skycoder42/QtApng) -- not packaged by most distros"},
     };
     out() << "\n";
     for(const auto &entry : kNotable) {
         const bool have = formats.contains(QString::fromLatin1(entry.format));
-        out() << "   " << (have ? "[x] " : "[ ] ")
-              << QString::fromLatin1(entry.format).leftJustified(6);
+        out() << "   " << (have ? "[x] " : "[ ] ") << QString::fromLatin1(entry.format).leftJustified(6);
         if(!have)
             out() << " -- provided by " << entry.source;
         out() << "\n";

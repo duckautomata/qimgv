@@ -19,9 +19,9 @@ private slots:
     void innerNeverExceedsOuter();
 
 private:
-    const QSize  kWindowSize{200, 100};
+    const QSize kWindowSize{200, 100};
     const QSizeF kDrawingSize{1400, 1200};
 
-    QWidget    *parent  = nullptr;
+    QWidget *parent = nullptr;
     MapOverlay *minimap = nullptr;
 };

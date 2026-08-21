@@ -4,14 +4,13 @@
 // the set once. QImageReader::supportedImageFormats() walks the plugin loader
 // and allocates a fresh QList on every call, which is measurable when
 // scanning a directory of thousands of images.
-static const QSet<QByteArray>& readableFormats() {
+static const QSet<QByteArray> &readableFormats() {
     static const QSet<QByteArray> formats = [] {
         const QList<QByteArray> list = QImageReader::supportedImageFormats();
         return QSet<QByteArray>(list.begin(), list.end());
     }();
     return formats;
 }
-
 
 DocumentInfo::DocumentInfo(QString path)
     : mDocumentType(DocumentType::NONE),
@@ -139,8 +138,8 @@ void DocumentInfo::detectFormat() {
     } else if(mimeName == "image/avif") {
         mFormat = "avif";
         mDocumentType = detectAnimatedAvif() ? DocumentType::ANIMATED : DocumentType::STATIC;
-    } else if(mimeName == "image/heif" || mimeName == "image/heic"
-              || mimeName == "image/heif-sequence" || mimeName == "image/heic-sequence") {
+    } else if(mimeName == "image/heif" || mimeName == "image/heic" || mimeName == "image/heif-sequence" ||
+              mimeName == "image/heic-sequence") {
         // Qt reports both under the "heic" reader name.
         mFormat = "heic";
         mDocumentType = detectAnimatedHeif() ? DocumentType::ANIMATED : DocumentType::STATIC;
@@ -173,7 +172,7 @@ void DocumentInfo::detectFormat() {
 
 // Reads a big-endian uint32 from an open stream. Returns false at EOF.
 static bool readU32(QDataStream &in, quint32 &out) {
-    if(in.readRawData(reinterpret_cast<char*>(&out), 4) != 4)
+    if(in.readRawData(reinterpret_cast<char *>(&out), 4) != 4)
         return false;
     out = qFromBigEndian(out);
     return true;
@@ -190,7 +189,7 @@ bool DocumentInfo::detectAPNG() {
     if(!f.open(QFile::ReadOnly))
         return false;
 
-    static const char kPngSignature[8] = {'\x89','P','N','G','\r','\n','\x1a','\n'};
+    static const char kPngSignature[8] = {'\x89', 'P', 'N', 'G', '\r', '\n', '\x1a', '\n'};
     char signature[8];
     QDataStream in(&f);
     if(in.readRawData(signature, 8) != 8 || memcmp(signature, kPngSignature, 8) != 0)
@@ -269,10 +268,10 @@ QSet<QByteArray> DocumentInfo::isoBmffBrands() const {
         return brands;
 
     char brand[4];
-    if(in.readRawData(brand, 4) != 4)   // major_brand
+    if(in.readRawData(brand, 4) != 4) // major_brand
         return brands;
     brands.insert(QByteArray(brand, 4));
-    in.skipRawData(4);                  // minor_version
+    in.skipRawData(4); // minor_version
 
     // Remaining bytes are a list of 4-byte compatible brands.
     const int remaining = static_cast<int>(boxSize) - 16;
@@ -295,11 +294,9 @@ bool DocumentInfo::detectAnimatedAvif() {
 // appear alongside it depending on the codec.
 bool DocumentInfo::detectAnimatedHeif() {
     const QSet<QByteArray> brands = isoBmffBrands();
-    return brands.contains(QByteArrayLiteral("msf1"))
-        || brands.contains(QByteArrayLiteral("hevc"))
-        || brands.contains(QByteArrayLiteral("avcs"));
+    return brands.contains(QByteArrayLiteral("msf1")) || brands.contains(QByteArrayLiteral("hevc")) ||
+           brands.contains(QByteArrayLiteral("avcs"));
 }
-
 
 void DocumentInfo::loadExifTags() {
     if(exifLoaded)

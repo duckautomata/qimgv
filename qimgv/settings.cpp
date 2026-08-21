@@ -278,51 +278,51 @@ void Settings::setColorTid(int tid) {
 // this list is about containers, not codecs.
 void Settings::fillVideoFormats() {
     // Modern / common
-    mVideoFormatsMap.insert("video/webm",         "webm");
-    mVideoFormatsMap.insert("video/mp4",          "mp4");
-    mVideoFormatsMap.insert("video/mp4",          "m4v");
-    mVideoFormatsMap.insert("video/x-matroska",   "mkv");
-    mVideoFormatsMap.insert("video/quicktime",    "mov");
-    mVideoFormatsMap.insert("video/quicktime",    "qt");
+    mVideoFormatsMap.insert("video/webm", "webm");
+    mVideoFormatsMap.insert("video/mp4", "mp4");
+    mVideoFormatsMap.insert("video/mp4", "m4v");
+    mVideoFormatsMap.insert("video/x-matroska", "mkv");
+    mVideoFormatsMap.insert("video/quicktime", "mov");
+    mVideoFormatsMap.insert("video/quicktime", "qt");
 
     // Transport streams (camera / broadcast / Blu-ray)
-    mVideoFormatsMap.insert("video/mp2t",         "ts");
-    mVideoFormatsMap.insert("video/mp2t",         "m2ts");
-    mVideoFormatsMap.insert("video/mp2t",         "mts");
-    mVideoFormatsMap.insert("video/mp2t",         "m2t");
+    mVideoFormatsMap.insert("video/mp2t", "ts");
+    mVideoFormatsMap.insert("video/mp2t", "m2ts");
+    mVideoFormatsMap.insert("video/mp2t", "mts");
+    mVideoFormatsMap.insert("video/mp2t", "m2t");
 
     // MPEG program streams
-    mVideoFormatsMap.insert("video/mpeg",         "mpg");
-    mVideoFormatsMap.insert("video/mpeg",         "mpeg");
-    mVideoFormatsMap.insert("video/mpeg",         "m2v");
-    mVideoFormatsMap.insert("video/mpeg",         "mpv");
+    mVideoFormatsMap.insert("video/mpeg", "mpg");
+    mVideoFormatsMap.insert("video/mpeg", "mpeg");
+    mVideoFormatsMap.insert("video/mpeg", "m2v");
+    mVideoFormatsMap.insert("video/mpeg", "mpv");
 
     // Ogg / Matroska siblings
-    mVideoFormatsMap.insert("video/ogg",          "ogv");
-    mVideoFormatsMap.insert("video/ogg",          "ogg");
+    mVideoFormatsMap.insert("video/ogg", "ogv");
+    mVideoFormatsMap.insert("video/ogg", "ogg");
 
     // Mobile
-    mVideoFormatsMap.insert("video/3gpp",         "3gp");
-    mVideoFormatsMap.insert("video/3gpp2",        "3g2");
+    mVideoFormatsMap.insert("video/3gpp", "3gp");
+    mVideoFormatsMap.insert("video/3gpp2", "3g2");
 
     // Professional / intermediate (ProRes, DNxHD often live here)
-    mVideoFormatsMap.insert("application/mxf",    "mxf");
+    mVideoFormatsMap.insert("application/mxf", "mxf");
 
     // Legacy
-    mVideoFormatsMap.insert("video/x-ms-wmv",     "wmv");
-    mVideoFormatsMap.insert("video/x-ms-asf",     "asf");
-    mVideoFormatsMap.insert("video/x-msvideo",    "avi");
-    mVideoFormatsMap.insert("video/x-flv",        "flv");
-    mVideoFormatsMap.insert("video/x-f4v",        "f4v");
-    mVideoFormatsMap.insert("video/divx",         "divx");
-    mVideoFormatsMap.insert("video/x-ms-vob",     "vob");
+    mVideoFormatsMap.insert("video/x-ms-wmv", "wmv");
+    mVideoFormatsMap.insert("video/x-ms-asf", "asf");
+    mVideoFormatsMap.insert("video/x-msvideo", "avi");
+    mVideoFormatsMap.insert("video/x-flv", "flv");
+    mVideoFormatsMap.insert("video/x-f4v", "f4v");
+    mVideoFormatsMap.insert("video/divx", "divx");
+    mVideoFormatsMap.insert("video/x-ms-vob", "vob");
     mVideoFormatsMap.insert("video/vnd.rn-realvideo", "rmvb");
 
     // Raw elementary streams -- no container, mpv sniffs them.
-    mVideoFormatsMap.insert("video/h264",         "h264");
-    mVideoFormatsMap.insert("video/h265",         "h265");
-    mVideoFormatsMap.insert("video/h265",         "hevc");
-    mVideoFormatsMap.insert("video/av1",          "av1");
+    mVideoFormatsMap.insert("video/h264", "h264");
+    mVideoFormatsMap.insert("video/h265", "h265");
+    mVideoFormatsMap.insert("video/h265", "hevc");
+    mVideoFormatsMap.insert("video/av1", "av1");
 }
 //------------------------------------------------------------------------------
 QString Settings::mpvBinary() {
