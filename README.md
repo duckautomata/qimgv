@@ -2,7 +2,7 @@
 
 <p align="center">
   <b>Fast, configurable image viewer with optional video support.</b><br>
-  <sub>Qt 6 · Windows · Linux · macOS</sub>
+  <sub>Qt 6 · Windows · builds on Linux and macOS</sub>
 </p>
 
 <p align="center">
@@ -65,19 +65,30 @@ application background rather than rendered over black.
 
 ### Windows
 
-Portable — everything lives in the extracted folder. Grab the latest zip from the
-[releases page](https://github.com/duckautomata/qimgv/releases).
+Three downloads on the [releases page](https://github.com/duckautomata/qimgv/releases/latest):
+
+| File | Size | Use it if |
+|---|---|---|
+| `…-win64-setup.exe` | ~88 MB | You want it installed like a normal app. **Start here.** |
+| `…-win64.zip` | ~131 MB | You want it portable, with nothing written outside the folder. |
+| `…-win64-minimal.zip` | ~61 MB | Images only — no video playback, smallest download. |
+
+The installer is per-user, so it needs no administrator rights. Full instructions,
+including upgrading, where settings live and how to set qimgv as your default image
+viewer, are in **[docs/INSTALL.md](docs/INSTALL.md)**.
 
 ### Linux
 
-This fork is not yet in distro repositories. Build from source (see below), or use the
-`qimgv/distrib/PKGBUILD` on Arch.
+No binaries yet. Build from source (see below), or use the `qimgv/distrib/PKGBUILD` on Arch.
 
 Note that `qimgv` in your distro's repos is the **upstream** package, not this fork.
 
 ### macOS
 
 Build from source. See [docs/BUILDING.md](docs/BUILDING.md).
+
+It compiles and its tests pass in CI, but no one has run the application on macOS
+yet — treat it as unverified rather than supported.
 
 ## Building
 
