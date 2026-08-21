@@ -17,62 +17,62 @@
 <context>
     <name>ContextMenu</name>
     <message>
-        <location filename="../../gui/contextmenu.ui" line="229"/>
+        <location filename="../../gui/contextmenu.ui" line="236"/>
         <source>Edit</source>
         <translation>Редагувати</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="55"/>
+        <location filename="../../gui/contextmenu.cpp" line="58"/>
         <source>Print</source>
         <translation>Друк</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="59"/>
+        <location filename="../../gui/contextmenu.cpp" line="62"/>
         <source>Quick copy</source>
         <translation>Шв. копіювання</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="63"/>
+        <location filename="../../gui/contextmenu.cpp" line="66"/>
         <source>Quick move</source>
         <translation>Шв. переміщення</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="67"/>
+        <location filename="../../gui/contextmenu.cpp" line="70"/>
         <source>Move to trash</source>
         <translation>Помістити в корзину</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="72"/>
+        <location filename="../../gui/contextmenu.cpp" line="75"/>
         <source>Open</source>
         <translation>Відкрити</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="77"/>
+        <location filename="../../gui/contextmenu.cpp" line="80"/>
         <source>Folder View</source>
         <translation>Перегляд теки</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="82"/>
+        <location filename="../../gui/contextmenu.cpp" line="85"/>
         <source>Settings</source>
         <translation>Налаштування</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="85"/>
+        <location filename="../../gui/contextmenu.cpp" line="88"/>
         <source>Open with...</source>
         <translation>Відкрити в...</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="91"/>
+        <location filename="../../gui/contextmenu.cpp" line="94"/>
         <source>Show in folder</source>
         <translation>Показати в теці</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="99"/>
+        <location filename="../../gui/contextmenu.cpp" line="102"/>
         <source>Back</source>
         <translation>Назад</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="102"/>
+        <location filename="../../gui/contextmenu.cpp" line="105"/>
         <source>Configure menu</source>
         <translation>Налаштувати меню</translation>
     </message>
@@ -94,228 +94,228 @@
 <context>
     <name>Core</name>
     <message>
-        <location filename="../../core.cpp" line="255"/>
+        <location filename="../../core.cpp" line="258"/>
         <source>Updated: </source>
         <translation>Оновлено: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="261"/>
+        <location filename="../../core.cpp" line="264"/>
         <source>Welcome to </source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="261"/>
+        <location filename="../../core.cpp" line="264"/>
         <source> version </source>
         <translation> версія </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="268"/>
+        <location filename="../../core.cpp" line="271"/>
         <source>Shuffle mode: OFF</source>
         <translation>Режим перемішування: Вимкнено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="271"/>
+        <location filename="../../core.cpp" line="274"/>
         <source>Shuffle mode: ON</source>
         <translation>Режим перемішування: Увімкнено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="280"/>
+        <location filename="../../core.cpp" line="283"/>
         <source>Slideshow: OFF</source>
         <translation>Слайд-шоу: Вимкнено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="284"/>
+        <location filename="../../core.cpp" line="287"/>
         <source>Slideshow: ON</source>
         <translation>Слайд-шоу: Увімкнено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="355"/>
+        <location filename="../../core.cpp" line="358"/>
         <source>Delete </source>
         <translation>Видалити </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="355"/>
+        <location filename="../../core.cpp" line="358"/>
         <source> items permanently?</source>
         <translation> елементів остаточно?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="357"/>
+        <location filename="../../core.cpp" line="360"/>
         <source>Delete item permanently?</source>
         <translation>Видалити елемент остаточно?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="358"/>
+        <location filename="../../core.cpp" line="361"/>
         <source>Delete permanently</source>
         <translation>Видалити остаточно</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="374"/>
+        <location filename="../../core.cpp" line="377"/>
         <source>File removed</source>
         <translation>Файл видалено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="378"/>
+        <location filename="../../core.cpp" line="381"/>
         <source>Removed: </source>
         <translation>Видалено: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="378"/>
-        <location filename="../../core.cpp" line="408"/>
+        <location filename="../../core.cpp" line="381"/>
+        <location filename="../../core.cpp" line="411"/>
         <source> files</source>
         <translation> файлів</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="389"/>
+        <location filename="../../core.cpp" line="392"/>
         <source>Move </source>
         <translation>Помістити </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="389"/>
+        <location filename="../../core.cpp" line="392"/>
         <source> items to trash?</source>
         <translation> елементів до кошику?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="391"/>
+        <location filename="../../core.cpp" line="394"/>
         <source>Move item to trash?</source>
         <translation>Помістити елемент до кошику?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="392"/>
+        <location filename="../../core.cpp" line="395"/>
         <source>Move to trash</source>
         <translation>Помістити в кошик</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="404"/>
+        <location filename="../../core.cpp" line="407"/>
         <source>Moved to trash</source>
         <translation>Переміщено в кошик</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="408"/>
+        <location filename="../../core.cpp" line="411"/>
         <source>Moved to trash: </source>
         <translation>Переміщено в кошик: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="463"/>
+        <location filename="../../core.cpp" line="466"/>
         <source>File copied</source>
         <translation>Файл скопійовано</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="470"/>
+        <location filename="../../core.cpp" line="473"/>
         <source>Path copied</source>
         <translation>Шлях скопійовано</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="644"/>
-        <location filename="../../core.cpp" line="918"/>
-        <location filename="../../core.cpp" line="939"/>
+        <location filename="../../core.cpp" line="647"/>
+        <location filename="../../core.cpp" line="921"/>
+        <location filename="../../core.cpp" line="942"/>
         <source>File exists</source>
         <translation>Файл існує</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="644"/>
+        <location filename="../../core.cpp" line="647"/>
         <source>Overwrite file?</source>
         <translation>Перезаписати файл?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="812"/>
-        <location filename="../../core.cpp" line="880"/>
+        <location filename="../../core.cpp" line="815"/>
+        <location filename="../../core.cpp" line="883"/>
         <source>Could not create directory </source>
         <translation>Не вдалося створити директорію </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="916"/>
+        <location filename="../../core.cpp" line="919"/>
         <source>File moved.</source>
         <translation>Файл переміщено.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="918"/>
-        <location filename="../../core.cpp" line="939"/>
+        <location filename="../../core.cpp" line="921"/>
+        <location filename="../../core.cpp" line="942"/>
         <source>Destination file exists. Overwrite?</source>
         <translation>Файл існує. Перезаписати?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="937"/>
+        <location filename="../../core.cpp" line="940"/>
         <source>File copied.</source>
         <translation>Файл скопійовано.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="984"/>
+        <location filename="../../core.cpp" line="987"/>
         <source>Perform action &quot;</source>
         <translation>Виконати дію &quot;</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="984"/>
+        <location filename="../../core.cpp" line="987"/>
         <source>Changes will be saved immediately.</source>
         <translation>Зміни будуть збережені негайно.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1002"/>
+        <location filename="../../core.cpp" line="1005"/>
         <source>Flip horizontal</source>
         <translation>Перевернути горизонтально</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1006"/>
+        <location filename="../../core.cpp" line="1009"/>
         <source>Flip vertical</source>
         <translation>Перевернути вертикально</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1010"/>
+        <location filename="../../core.cpp" line="1013"/>
         <source>Rotate</source>
         <translation>Повернути</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1014"/>
+        <location filename="../../core.cpp" line="1017"/>
         <source>Resize</source>
         <translation>Змінити розмір</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1020"/>
-        <location filename="../../core.cpp" line="1026"/>
+        <location filename="../../core.cpp" line="1023"/>
+        <location filename="../../core.cpp" line="1029"/>
         <source>Crop</source>
         <translation>Обрізати</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1058"/>
+        <location filename="../../core.cpp" line="1061"/>
         <source>File saved</source>
         <translation>Файл збережено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1061"/>
+        <location filename="../../core.cpp" line="1064"/>
         <source>Could not save file</source>
         <translation>Не вдалос зберегти файл</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1171"/>
+        <location filename="../../core.cpp" line="1174"/>
         <source>Could not open image</source>
         <translation>Не вдалося відкрити зображення</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1175"/>
+        <location filename="../../core.cpp" line="1178"/>
         <source>Can only print static images</source>
         <translation>Можливий друк лише статичних зображень</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1226"/>
+        <location filename="../../core.cpp" line="1229"/>
         <source>Could not open path: </source>
         <translation>Не вдалося відкрити шлях: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1260"/>
+        <location filename="../../core.cpp" line="1263"/>
         <source>Could not load folder: </source>
         <translation>Не вдалося завантажити теку: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1413"/>
+        <location filename="../../core.cpp" line="1416"/>
         <source>End of directory.</source>
         <translation>Кінець директорії.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1452"/>
+        <location filename="../../core.cpp" line="1455"/>
         <source>Load failed: </source>
         <translation>Завантаження не вдалося: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1496"/>
+        <location filename="../../core.cpp" line="1499"/>
         <source>Error: could not load image.</source>
         <translation>Помилка: не вдалося завантажити зображення.</translation>
     </message>
@@ -584,35 +584,35 @@
 <context>
     <name>MW</name>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="536"/>
+        <location filename="../../gui/mainwindow.cpp" line="572"/>
         <source>Save File as...</source>
         <translation>Зберегти файл як...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="771"/>
+        <location filename="../../gui/mainwindow.cpp" line="803"/>
         <source>Folder view</source>
         <translation>Галерея</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="772"/>
-        <location filename="../../gui/mainwindow.cpp" line="773"/>
-        <location filename="../../gui/mainwindow.cpp" line="776"/>
-        <location filename="../../gui/mainwindow.cpp" line="777"/>
+        <location filename="../../gui/mainwindow.cpp" line="804"/>
+        <location filename="../../gui/mainwindow.cpp" line="805"/>
+        <location filename="../../gui/mainwindow.cpp" line="808"/>
+        <location filename="../../gui/mainwindow.cpp" line="809"/>
         <source>No file opened.</source>
         <translation>Файл не відкрито.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="838"/>
+        <location filename="../../gui/mainwindow.cpp" line="872"/>
         <source>Fit Window</source>
         <translation>Вписати у вікно</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="842"/>
+        <location filename="../../gui/mainwindow.cpp" line="876"/>
         <source>Fit Width</source>
         <translation>Розтягнути по ширині</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="846"/>
+        <location filename="../../gui/mainwindow.cpp" line="880"/>
         <source>Fit 1:1</source>
         <translation>Режим 1:1</translation>
     </message>
@@ -713,59 +713,59 @@
         <translation>Розширений + Теки</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="218"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="314"/>
         <source>Make</source>
         <translation>ВИробник</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="222"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="318"/>
         <source>Model</source>
         <translation>Модель</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="226"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="322"/>
         <source>Date/Time</source>
         <translation>Дата/Час</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="233"/>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="236"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="329"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="332"/>
         <source>ExposureTime</source>
         <translation>Час експозиції</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="233"/>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="236"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="329"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="332"/>
         <source> sec</source>
         <translation> сек</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="244"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="340"/>
         <source>F Number</source>
         <translation>F номер</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="249"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="345"/>
         <source>ISO Speed ratings</source>
         <translation>Швидкість ISO</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="253"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="349"/>
         <source>Flash</source>
         <translation>Спалах</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="259"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="355"/>
         <source>Focal Length</source>
         <translation>Фокусна відстань</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="259"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="355"/>
         <source> mm</source>
         <translation> мм</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="268"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="364"/>
         <source>UserComment</source>
         <translation>Коментар</translation>
     </message>
@@ -1140,17 +1140,17 @@
         <translation>Загальні</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3666"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3694"/>
         <source>Controls</source>
         <translation>Керування</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3964"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4122"/>
         <source>Scripts</source>
         <translation>Скріпти</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4139"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4297"/>
         <source>Advanced</source>
         <translation>Продвинуті</translation>
     </message>
@@ -1171,7 +1171,7 @@
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="864"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2233"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2261"/>
         <source>xx</source>
         <translation></translation>
     </message>
@@ -1181,28 +1181,28 @@
         <translation>Приховувати курсор</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1973"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1994"/>
         <source>Image fit:</source>
         <translation>Підігнати зображення:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1990"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2011"/>
         <source>Stretch to width</source>
         <translation>Розтягнути по ширині</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1997"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2018"/>
         <source>1:1</source>
         <translation>1:1</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1980"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2001"/>
         <source>Fit in window</source>
         <translation>Вписати у вікно</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1266"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2057"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2085"/>
         <source>Top</source>
         <translation>Зверху</translation>
     </message>
@@ -1212,27 +1212,27 @@
         <translation>Зупинитись</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2064"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2092"/>
         <source>Center</source>
         <translation>По центру</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2071"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2099"/>
         <source>At cursor</source>
         <translation>На курсор</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2050"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2078"/>
         <source>Focus in 1:1 mode:</source>
         <translation>Фокус в режимі 1:1:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1602"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1623"/>
         <source>Video playback</source>
         <translation>Відео програвач</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1644"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1665"/>
         <source>Play sounds</source>
         <translation>Програвати аудіо</translation>
     </message>
@@ -1352,22 +1352,22 @@
         <translation>Сортування за замовчуванням:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1713"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1734"/>
         <source>Slideshow</source>
         <translation>Слайд-шоу</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1796"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1817"/>
         <source>Loop slideshow</source>
         <translation>Зациклити слайд-шоу</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1733"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1754"/>
         <source>Switch interval:</source>
         <translation>Інтервал перемикання:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1764"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1785"/>
         <source>ms</source>
         <translation>мс</translation>
     </message>
@@ -1402,17 +1402,17 @@
         <translation>Потребує перезапуск програми</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2889"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2917"/>
         <source>Use system colors</source>
         <translation>Системні кольори</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2899"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2927"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;modify&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;змінити&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2833"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2861"/>
         <source>Load preset:</source>
         <translation>Завантажити пресет:</translation>
     </message>
@@ -1462,12 +1462,22 @@
         <translation>При досягненні кінця теки:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1893"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1541"/>
+        <source>Apply sorting to folders</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1555"/>
+        <source>Show hidden files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1914"/>
         <source>View</source>
         <translation>Перегляд</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1949"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1970"/>
         <source>Display options</source>
         <translation>Налаштування перегляду</translation>
     </message>
@@ -1477,127 +1487,149 @@
         <translation>Вписати у вікно (розтягнути)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2026"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2047"/>
         <source>Keep fit mode when switching images</source>
         <translation>Не змінювати при перемиканні зображення</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2119"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2147"/>
         <source>Grid background on images with transparency</source>
         <translation>Фон-сітка на зображеннях із прозорістю</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2156"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2184"/>
         <source>Expand images, up to:</source>
         <translation>Збільшувати зображення, до:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2264"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2292"/>
         <source>Images smaller than window will be zoomed in</source>
         <translation>Зображення менші за розмір вікна будуть збільшені</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2323"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2351"/>
         <source>Unlock minimum zoom</source>
         <translation>Розблокувати мінімальний зум</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2333"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2361"/>
         <source>Always allow zooming below 100%</source>
         <translation>Завжди дозволяти зум менше ніж 100%</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2455"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2483"/>
         <source>Use fixed zoom levels:</source>
         <translation>Використовувати фіксовані рівні зуму:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2499"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2527"/>
         <source>Load defaults</source>
         <translation>За замовчуванням</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2774"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2802"/>
         <source>Theme</source>
         <translation>Тема</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2846"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2850"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2874"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2878"/>
         <source>Black</source>
         <translation>Чорний</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2855"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2883"/>
         <source>Dark</source>
         <translation>Темний</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2860"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2888"/>
         <source>Dark Blue</source>
         <translation>Темно-синій</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2865"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2893"/>
         <source>Light</source>
         <translation>Світлий</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3336"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3364"/>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="61"/>
         <source>Widget border</source>
         <translation>Межа віджетів</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3329"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4884"/>
+        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Noto Sans&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;This is a fast and easy to use image viewer&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;Features video support via libmpv&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Github page:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/duckautomata/qimgv&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;https://github.com/duckautomata/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Maintainer:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; duckautomata &amp;middot; originally by easymodo&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/duckautomata/qimgv/graphs/contributors&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;Contributors&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;OpenCV enabled builds use &lt;/span&gt;&lt;a href=&quot;https://github.com/dbzhang800/QtOpenCV&quot;&gt;&lt;span style=&quot; font-family:&apos;Ubuntu&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;QtOpenCV&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt; by dbzhang800&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;qimgv is licensed under &lt;/span&gt;&lt;a href=&quot;https://www.gnu.org/licenses/gpl-3.0.en.html&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;GNU GPL Version 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;Report any issues / request features &lt;/span&gt;&lt;a href=&quot;https://github.com/duckautomata/qimgv/issues&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3357"/>
         <source>Folder view top panel</source>
         <translation>Верхня панель галереї</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3132"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3160"/>
         <source>Background</source>
         <translation>Фон вікна</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3284"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3312"/>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="62"/>
         <source>Overlay background</source>
         <translation>Фон оверлеїв</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3405"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3433"/>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="63"/>
         <source>Overlay text</source>
         <translation>Текст оверлея</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3125"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3153"/>
         <source>Accent</source>
         <translation>Акцент</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3177"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3205"/>
         <source>Text</source>
         <translation>Текст</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3322"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3350"/>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="60"/>
         <source>Widget background</source>
         <translation>Фон віджетів</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3450"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3478"/>
         <source>Folder view background</source>
         <translation>Фон галереї</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3184"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3212"/>
         <source>Icons</source>
         <translation>Значки</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3443"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3471"/>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="64"/>
         <source>Scrollbars</source>
         <translation>Смуга прокрутки</translation>
@@ -1607,135 +1639,165 @@
         <translation type="obsolete">Фон-сітка на прозорих зображеннях</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3614"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3642"/>
         <source>Background blur (KDE)</source>
         <translation>Розмиття фону вікна (KDE)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3536"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3564"/>
         <source>Window opacity:</source>
         <translation>Непрозорість вікна:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3589"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3617"/>
         <source>%</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2567"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2595"/>
         <source>Scaling quality</source>
         <translation>Якість масштабування</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2673"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2701"/>
         <source>When unchecked, nearest neighbor algorithm will be used for upscaling.</source>
         <translation>Якщо вимкнено, буде застосований алгоритм nearest neighbor.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2676"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2704"/>
         <source>Smooth upscaling</source>
         <translation>Плавний апскейлінг</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2695"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2723"/>
         <source>Smooth animated images</source>
         <translation>Плавне масштабування анімацій</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2594"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2622"/>
         <source>Scaling filter:</source>
         <translation>Фільтр масштабування:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2626"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2654"/>
         <source>Nearest neighbor</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2631"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2659"/>
         <source>Bilinear</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2316"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2344"/>
         <source>Zoom options</source>
         <translation>Налаштування зуму</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2358"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2386"/>
         <source>Zoom step:</source>
         <translation>Крок зуму:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2426"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2454"/>
         <source>[step]</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3896"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3943"/>
         <source>None</source>
         <translation>Нічого</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3901"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3948"/>
         <source>Touchpad</source>
         <translation>Трекпад</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3906"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3953"/>
         <source>Touchpad &amp; Mouse Wheel</source>
         <translation>Трекпад &amp; колесо миші</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3727"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4042"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3755"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4200"/>
         <source>Add</source>
         <translation>Додати</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3734"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4049"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3762"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4207"/>
         <source>Edit</source>
         <translation>Редагувати</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3747"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4056"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3775"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4214"/>
         <source>Remove</source>
         <translation>Видалити</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3776"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3804"/>
         <source>Reset to defaults</source>
         <translation>За замовчуванням</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3810"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3838"/>
         <source>Action</source>
         <translation>Дія</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3815"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3843"/>
         <source>Shortcut</source>
         <translation>Комбінація клавіш</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4237"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3898"/>
+        <source>Switch image by clicking window edges</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3905"/>
+        <source>Visible edges</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4007"/>
+        <source>Mouse scrolling speed:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4051"/>
+        <source>[x]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4080"/>
+        <source>Trackpad detection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4090"/>
+        <source>Disable if you have issues with mouse scrolling</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4395"/>
         <source>Thumbnailer thread count:</source>
         <translation>Кількість потоків для генератора превью:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4275"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4433"/>
         <source>2</source>
         <translation>2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4196"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4354"/>
         <source>Preload the next/previous image. Results in a much faster image switching (at the expense of wasting more RAM).</source>
         <translation>Заважтажити наступне/попереднє зображення. Швидке перемикання зображень (за рахунок збільшеного використання пам&apos;яті).</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4199"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4357"/>
         <source>Use preloader (recommended)</source>
         <translation>Попереднє завантаження</translation>
     </message>
@@ -1750,147 +1812,126 @@
         <translation>Увімкнути плавну прокрутку</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2096"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2124"/>
         <source>Part of image that&apos;s focused after switching to 1:1</source>
         <translation>Яку частину зображення фокусувати в режимі 1:1</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3139"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3167"/>
         <source>Background (fullscreen mode)</source>
         <translation>Фон (повноекранний режим)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3521"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3549"/>
         <source>Other window tweaks</source>
         <translation>Інші налаштування вікна</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3867"/>
         <source>Mouse &amp; touchpad</source>
-        <translation>Мишка / тачпад</translation>
+        <translation type="vanished">Мишка / тачпад</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3888"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3935"/>
         <source>Scroll image with:</source>
         <translation>Прокручувати зображення з:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3932"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3979"/>
         <source>Note: you can also zoom by holding RMB and moving the mouse</source>
         <translation>Примітка: також ви можете зумувати утримуючи праву кл. миші</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4020"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4178"/>
         <source>Note: these will appear in &quot;Open with&quot; menu.</source>
         <translation>Примітка: ці записи будуть присутні в меню &quot;Відкрити в...&quot;</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4030"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4188"/>
         <source>Also, you can assign shortcuts to scripts (in &quot;Controls&quot; section).</source>
         <translation>Також ви можете призначити їм комбінації клавіш (див. секцію &quot;Керування&quot;).</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4209"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4367"/>
         <source>Load adjacent images in background</source>
         <translation>Завантажувати в фоні суміжні зображення</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4323"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4481"/>
         <source>Dynamically unload items to save memory</source>
         <translation>Динамічно вивантажувати елементи з пам&apos;яті</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4337"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4495"/>
         <source>Show save overlay when editing images</source>
         <translation>Показати оверлей збереження при редагуванні зображень</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4313"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4471"/>
         <source>Unload off-screen thumbnails</source>
         <translation>Вивантажувати превью поза кадром</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4437"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4595"/>
         <source>Confirm file delete (!)</source>
         <translation>Підтвердження для видалення файлів (!)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4479"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4637"/>
         <source>Memory allocation limit per image, MB:</source>
         <translation>Ліміт виділення пам&apos;яті на зображення, МБ:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4540"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4698"/>
         <source>Mpv binary:</source>
         <translation>Бінарний файл Mpv:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4581"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4739"/>
         <source>...</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4451"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4609"/>
         <source>JXL animation support (experimental)</source>
         <translation>Підтримка JXL анімацій (експериментально)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4352"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4510"/>
         <source>JPEG save quality:</source>
         <translation>Якість JPEG при збереженні:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4396"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4554"/>
         <source>q</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4306"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4464"/>
         <source>Use thumbnail cache (recommended)</source>
         <translation>Використовувати кеш превью (рекомендовано)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4425"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4583"/>
         <source>Confirm moving to trash</source>
         <translation>Підтвердження видалення у кошик</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4675"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4833"/>
         <source>About qimgv</source>
         <translation>Про qimgv</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4726"/>
-        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-hr { height: 1px; border-width: 0; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Noto Sans&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;This is a fast and easy to use image viewer&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;Features video support via libmpv&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Github page:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/easymodo/qimgv&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;https://github.com/easymodo/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Main developer:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; easymodo (easymodofrf@gmail.com)&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/easymodo/qimgv/graphs/contributors&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;Contributors&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;OpenCV enabled builds use &lt;/span&gt;&lt;a href=&quot;https://github.com/dbzhang800/QtOpenCV&quot;&gt;&lt;span style=&quot; font-family:&apos;Ubuntu&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;QtOpenCV&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt; by dbzhang800&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;qimgv is licensed under &lt;/span&gt;&lt;a href=&quot;https://www.gnu.org/licenses/gpl-3.0.en.html&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;GNU GPL Version 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;Report any issues / request features &lt;/span&gt;&lt;a href=&quot;https://github.com/easymodo/qimgv/issues&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4817"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4977"/>
         <source>OK</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4824"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4984"/>
         <source>Apply</source>
         <translation>Застосувати</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4831"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4991"/>
         <source>Cancel</source>
         <translation>Відмінити</translation>
     </message>
@@ -1930,12 +1971,12 @@ hr { height: 1px; border-width: 0; }
         <translation>Колір тексту</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="563"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="586"/>
         <source>Edit shortcut</source>
         <translation>Редагувати комбінацію клавіш</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="614"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="637"/>
         <source>Navigate to mpv binary</source>
         <translation>Перейдіть до бінарного файлу mpv</translation>
     </message>
@@ -1971,32 +2012,32 @@ hr { height: 1px; border-width: 0; }
 <context>
     <name>main</name>
     <message>
-        <location filename="../../main.cpp" line="133"/>
+        <location filename="../../main.cpp" line="106"/>
         <source>File or directory path.</source>
         <translation>Шлях до файлу або директорії.</translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="136"/>
+        <location filename="../../main.cpp" line="109"/>
         <source>Generate all thumbnails for directory.</source>
         <translation>Згенерувати превью для дикерторії.</translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="137"/>
+        <location filename="../../main.cpp" line="110"/>
         <source>directory-path</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="139"/>
+        <location filename="../../main.cpp" line="112"/>
         <source>Thumbnail size. Current size is used if not specified.</source>
         <translation>Розмір превью. За замовчуванням буде використано поточний розмір.</translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="140"/>
+        <location filename="../../main.cpp" line="113"/>
         <source>thumbnail-size</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="142"/>
+        <location filename="../../main.cpp" line="115"/>
         <source>Show build options.</source>
         <translation>Показати опції зборки.</translation>
     </message>

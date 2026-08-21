@@ -145,7 +145,7 @@ void InputMap::initKeyMap() {
     //keyMap.insert(??, "PgForward");
 
     // looks like qt 6.7.0 changed nativeScanCode() values on windows
-    // see https://github.com/easymodo/qimgv/issues/539
+    // see https://github.com/easymodo/qimgv/issues/539 (upstream)
     keyMap.insert( 57426 , "Ins" );
     keyMap.insert( 57415 , "Home" );
     keyMap.insert( 57417 , "PgUp" );
