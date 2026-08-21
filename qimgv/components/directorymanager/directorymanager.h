@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QCollator>
+#include <QHash>
 #include <QElapsedTimer>
 #include <QString>
 #include <QSize>
@@ -94,6 +95,19 @@ private:
     QRegularExpression regex;
     QCollator collator;
     std::vector<FSEntry> fileEntryVec, dirEntryVec;
+
+    // Path -> index, so indexOfFile() is not a linear walk. It was, and
+    // DirectoryPresenter::onThumbnailReady() calls it once per delivered
+    // thumbnail, which made opening a folder quadratic in the file count.
+    //
+    // Rebuilt lazily rather than patched at every insert and erase: indices
+    // shift under both, and getting that wrong returns a confidently incorrect
+    // answer. Invalidation only has to be pessimistic, so a missed call costs a
+    // rebuild rather than correctness.
+    mutable QHash<QString, int> fileIndexCache, dirIndexCache;
+    mutable bool fileIndexCacheValid = false, dirIndexCacheValid = false;
+    void invalidateFileIndexCache() const { fileIndexCacheValid = false; }
+    void invalidateDirIndexCache() const { dirIndexCacheValid = false; }
     const FSEntry defaultEntry;
     QString mDirectoryPath;
 

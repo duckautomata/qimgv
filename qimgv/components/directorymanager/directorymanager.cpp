@@ -158,19 +158,25 @@ QString DirectoryManager::directoryPath() const {
 }
 
 int DirectoryManager::indexOfFile(QString filePath) const {
-    auto item =
-        find_if(fileEntryVec.begin(), fileEntryVec.end(), [filePath](const FSEntry &e) { return e.path == filePath; });
-    if(item != fileEntryVec.end())
-        return distance(fileEntryVec.begin(), item);
-    return -1;
+    if(!fileIndexCacheValid) {
+        fileIndexCache.clear();
+        fileIndexCache.reserve(static_cast<int>(fileEntryVec.size()));
+        for(size_t i = 0; i < fileEntryVec.size(); i++)
+            fileIndexCache.insert(fileEntryVec[i].path, static_cast<int>(i));
+        fileIndexCacheValid = true;
+    }
+    return fileIndexCache.value(filePath, -1);
 }
 
 int DirectoryManager::indexOfDir(QString dirPath) const {
-    auto item =
-        find_if(dirEntryVec.begin(), dirEntryVec.end(), [dirPath](const FSEntry &e) { return e.path == dirPath; });
-    if(item != dirEntryVec.end())
-        return distance(dirEntryVec.begin(), item);
-    return -1;
+    if(!dirIndexCacheValid) {
+        dirIndexCache.clear();
+        dirIndexCache.reserve(static_cast<int>(dirEntryVec.size()));
+        for(size_t i = 0; i < dirEntryVec.size(); i++)
+            dirIndexCache.insert(dirEntryVec[i].path, static_cast<int>(i));
+        dirIndexCacheValid = true;
+    }
+    return dirIndexCache.value(dirPath, -1);
 }
 
 QString DirectoryManager::filePathAt(int index) const {
@@ -307,7 +313,9 @@ bool DirectoryManager::containsDir(QString dirPath) const {
 // ##############################################################
 void DirectoryManager::loadEntryList(QString directoryPath, bool recursive) {
     dirEntryVec.clear();
+    invalidateDirIndexCache();
     fileEntryVec.clear();
+    invalidateFileIndexCache();
     if(recursive) { // load files only
         addEntriesFromDirectoryRecursive(fileEntryVec, directoryPath);
     } else { // load dirs & files
@@ -353,6 +361,7 @@ void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, Q
                 continue;
             }
             dirEntryVec.emplace_back(newEntry);
+            invalidateDirIndexCache();
         } else if(regex.match(name).hasMatch()) {
             FSEntry newEntry;
             try {
@@ -406,6 +415,9 @@ void DirectoryManager::sortEntryLists() {
                   std::bind(&DirectoryManager::path_entry_compare, this, std::placeholders::_1, std::placeholders::_2));
     std::sort(fileEntryVec.begin(), fileEntryVec.end(),
               std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    // Both orders just changed, so every cached index is stale.
+    invalidateDirIndexCache();
+    invalidateFileIndexCache();
 }
 
 void DirectoryManager::setSortingMode(SortingMode mode) {
@@ -439,6 +451,7 @@ bool DirectoryManager::forceInsertFileEntry(const QString &filePath) {
     FSEntry FSEntry(filePath, fileName, stdEntry.file_size(), stdEntry.last_write_time(), stdEntry.is_directory());
     insert_sorted(fileEntryVec, FSEntry,
                   std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    invalidateFileIndexCache();
     if(!directoryPath().isEmpty()) {
         qDebug() << "fileIns" << filePath << directoryPath();
         emit fileAdded(filePath);
@@ -451,6 +464,7 @@ void DirectoryManager::removeFileEntry(const QString &filePath) {
         return;
     int index = indexOfFile(filePath);
     fileEntryVec.erase(fileEntryVec.begin() + index);
+    invalidateFileIndexCache();
     qDebug() << "fileRem" << filePath;
     emit fileRemoved(filePath, index);
 }
@@ -483,17 +497,20 @@ void DirectoryManager::renameFileEntry(const QString &oldFilePath, const QString
     if(containsFile(newFilePath)) {
         int replaceIndex = indexOfFile(newFilePath);
         fileEntryVec.erase(fileEntryVec.begin() + replaceIndex);
+        invalidateFileIndexCache();
         emit fileRemoved(newFilePath, replaceIndex);
     }
     // remove the old one
     int oldIndex = indexOfFile(oldFilePath);
     fileEntryVec.erase(fileEntryVec.begin() + oldIndex);
+    invalidateFileIndexCache();
     // insert
     std::filesystem::directory_entry stdEntry(toStdString(newFilePath));
     FSEntry FSEntry(newFilePath, newFileName, stdEntry.file_size(), stdEntry.last_write_time(),
                     stdEntry.is_directory());
     insert_sorted(fileEntryVec, FSEntry,
                   std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    invalidateFileIndexCache();
     qDebug() << "fileRen" << oldFilePath << newFilePath;
     emit fileRenamed(oldFilePath, oldIndex, newFilePath, indexOfFile(newFilePath));
 }
@@ -511,6 +528,7 @@ bool DirectoryManager::insertDirEntry(const QString &dirPath) {
     FSEntry.isDirectory = true;
     insert_sorted(dirEntryVec, FSEntry,
                   std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    invalidateDirIndexCache();
     qDebug() << "dirIns" << dirPath;
     emit dirAdded(dirPath);
     return true;
@@ -521,6 +539,7 @@ void DirectoryManager::removeDirEntry(const QString &dirPath) {
         return;
     int index = indexOfDir(dirPath);
     dirEntryVec.erase(dirEntryVec.begin() + index);
+    invalidateDirIndexCache();
     qDebug() << "dirRem" << dirPath;
     emit dirRemoved(dirPath, index);
 }
@@ -533,6 +552,7 @@ void DirectoryManager::renameDirEntry(const QString &oldDirPath, const QString &
     // remove the old one
     int oldIndex = indexOfDir(oldDirPath);
     dirEntryVec.erase(dirEntryVec.begin() + oldIndex);
+    invalidateDirIndexCache();
     // insert
     std::filesystem::directory_entry stdEntry(toStdString(newDirPath));
     FSEntry FSEntry;
@@ -541,6 +561,7 @@ void DirectoryManager::renameDirEntry(const QString &oldDirPath, const QString &
     FSEntry.isDirectory = true;
     insert_sorted(dirEntryVec, FSEntry,
                   std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    invalidateDirIndexCache();
     qDebug() << "dirRen" << oldDirPath << newDirPath;
     emit dirRenamed(oldDirPath, oldIndex, newDirPath, indexOfDir(newDirPath));
 }

@@ -72,6 +72,52 @@ add_test(NAME qimgv_format_tests COMMAND qimgv_format_tests)
 set_tests_properties(qimgv_format_tests PROPERTIES ENVIRONMENT "${QIMGV_TEST_ENV}")
 
 # ---------------------------------------------------------------------------
+# DirectoryManager. Covers the path -> index cache: a missed invalidation does
+# not crash, it silently returns another file's index, so every list-mutating
+# path is exercised and checked against filePathAt().
+# ---------------------------------------------------------------------------
+qt_add_executable(qimgv_directory_tests
+    test_directorymanager.cpp
+    "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/directorymanager.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/watchers/directorywatcher.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/watchers/watcherevent.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/watchers/watcherworker.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/watchers/dummywatcher.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/sourcecontainers/fsentry.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/settings.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/themestore.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/utils/stuff.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/utils/script.cpp"
+)
+
+if(WIN32)
+    target_sources(qimgv_directory_tests PRIVATE
+        "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/watchers/windows/windowswatcher.cpp"
+        "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/watchers/windows/windowsworker.cpp")
+elseif(UNIX AND NOT APPLE)
+    target_sources(qimgv_directory_tests PRIVATE
+        "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/watchers/linux/linuxwatcher.cpp"
+        "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/watchers/linux/linuxworker.cpp"
+        "${CMAKE_SOURCE_DIR}/qimgv/components/directorymanager/watchers/linux/linuxfsevent.cpp")
+endif()
+
+target_include_directories(qimgv_directory_tests PRIVATE
+    "${CMAKE_SOURCE_DIR}"
+    "${CMAKE_SOURCE_DIR}/qimgv"
+)
+
+target_link_libraries(qimgv_directory_tests PRIVATE
+    Qt6::Test
+    Qt6::Widgets
+    qimgv::warnings
+)
+
+add_test(NAME qimgv_directory_tests COMMAND qimgv_directory_tests)
+set_tests_properties(qimgv_directory_tests PROPERTIES
+    TIMEOUT 60
+    ENVIRONMENT "${QIMGV_TEST_ENV}")
+
+# ---------------------------------------------------------------------------
 # Update check. Only the tag -> version step is unit-testable; the rest of
 # UpdateChecker is network I/O. It drags in settings because the reply handler
 # records the last check time, hence the extra translation units.
