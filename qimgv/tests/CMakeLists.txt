@@ -4,6 +4,18 @@
 # ============================================================================
 find_package(Qt6 6.5 REQUIRED COMPONENTS Test Widgets)
 
+# ---------------------------------------------------------------------------
+#  Environment every test needs.
+#
+#  QT_QPA_PLATFORM  GUI tests need a display; use the offscreen plugin.
+#  QT_FORCE_STDERR_LOGGING
+#      On Windows, Qt sends test output to OutputDebugString instead of the
+#      console whenever stderr is not a tty -- which is always the case under
+#      ctest. Without this, a failing test reports nothing but an exit code
+#      and --output-on-failure prints an empty block. Harmless elsewhere.
+# ---------------------------------------------------------------------------
+set(QIMGV_TEST_ENV "QT_QPA_PLATFORM=offscreen" "QT_FORCE_STDERR_LOGGING=1")
+
 qt_add_executable(qimgv_tests
     test_mapoverlay.cpp
     "${CMAKE_SOURCE_DIR}/qimgv/gui/overlays/mapoverlay.cpp"
@@ -21,10 +33,7 @@ target_link_libraries(qimgv_tests PRIVATE
 )
 
 add_test(NAME qimgv_tests COMMAND qimgv_tests)
-
-# GUI tests need a display; use the offscreen platform plugin in CI.
-set_tests_properties(qimgv_tests PROPERTIES
-    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+set_tests_properties(qimgv_tests PROPERTIES ENVIRONMENT "${QIMGV_TEST_ENV}")
 
 # ---------------------------------------------------------------------------
 # Format detection tests. These link the real DocumentInfo so the sniffers
@@ -60,8 +69,7 @@ if(QIMGV_EXIV2)
 endif()
 
 add_test(NAME qimgv_format_tests COMMAND qimgv_format_tests)
-set_tests_properties(qimgv_format_tests PROPERTIES
-    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+set_tests_properties(qimgv_format_tests PROPERTIES ENVIRONMENT "${QIMGV_TEST_ENV}")
 
 # ---------------------------------------------------------------------------
 # Randomizer regression tests (shuffle-mode hang on 0/1-image directories).
@@ -78,4 +86,6 @@ target_link_libraries(qimgv_randomizer_tests PRIVATE
     Qt6::Test qimgv::warnings)
 
 add_test(NAME qimgv_randomizer_tests COMMAND qimgv_randomizer_tests)
-set_tests_properties(qimgv_randomizer_tests PROPERTIES TIMEOUT 30)
+set_tests_properties(qimgv_randomizer_tests PROPERTIES
+    TIMEOUT 30
+    ENVIRONMENT "${QIMGV_TEST_ENV}")
