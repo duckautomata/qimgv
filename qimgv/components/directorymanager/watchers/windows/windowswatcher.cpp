@@ -1,7 +1,7 @@
 #include "windowswatcher_p.h"
 #include "windowsworker.h"
 
-QString lastError() {
+static QString lastError() {
     char buffer[1024];
     DWORD lastError = GetLastError();
     int res = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM,
@@ -117,7 +117,8 @@ WindowsWatcher::WindowsWatcher()
 WindowsWatcher::WindowsWatcher(const QString& path)
     : DirectoryWatcher(new WindowsWatcherPrivate(this))
 {
-    Q_D(WindowsWatcher);
+    // No Q_D here: setWatchPath() does its own Q_D, and an unused `d` from the
+    // macro trips -Wunused-variable.
     setWatchPath(path);
 }
 

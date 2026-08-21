@@ -90,7 +90,7 @@ void ClickZoneOverlay::recalculateGeometry() {
     setGeometry(0,0, containerSize().width(), containerSize().height());
 }
 
-void ClickZoneOverlay::resizeEvent(QResizeEvent *event) {
+void ClickZoneOverlay::resizeEvent(QResizeEvent */*event*/) {
     mLeftZone = QRect(0,0, zoneSize, height());
     mRightZone = QRect(width() - zoneSize, 0, zoneSize, height());
 }

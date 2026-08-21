@@ -11,13 +11,15 @@
 #include <tchar.h>
 #endif
 
+// Initializer order matches the declaration order in core.h; the compiler
+// initializes members in declaration order regardless of what is written here.
 Core::Core()
     : QObject(),
-      folderEndAction(FOLDER_END_NO_ACTION),
       loopSlideshow(false),
-      mDrag(nullptr),
       slideshow(false),
-      shuffle(false)
+      shuffle(false),
+      folderEndAction(FOLDER_END_NO_ACTION),
+      mDrag(nullptr)
 {
     loadTranslation();
     initGui();

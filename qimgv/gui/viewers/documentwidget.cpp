@@ -3,11 +3,11 @@
 DocumentWidget::DocumentWidget(std::shared_ptr<ViewerWidget> viewWidget, std::shared_ptr<InfoBarProxy> infoBar, QWidget *parent)
     : FloatingWidgetContainer(parent),
       mainPanel(nullptr),
-      mPanelPinned(false),
+      avoidPanelFlag(false),
       mPanelEnabled(false),
       mPanelFullscreenOnly(false),
-      avoidPanelFlag(false),
       mIsFullscreen(false),
+      mPanelPinned(false),
       mInteractionEnabled(false),
       mAllowPanelInit(false)
 {
@@ -95,7 +95,7 @@ void DocumentWidget::hideFloatingPanel() {
     hideFloatingPanel(false);
 }
 
-void DocumentWidget::hideFloatingPanel(bool animated) {
+void DocumentWidget::hideFloatingPanel(bool /*animated*/) {
     if(!mPanelPinned)
         mainPanel->hideAnimated();
 }

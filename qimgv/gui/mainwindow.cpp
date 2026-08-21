@@ -7,14 +7,14 @@ MW::MW(QWidget *parent)
       currentDisplay(0),
       maximized(false),
       activeSidePanel(SIDEPANEL_NONE),
-      copyOverlay(nullptr),
-      saveOverlay(nullptr),
-      renameOverlay(nullptr),
-      infoBarFullscreen(nullptr),
-      imageInfoOverlay(nullptr),
-      floatingMessage(nullptr),
       cropPanel(nullptr),
-      cropOverlay(nullptr)
+      cropOverlay(nullptr),
+      saveOverlay(nullptr),
+      copyOverlay(nullptr),
+      renameOverlay(nullptr),
+      imageInfoOverlay(nullptr),
+      infoBarFullscreen(nullptr),
+      floatingMessage(nullptr)
 {
     setAttribute(Qt::WA_TranslucentBackground, true);
     layout.setContentsMargins(0,0,0,0);
@@ -412,12 +412,8 @@ void MW::restoreWindowGeometry() {
 }
 
 void MW::updateCurrentDisplay() {
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-    currentDisplay = desktopWidget.screenNumber(this);
-#else
     auto screens = qApp->screens();
     currentDisplay = screens.indexOf(this->window()->screen());
-#endif
 }
 
 void MW::onWindowGeometryChanged() {
@@ -426,11 +422,7 @@ void MW::onWindowGeometryChanged() {
 }
 
 void MW::saveCurrentDisplay() {
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-    settings->setLastDisplay(desktopWidget.screenNumber(this));
-#else
     settings->setLastDisplay(qApp->screens().indexOf(this->window()->screen()));
-#endif
 }
 
 //#############################################################
@@ -474,14 +466,18 @@ void MW::mouseReleaseEvent(QMouseEvent *event) {
 
 void MW::mouseDoubleClickEvent(QMouseEvent *event) {
     event->accept();
-    QMouseEvent *fakePressEvent = new QMouseEvent(
+    // Synthesize the press half of the double-click so that actions bound to
+    // a plain press still fire. Stack-allocated: the previous version used
+    // new without a matching delete, leaking one event per double-click.
+    QMouseEvent fakePressEvent(
         QEvent::MouseButtonPress,
-        event->pos(),
+        event->position(),
+        event->globalPosition(),
         event->button(),
         event->buttons(),
         event->modifiers()
     );
-    actionManager->processEvent(fakePressEvent);
+    actionManager->processEvent(&fakePressEvent);
     actionManager->processEvent(event);
 }
 
@@ -490,9 +486,6 @@ void MW::close() {
     saveCurrentDisplay();
     // try to close window sooner
     // since qt6.3 QWidget::close() no longer works on hidden windows (bug?)
-#if QT_VERSION < QT_VERSION_CHECK(6, 3, 0)
-    this->hide();
-#endif
     if(copyOverlay)
         copyOverlay->saveSettings();
     QWidget::close();
@@ -641,11 +634,7 @@ void MW::showFullScreen() {
         saveWindowGeometry();
     auto screens = qApp->screens();
     // todo: why check the screen again?
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-    int _currentDisplay = desktopWidget.screenNumber(this);
-#else
     int _currentDisplay = screens.indexOf(this->window()->screen());
-#endif
     //move to target screen
     if(screens.count() > currentDisplay && currentDisplay != _currentDisplay) {
         this->move(screens.at(currentDisplay)->geometry().x(),

@@ -3,14 +3,14 @@
 ThumbnailView::ThumbnailView(Qt::Orientation _orientation, QWidget *parent)
     : QGraphicsView(parent),
       blockThumbnailLoading(false),
+      mDrawScrollbarIndicator(true),
+      lastScrollFrameTime(0),
       mCropThumbnails(false),
       mouseReleaseSelect(false),
-      mDrawScrollbarIndicator(true),
-      mThumbnailSize(120),
-      rangeSelection(false),
       selectMode(ACTIVATE_BY_PRESS),
-      lastScrollFrameTime(0),
-      scrollTimeLine(nullptr)
+      scrollTimeLine(nullptr),
+      mThumbnailSize(120),
+      rangeSelection(false)
 {
     setAccessibleName("thumbnailView");
     this->setMouseTracking(true);
@@ -28,7 +28,7 @@ ThumbnailView::ThumbnailView(Qt::Orientation _orientation, QWidget *parent)
     lastTouchpadScroll.start();
 
     connect(&loadTimer, &QTimer::timeout, this, &ThumbnailView::loadVisibleThumbnails);
-    loadTimer.setInterval(static_cast<const int>(LOAD_DELAY));
+    loadTimer.setInterval(static_cast<int>(LOAD_DELAY));
     loadTimer.setSingleShot(true);
 
     qreal screenMaxRefreshRate = 60;
@@ -338,7 +338,7 @@ void ThumbnailView::reloadItem(int index) {
     emit thumbnailsRequested(QList<int>() << index, static_cast<int>(qApp->devicePixelRatio() * mThumbnailSize), mCropThumbnails, true);
 }
 
-void ThumbnailView::setDragHover(int index) {
+void ThumbnailView::setDragHover(int /*index*/) {
 
 }
 

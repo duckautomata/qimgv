@@ -1,7 +1,11 @@
 #include "themestore.h"
 
 ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
-    BaseColorScheme base = {-1};
+    // Value-initialize every colour, then flag the theme id as "unset".
+    // Was `= {-1}`, which relied on aggregate init filling the remaining 24
+    // members and produced a warning for each one.
+    BaseColorScheme base{};
+    base.tid = -1;
     QPalette p;
     switch(name) {
         case COLORS_SYSTEM:
