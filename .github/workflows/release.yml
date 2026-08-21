@@ -25,6 +25,7 @@ jobs:
         shell: msys2 {0}
     outputs:
       version: ${{ steps.meta.outputs.version }}
+      file_version: ${{ steps.meta.outputs.file_version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -79,9 +80,16 @@ jobs:
             exit 1
           fi
 
+          # Three forms, because they are not interchangeable: the tag names the
+          # release, the bare project version is all VersionInfoVersion accepts,
+          # and the filename form keeps a -dev suffix without the leading v.
+          file_version=${v#v}
           echo "version=${v}" >> $GITHUB_OUTPUT
+          echo "file_version=${file_version}" >> $GITHUB_OUTPUT
+          echo "project_version=${project_version}" >> $GITHUB_OUTPUT
           echo "Building ${v} (project version ${project_version})"
 
+      # --- full build: everything on -------------------------------------
       - name: Build
         run: |
           cmake --preset windows-msys2
@@ -94,19 +102,71 @@ jobs:
       - name: Test
         run: ctest --test-dir build/windows-msys2 --output-on-failure
 
-      - name: Package
+      - name: Package (full)
         run: |
           ./scripts/package-windows.sh
           cd build
-          mv dist "qimgv-${{ steps.meta.outputs.version }}-win64"
-          zip -qr "qimgv-${{ steps.meta.outputs.version }}-win64.zip" \
-                  "qimgv-${{ steps.meta.outputs.version }}-win64"
-          ls -lh *.zip
+          rm -rf "qimgv-${{ steps.meta.outputs.file_version }}-win64"
+          mv dist "qimgv-${{ steps.meta.outputs.file_version }}-win64"
+          zip -qr "qimgv-${{ steps.meta.outputs.file_version }}-win64.zip" \
+                  "qimgv-${{ steps.meta.outputs.file_version }}-win64"
+          # The installer is built from this tree, so put it back where the
+          # .iss expects it rather than leaving it under the versioned name.
+          mv "qimgv-${{ steps.meta.outputs.file_version }}-win64" dist
+
+      # --- minimal build: no video, no exiv2, no OpenCV --------------------
+      # Roughly half the size of the full package. Zip only: the installer is
+      # the "just give me the app" path and shipping two of them would double
+      # the winget manifests and the testing for very little.
+      - name: Build (minimal)
+        run: |
+          cmake --preset minimal
+          cmake --build --preset minimal
+
+      - name: Package (minimal)
+        run: |
+          BUILD_DIR=build/minimal DIST_DIR=build/dist-minimal ./scripts/package-windows.sh
+          cd build
+          rm -rf "qimgv-${{ steps.meta.outputs.file_version }}-win64-minimal"
+          mv dist-minimal "qimgv-${{ steps.meta.outputs.file_version }}-win64-minimal"
+          zip -qr "qimgv-${{ steps.meta.outputs.file_version }}-win64-minimal.zip" \
+                  "qimgv-${{ steps.meta.outputs.file_version }}-win64-minimal"
+
+      # --- installer, built from the full tree -----------------------------
+      - name: Build installer
+        run: |
+          # Preinstalled on the runner image, but not on PATH, and an image
+          # change should fail loudly rather than quietly publishing a release
+          # with one of its three artifacts missing.
+          iscc=""
+          for candidate in "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
+                           "/c/Program Files/Inno Setup 6/ISCC.exe" \
+                           "${LOCALAPPDATA:+$(cygpath -u "$LOCALAPPDATA")/Programs/Inno Setup 6/ISCC.exe}" \
+                           "$(command -v iscc 2>/dev/null || true)"; do
+            if [ -n "$candidate" ] && [ -x "$candidate" ]; then iscc="$candidate"; break; fi
+          done
+          if [ -z "$iscc" ]; then
+            echo "::error::Inno Setup (ISCC.exe) not found on this runner; cannot build the installer"
+            exit 1
+          fi
+          echo "using $iscc"
+          # AppVersion feeds VersionInfoVersion, which only accepts x.y.z, so it
+          # gets the bare project version while the filename keeps any -dev
+          # suffix the tag carried.
+          "$iscc" //DAppVersion=${{ steps.meta.outputs.project_version }} \
+                  //F"qimgv-${{ steps.meta.outputs.file_version }}-win64-setup" \
+                  scripts/qimgv.iss
+          ls -lh build/*.exe
+
+      - name: Show what will be published
+        run: ls -lh build/*.zip build/*.exe
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: qimgv-win64
-          path: build/*.zip
+          path: |
+            build/*.zip
+            build/*.exe
           if-no-files-found: error
 
   publish:
@@ -125,8 +185,26 @@ jobs:
       - name: Generate checksums
         run: |
           cd dist
-          sha256sum *.zip > SHA256SUMS.txt
+          # The installer is checksummed too. It is the artifact most people
+          # will run, and an unsigned setup.exe is exactly the thing worth
+          # being able to verify.
+          sha256sum *.zip *.exe > SHA256SUMS.txt
           cat SHA256SUMS.txt
+
+      # A release that quietly ships two of its three artifacts is worse than
+      # one that fails, so check before anything is published.
+      - name: Verify all three artifacts are present
+        run: |
+          missing=0
+          for f in "qimgv-${{ needs.windows.outputs.file_version }}-win64.zip"                    "qimgv-${{ needs.windows.outputs.file_version }}-win64-minimal.zip"                    "qimgv-${{ needs.windows.outputs.file_version }}-win64-setup.exe"; do
+            if [ -f "dist/$f" ]; then
+              echo "  ok      $f"
+            else
+              echo "::error::missing release artifact: $f"
+              missing=1
+            fi
+          done
+          exit $missing
 
       - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228  # v3.0.2
         with:
@@ -136,5 +214,6 @@ jobs:
           prerelease: ${{ github.event_name == 'workflow_dispatch' }}
           generate_release_notes: true
           files: |
+            dist/*.exe
             dist/*.zip
             dist/SHA256SUMS.txt
