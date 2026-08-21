@@ -2,6 +2,33 @@
 
 Settings *settings = nullptr;
 
+// qimgv is portable when a "conf" directory sits next to the executable. That
+// is exactly what the released zip ships, so unpacking it anywhere keeps every
+// file the app writes inside that one folder -- and an existing portable setup
+// keeps working untouched after an upgrade.
+//
+// An installed copy has no such directory and uses the platform's per-user
+// locations instead. That is what makes installing to a read-only prefix
+// possible at all: Program Files is not writable by a standard user, and on
+// macOS applicationDirPath() points inside qimgv.app/Contents/MacOS, where
+// writing would break the bundle's signature.
+static bool portableMode() {
+    static bool const portable = QDir(QCoreApplication::applicationDirPath() + "/conf").exists();
+    return portable;
+}
+
+// Per-user config directory, used when not running portable. Deliberately
+// GenericConfigLocation + applicationName() rather than AppConfigLocation:
+// organizationName and applicationName are both "qimgv", and Qt would build
+// that into a doubled qimgv/qimgv path. Mirrors how setupCache() has always
+// derived the cache directory.
+static QString userConfigDir() {
+    QString dir = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
+    if(dir.isEmpty())
+        dir = QDir::homePath() + "/.config";
+    return dir + "/" + QCoreApplication::applicationName();
+}
+
 Settings::Settings(QObject *parent) : QObject(parent) {
 #if defined(__linux__) || defined(__FreeBSD__)
     // config files
@@ -10,8 +37,9 @@ Settings::Settings(QObject *parent) : QObject(parent) {
     stateConf = new QSettings(QCoreApplication::organizationName(), "savedState");
     themeConf = new QSettings(QCoreApplication::organizationName(), "theme");
 #else
-    mConfDir = new QDir(QApplication::applicationDirPath() + "/conf");
-    mConfDir->mkpath(QApplication::applicationDirPath() + "/conf");
+    QString confPath = portableMode() ? QApplication::applicationDirPath() + "/conf" : userConfigDir();
+    mConfDir = new QDir(confPath);
+    mConfDir->mkpath(confPath);
     settingsConf = new QSettings(mConfDir->absolutePath() + "/" + qApp->applicationName() + ".ini", QSettings::IniFormat);
     stateConf = new QSettings(mConfDir->absolutePath() + "/savedState.ini", QSettings::IniFormat);
     themeConf = new QSettings(mConfDir->absolutePath() + "/theme.ini", QSettings::IniFormat);
@@ -38,30 +66,39 @@ Settings *Settings::getInstance() {
 }
 //------------------------------------------------------------------------------
 void Settings::setupCache() {
-#if defined(__linux__) ||  defined(__FreeBSD__)
-    QString genericCacheLocation = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation);
-    if(genericCacheLocation.isEmpty())
-        genericCacheLocation = QDir::homePath() + "/.cache";
-    genericCacheLocation.append("/" + QApplication::applicationName());
-    QString cacheLocation = settings->settingsConf->value("cacheDir", genericCacheLocation).toString();
+    QString cacheLocation;
+    if(portableMode()) {
+        // Self-contained: everything stays beside the executable, and the
+        // cacheDir override is deliberately ignored so the folder stays movable.
+        cacheLocation = QApplication::applicationDirPath() + "/cache";
+    } else {
+        QString genericCacheLocation = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation);
+        if(genericCacheLocation.isEmpty())
+            genericCacheLocation = QDir::homePath() + "/.cache";
+        genericCacheLocation.append("/" + QApplication::applicationName());
+        cacheLocation = settings->settingsConf->value("cacheDir", genericCacheLocation).toString();
+    }
     mTmpDir = new QDir(cacheLocation);
     mTmpDir->mkpath(mTmpDir->absolutePath());
     QFileInfo dirTest(mTmpDir->absolutePath());
     if(!dirTest.isDir() || !dirTest.isWritable() || !dirTest.exists()) {
-        // fallback
+        // fallback. Used to be Linux-only, but an installed copy can just as
+        // easily be pointed at somewhere unwritable on any platform.
         qDebug() << "Error: cache dir is not writable" << mTmpDir->absolutePath();
-        qDebug() << "Trying to use" << genericCacheLocation << "instead";
-        mTmpDir->setPath(genericCacheLocation);
+        QString fallback = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation);
+        if(fallback.isEmpty())
+            fallback = QDir::homePath() + "/.cache";
+        fallback.append("/" + QApplication::applicationName());
+        qDebug() << "Trying to use" << fallback << "instead";
+        mTmpDir->setPath(fallback);
         mTmpDir->mkpath(mTmpDir->absolutePath());
     }
-    mThumbCacheDir = new QDir(mTmpDir->absolutePath() + "/thumbnails");
+    // Portable keeps thumbnails a sibling of cache/, which is the layout the
+    // released zip has always shipped; elsewhere they live inside it.
+    QString thumbPath =
+        portableMode() ? QApplication::applicationDirPath() + "/thumbnails" : mTmpDir->absolutePath() + "/thumbnails";
+    mThumbCacheDir = new QDir(thumbPath);
     mThumbCacheDir->mkpath(mThumbCacheDir->absolutePath());
-#else
-    mTmpDir = new QDir(QApplication::applicationDirPath() + "/cache");
-    mTmpDir->mkpath(mTmpDir->absolutePath());
-    mThumbCacheDir = new QDir(QApplication::applicationDirPath() + "/thumbnails");
-    mThumbCacheDir->mkpath(mThumbCacheDir->absolutePath());
-#endif
 }
 //------------------------------------------------------------------------------
 void Settings::sync() {
