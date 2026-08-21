@@ -247,7 +247,11 @@ QImage mat2Image(const cv::Mat &mat, MatColorOrder order, QImage::Format formatH
         return QImage();
 
     //Adjust mat channels if needed, and find proper QImage format.
-    QImage::Format format;
+    //Only 1, 3 and 4 channels are handled below. The Q_ASSERT above is the
+    //only thing ruling anything else out, and it compiles away in a release
+    //build -- leaving `format` read uninitialized. Default to Format_Invalid
+    //so an unexpected channel count yields a null QImage instead.
+    QImage::Format format = QImage::Format_Invalid;
     cv::Mat mat_adjustCn;
     if (mat.channels() == 1) {
         format = formatHint;
