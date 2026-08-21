@@ -10,11 +10,11 @@ once the open items below are closed — it is a snapshot, not documentation.
 `duckautomata/qimgv` is a fork of `easymodo/qimgv` (unmaintained). The
 `modernize` branch (9 commits) did the build-system, Qt6, codec and CI work.
 
-**All of it was done on a headless Linux server.** The maintainer has no
-display there, so nothing visual has ever been looked at, and neither CI, the
-Windows build, nor macOS has ever run. Windows is now the primary dev
-environment because it is the primary target and the only place the UI, video
-playback and transparency can actually be evaluated.
+The build, test and packaging work was done on a headless Linux server. As of
+2026-08-20 the Windows toolchain has been brought up: `dev`, `ci` and
+`windows-msys2` all configure, build warning-clean and pass 3/3 tests, the
+portable package runs standalone, and the GUI has been looked at for the first
+time. macOS and CI have still never run.
 
 Read `git log master..modernize` — the commit messages carry the reasoning and
 are more detailed than this file.
@@ -44,47 +44,51 @@ Full detail in `docs/BUILDING.md`.
 
 ## What is actually verified
 
-Everything below was verified on Linux/Qt 6.10.1 unless stated.
+Linux results are Qt 6.10.1; Windows results are MSYS2 UCRT64, GCC 16.1.0,
+Qt 6.11.1.
 
 | Area | Status |
 |---|---|
-| `dev` + `ci` presets, clean build | verified, 0 warnings under `-Wall -Wextra -Wpedantic -Werror` |
-| Test suite (3 targets) | verified, 3/3 pass |
-| Animated AVIF | **verified end to end** — real ffmpeg/libaom file, `QImageReader` reports 10 frames, `QMovie` decodes all 10 |
+| `dev` + `ci` presets, clean build (Linux) | verified, 0 warnings under `-Wall -Wextra -Wpedantic -Werror` |
+| `dev` + `ci` + `windows-msys2`, clean build (Windows) | verified — GCC 16.1.0 / Qt 6.11.1, 0 warnings under `-Wall -Wextra -Wpedantic` |
+| Test suite (3 targets) | verified on Linux and Windows, 3/3 pass |
+| Animated AVIF | **verified end to end** on Linux *and* Windows — real ffmpeg/libaom file, `QImageReader` reports 10 frames, `QMovie` decodes all 10, and it animates in the running app |
+| Windows portable package | verified — `package-windows.sh` produces a `build/dist/` that runs with MSYS2 off `PATH`; avif/heic/jxl/webp/tiff all `[x]` |
+| Windows GUI | verified by the maintainer — every keyboard shortcut does its job; rendering, directory scan and title metadata all correct |
 | ProRes 4444 alpha *decode* | **verified** — libmpv reports `pixelformat=yuva444p12`, `alpha=straight`, and accepts `background=none` |
-| ProRes 4444 alpha *compositing* | **NOT VERIFIED** — needs a display. See task 1. |
-| Windows build | **NEVER RUN** |
+| ProRes 4444 alpha *compositing* | **verified** — transparency is visible and composites against the app background. Two bugs found doing it, both fixed; see "Windows bring-up" below. |
 | macOS build | **NEVER RUN** |
 | GitHub Actions | **NEVER RUN** |
-| Any UI behaviour at all | **NEVER LOOKED AT** |
 
 ---
 
 ## Priority tasks
 
-### 1. Does ProRes 4444 alpha actually composite?
+### 1. ~~Does ProRes 4444 alpha actually composite?~~ Done
 
-The highest-value unknown, and an explicit product requirement.
+Yes. Confirmed on Windows with a `prores_ks -profile:v 4444` alpha ramp: the
+transparent side shows the app background and the opaque side shows the video.
 
-Generate the test file (ffmpeg required):
+If you re-check this, capture the screen (`Graphics.CopyFromScreen`), not the
+window (`PrintWindow`). `PrintWindow` renders the window in isolation against
+its own background, so a window that is punching a hole through to the desktop
+still looks perfectly correct in the capture. Putting a garish window behind
+qimgv and confirming none of it bleeds into the video is the reliable check.
 
-```bash
-ffmpeg -f lavfi -i "testsrc2=size=128x128:rate=10:duration=1,format=yuva444p10le,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='255*X/W'" \
-  -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le -alpha_bits 16 prores4444.mov
-```
+Two bugs surfaced while checking it, both fixed:
 
-It is a left-to-right alpha ramp: fully transparent at the left edge, opaque at
-the right. Open it in qimgv.
+- The video had **no background at all** underneath it, so the transparent part
+  went through the window and showed the desktop.
+- Landing on a video **closed and reopened the window**.
 
-- **Left side shows the app background through it** → working, close this out.
-- **Left side is black** → decode is fine (proven), compositing is not. Most
-  likely cause: mpv reports `alpha=straight` (non-premultiplied) while GL
-  blending expects premultiplied. Look at `MpvWidget::paintGL` in
-  `plugins/player_mpv/src/mpvwidget.cpp` — the FBO is declared `GL_RGBA8` and
-  the surface format requests `alphaBufferSize(8)`, but nothing premultiplies.
-  Also check whether `WA_AlwaysStackOnTop` is needed on the QOpenGLWidget —
-  it was deliberately NOT set, because it would draw the video over the video
-  controls overlay.
+Both are described under "Windows bring-up" below.
+
+One thing deliberately left alone: mpv reports `alpha=straight`
+(non-premultiplied) while Qt's compositor expects premultiplied, so the blend
+is arithmetically slightly off. Every shipped theme uses a near-black viewer
+background (`#1a1a1a`, `#18191a`, `#000000` — even `COLORS_LIGHT` keeps the
+viewer dark), and against near-black the two formulas are indistinguishable.
+It would only show as washed-out edges on a custom light background.
 
 **Do not trust `alpha=yes`.** mpv renamed that option in 0.38; it returns
 `-5 option not found` on current libmpv. The code uses `background=none` with
@@ -93,33 +97,108 @@ way, the original bug was a discarded return value.
 
 ### 2. Get CI green
 
-Push the branch and watch. Expect the Windows job to need iteration.
+Push the branch and watch. macOS is still completely unexercised.
 
-`-Werror` is intentionally **off** for Windows and macOS — those sources have
-never seen `-Wall -Wextra`, and a new warning must not block the artifact. The
-job prints a warning count instead. I preemptively fixed two certain failures
-in the Windows watcher (`OVERLAPPED ovl = {0}`, an unused `Q_D`), but the
-Windows branches inside shared files are unaudited. Once Windows is clean,
-turn `-Werror` on for it.
+The Windows build itself is now clean, so the job should mostly work. `-Werror`
+is still **off** for Windows and macOS: the local build is warning-free with
+GCC 16.1.0, but the runner's toolchain is a different version and a new warning
+must not block the artifact on the first ever run. Flip it on once CI has been
+green once.
 
-Unverified assumptions in `scripts/package-windows.sh`:
-- `windeployqt6` is the right binary name under MSYS2 (could be `windeployqt`)
-- kimageformats plugins live at `/ucrt64/share/qt6/plugins/imageformats`
-- `ldd` resolves MinGW PE dependencies inside the UCRT64 shell
+All three unverified assumptions in `scripts/package-windows.sh` turned out to
+be correct — `windeployqt6` exists, the kimageformats plugins are at
+`/ucrt64/share/qt6/plugins/imageformats`, and `ldd` resolves MinGW PE
+dependencies inside the UCRT64 shell. The resulting `build/dist/` is ~344 MB
+and runs with MSYS2 off `PATH`; trimming it is worth a look.
 
-### 3. Exercise the app
+### 3. ~~Exercise the app~~ Mostly done
 
-Nobody has looked at this build. Worth an hour: open a large folder, switch fit
-modes, crop/resize/rotate, folder view, quick copy/move panels, settings,
-fullscreen, HiDPI at 125%/150%, and video playback.
+The maintainer has confirmed every keyboard shortcut works, and both previously
+broken cases (single-image directory + shuffle, and script persistence) are
+covered. Video playback, fit modes, folder view and the panels have all been
+driven by hand.
 
-Two specific things to try, both previously broken:
-- A directory with **exactly one image**, then toggle shuffle mode. This hung
-  the app before (`Randomizer` infinite loop). There is a regression test, but
-  confirm in the real app.
-- Save a script under Settings → Scripts, restart, confirm it persisted. The
-  `Script` QDataStream operators were an ODR violation that worked only by
-  link order.
+Still unexercised: HiDPI at 125%/150%, and a genuinely large folder — the
+structural problems below are all about scale, and nothing here has been run
+against 20k files.
+
+Note for anyone automating this: synthetic input (SendKeys / SendInput, with or
+without real scan codes) does not reach the window, so UI checks have to be
+done by hand. Non-interactive entry points that do work: `--build-options`,
+`--gen-thumbs <dir>`, and passing a file path directly.
+
+---
+
+## Windows bring-up: what had to be fixed
+
+Everything here was found by actually building and running on Windows, and is
+fixed on the branch. Listed because most of it is invisible on Linux.
+
+- **`cmake --preset dev` failed to generate.** `mingw-w64-ucrt-x86_64-mujs`
+  ships a `.pc` file with hardcoded MSYS paths (`Cflags: -I/ucrt64/include`)
+  instead of `${prefix}`-derived ones, so pkgconf has nothing to relocate and a
+  native CMake cannot resolve the result. mpv pulls mujs in through
+  `Requires.private`, which is why only the mpv plugin broke. Worth reporting
+  upstream to MSYS2; `cmake/PkgConfigFixup.cmake` repairs it locally.
+- **exiv2 0.28 dropped its wide-path API.** The only `open()` left takes a
+  narrow `std::string` that the CRT decodes with the ANSI codepage, so EXIF on
+  any path outside CP1252 failed. `main()` now puts `LC_CTYPE` in UTF-8 mode.
+  Verified with a Cyrillic + Japanese filename.
+- **LTO is off on MinGW.** GCC mis-handles COMDAT sections for
+  virtual-destructor thunks; every multiply-inherited widget produced a
+  "multiple definition" link error. Not an ODR bug in our code. This makes
+  `release`/`windows-msys2` slightly slower than the Linux equivalents.
+- **Animated AVIF was silently dead.** `kimageformats` ships `kimg_avif.dll`
+  but only *optionally* depends on `libavif`, so the plugin installed and then
+  failed to load. Same for HEIF and RAW. Added to both `setup-msys2.sh` and the
+  CI job. Always confirm with `--build-options` rather than assuming.
+- **Animated AVIF was misdetected as video.** Mime databases sniff ISOBMFF by
+  major brand, and ffmpeg writes `avis` for a sequence, which Qt's built-in
+  copy of freedesktop.org.xml maps to `video/quicktime` — so the file would
+  have gone to mpv instead of `QMovie`. `detectFormat()` now lets the ftyp
+  brands override. Two format tests were failing on this.
+- **The video had no background under it**, so the transparent parts of a
+  ProRes 4444 clip showed the user's desktop. Nothing in the video path painted
+  one: `VideoPlayerInitProxy::paintEvent` was empty and the proxy,
+  `VideoPlayerMpv` and `MpvWidget` are all `WA_TranslucentBackground`. Harmless
+  while mpv composited onto black itself; once `background=none` made the alpha
+  real, those pixels went straight through the window.
+
+  The important part: **painting a background on an ancestor widget does not
+  work.** With a translucent top-level, Qt hands the QOpenGLWidget's alpha
+  directly to the window surface instead of blending it against the backing
+  store, so the GL rect punches through regardless of what is painted beneath
+  it. Verified in isolation — a parent filled bright red is not visible at all
+  through a transparent GL child.
+
+  The composite has to happen inside `MpvWidget::paintGL()`, where we still own
+  the alpha: mpv renders (wrapped in `beginNativePainting`), then the app
+  background is painted underneath with
+  `QPainter::CompositionMode_DestinationOver`. The colour comes from the app
+  through `VideoPlayer::setBackgroundColor()` and tracks the theme, fullscreen
+  state and `backgroundOpacity` exactly like the image viewer.
+
+  mpv's own letterbox bars are opaque and are not covered by that composite, so
+  `background-color` is pushed to mpv as well, otherwise the bars stay black and
+  seam against the rest of the window.
+- **The plugin ABI had two hand-maintained copies.** `videoplayer.h` and
+  `videoplayer.cpp` existed byte-for-byte in both `qimgv/gui/viewers/` and
+  `plugins/player_mpv/src/`, defining the same class whose vtable qimgv calls
+  across the DLL boundary. Adding one virtual to the app's copy is enough to
+  make the two disagree, which is silent memory corruption rather than a build
+  error. The plugin now compiles the app's copy; its `src/` duplicates are gone.
+- **Landing on a video closed and reopened the window.** `initPlayer()` is
+  lazy, so the first video adds the plugin's `QOpenGLWidget` to a window that
+  is already on screen; Qt then switches the backing store to a
+  texture-composited one, which on Windows destroys and recreates the native
+  window. Confirmed in isolation — the `HWND` changes. An empty hidden
+  `QOpenGLWidget` parked in the proxy's constructor makes the window
+  texture-backed before it is ever shown and the `HWND` stays put. It is never
+  laid out or painted, so it creates no GL context. Trade-off: qimgv's window
+  is now texture-composited even for people who never open a video.
+- **Qt Test output is invisible under ctest on Windows.** Qt routes it to
+  `OutputDebugString` whenever stderr is not a tty, so a failing test printed
+  nothing but an exit code. The test targets now set `QT_FORCE_STDERR_LOGGING`.
 
 ---
 
