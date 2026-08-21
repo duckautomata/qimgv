@@ -116,8 +116,8 @@ jobs:
 
       # --- minimal build: no video, no exiv2, no OpenCV --------------------
       # Roughly half the size of the full package. Zip only: the installer is
-      # the "just give me the app" path and shipping two of them would double
-      # the winget manifests and the testing for very little.
+      # the "just give me the app" path, and a second one to test and keep in
+      # step would buy little for people who are already happy to unzip.
       - name: Build (minimal)
         run: |
           cmake --preset minimal
