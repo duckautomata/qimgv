@@ -213,6 +213,39 @@ jobs:
           draft: true            # review before it goes public
           prerelease: ${{ github.event_name == 'workflow_dispatch' }}
           generate_release_notes: true
+          # Prepended to the notes GitHub generates, so every release explains
+          # which file to take and how to upgrade without anyone having to
+          # remember to write it. Full detail lives in docs/INSTALL.md.
+          body: |
+            ### Which download?
+
+            | File | Use it if |
+            |---|---|
+            | `qimgv-${{ needs.windows.outputs.file_version }}-win64-setup.exe` | You want it installed like a normal app. **Start here.** |
+            | `qimgv-${{ needs.windows.outputs.file_version }}-win64.zip` | You want it portable, with nothing written outside the folder. |
+            | `qimgv-${{ needs.windows.outputs.file_version }}-win64-minimal.zip` | Images only — no video playback, smallest download. |
+
+            All three read the same image formats, including AVIF, HEIF and JPEG XL.
+            The minimal build drops video playback and the OpenCV scaling filters.
+
+            ### Upgrading
+
+            **Installed:** run the new installer. It replaces the existing install
+            and keeps your settings — no need to uninstall first.
+
+            **Portable:** extract to a new folder and copy your old `conf` folder
+            across.
+
+            ### Notes
+
+            The installer is per-user and needs no administrator rights. It is not
+            code signed, so Windows may warn about an unknown publisher — verify
+            against `SHA256SUMS.txt` below.
+
+            Installing, upgrading, file associations and where settings live are all
+            covered in [docs/INSTALL.md](https://github.com/duckautomata/qimgv/blob/master/docs/INSTALL.md).
+
+            ---
           files: |
             dist/*.exe
             dist/*.zip
