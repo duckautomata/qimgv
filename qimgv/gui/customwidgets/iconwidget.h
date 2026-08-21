@@ -8,11 +8,7 @@
 #include "settings.h"
 #include "utils/imagelib.h"
 
-enum IconColorMode {
-    ICON_COLOR_CUSTOM,
-    ICON_COLOR_THEME,
-    ICON_COLOR_SOURCE
-};
+enum IconColorMode { ICON_COLOR_CUSTOM, ICON_COLOR_THEME, ICON_COLOR_SOURCE };
 
 class IconWidget : public QWidget {
 public:

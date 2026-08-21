@@ -13,16 +13,16 @@ class LinuxFsEvent;
 class LinuxWatcherPrivate : public DirectoryWatcherPrivate {
     Q_OBJECT
 public:
-    explicit LinuxWatcherPrivate(LinuxWatcher* qq = 0);
+    explicit LinuxWatcherPrivate(LinuxWatcher *qq = 0);
 
     int indexOfWatcherEvent(uint cookie) const;
-    int indexOfWatcherEvent(const QString& name) const;
+    int indexOfWatcherEvent(const QString &name) const;
 
-    void handleModifyEvent(const QString& name);
-    void handleDeleteEvent(const QString& name);
-    void handleCreateEvent(const QString& name);
-    void handleMovedFromEvent(const QString& name, uint cookie);
-    void handleMovedToEvent(const QString& name, uint cookie);
+    void handleModifyEvent(const QString &name);
+    void handleDeleteEvent(const QString &name);
+    void handleCreateEvent(const QString &name);
+    void handleMovedFromEvent(const QString &name, uint cookie);
+    void handleMovedToEvent(const QString &name, uint cookie);
 
     int watcher;
     int watchObject;
@@ -30,7 +30,7 @@ public:
     QVector<QSharedPointer<WatcherEvent>> watcherEvents;
 
 protected:
-    virtual void timerEvent(QTimerEvent* timerEvent) override;
+    virtual void timerEvent(QTimerEvent *timerEvent) override;
 
 private slots:
     void dispatchFilesystemEvent(LinuxFsEvent *e);

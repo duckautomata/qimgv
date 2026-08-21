@@ -1,9 +1,7 @@
 #include "menuitem.h"
 
-MenuItem::MenuItem(QWidget *parent)
-    : QWidget(parent)
-{
-    mLayout.setContentsMargins(6,0,8,0);
+MenuItem::MenuItem(QWidget *parent) : QWidget(parent) {
+    mLayout.setContentsMargins(6, 0, 8, 0);
     mLayout.setSpacing(2);
 
     setAccessibleName("MenuItem");
@@ -23,7 +21,7 @@ MenuItem::MenuItem(QWidget *parent)
     mLayout.addWidget(&mTextLabel);
     mLayout.addSpacerItem(spacer);
     mLayout.addWidget(&mShortcutLabel);
-    mLayout.setStretch(1,1);
+    mLayout.setStretch(1, 1);
 
     setLayout(&mLayout);
 }
@@ -65,11 +63,9 @@ void MenuItem::paintEvent(QPaintEvent *event) {
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 }
 
-void MenuItem::onPress() {
-}
+void MenuItem::onPress() {}
 
-void MenuItem::onClick() {
-}
+void MenuItem::onClick() {}
 
 void MenuItem::mousePressEvent(QMouseEvent *event) {
     onPress();

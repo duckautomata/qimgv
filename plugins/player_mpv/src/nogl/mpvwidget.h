@@ -17,11 +17,11 @@ public:
     MpvWidget(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::Widget);
     ~MpvWidget() override;
 
-    void command(const QVariant& params);
+    void command(const QVariant &params);
     void setOption(const QString &name, const QVariant &value);
-    void setProperty(const QString& name, const QVariant& value);
-    QVariant getProperty(const QString& name) const;
-    
+    void setProperty(const QString &name, const QVariant &value);
+    QVariant getProperty(const QString &name) const;
+
     void setMuted(bool mode);
     void setRepeat(bool mode);
     bool muted();
@@ -39,6 +39,6 @@ private slots:
 
 private:
     void handle_mpv_event(mpv_event *event);
-    
+
     mpv_handle *mpv;
 };

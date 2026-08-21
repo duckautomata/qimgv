@@ -8,8 +8,7 @@
 #include <QDebug>
 #include "settings.h"
 
-class TreeViewCustom : public QTreeView
-{
+class TreeViewCustom : public QTreeView {
     Q_OBJECT
 public:
     TreeViewCustom(QWidget *parent = nullptr);
@@ -31,6 +30,7 @@ protected:
 
 private slots:
     void updateScrollbarStyle();
+
 private:
     QScrollBar overlayScrollbar;
 

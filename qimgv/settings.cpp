@@ -54,7 +54,8 @@ Settings::Settings(QObject *parent) : QObject(parent) {
     QString confPath = portableMode() ? QApplication::applicationDirPath() + "/conf" : userConfigDir();
     mConfDir = new QDir(confPath);
     mConfDir->mkpath(confPath);
-    settingsConf = new QSettings(mConfDir->absolutePath() + "/" + qApp->applicationName() + ".ini", QSettings::IniFormat);
+    settingsConf =
+        new QSettings(mConfDir->absolutePath() + "/" + qApp->applicationName() + ".ini", QSettings::IniFormat);
     stateConf = new QSettings(mConfDir->absolutePath() + "/savedState.ini", QSettings::IniFormat);
     themeConf = new QSettings(mConfDir->absolutePath() + "/theme.ini", QSettings::IniFormat);
 #endif
@@ -141,20 +142,21 @@ void Settings::loadStylesheet() {
         QPalette p;
         QColor sys_text = p.text().color();
         QColor sys_window = p.window().color();
-        QColor sys_window_tinted, sys_window_tinted_lc, sys_window_tinted_lc2, sys_window_tinted_hc, sys_window_tinted_hc2;
+        QColor sys_window_tinted, sys_window_tinted_lc, sys_window_tinted_lc2, sys_window_tinted_hc,
+            sys_window_tinted_hc2;
         if(sys_window.valueF() <= 0.45f) {
             // dark system theme
             sys_window_tinted_lc2.setHsv(sys_window.hue(), sys_window.saturation(), sys_window.value() + 6);
-            sys_window_tinted_lc.setHsv(sys_window.hue(),  sys_window.saturation(), sys_window.value() + 14);
-            sys_window_tinted.setHsv(sys_window.hue(),     sys_window.saturation(), sys_window.value() + 20);
-            sys_window_tinted_hc.setHsv(sys_window.hue(),  sys_window.saturation(), sys_window.value() + 35);
+            sys_window_tinted_lc.setHsv(sys_window.hue(), sys_window.saturation(), sys_window.value() + 14);
+            sys_window_tinted.setHsv(sys_window.hue(), sys_window.saturation(), sys_window.value() + 20);
+            sys_window_tinted_hc.setHsv(sys_window.hue(), sys_window.saturation(), sys_window.value() + 35);
             sys_window_tinted_hc2.setHsv(sys_window.hue(), sys_window.saturation(), sys_window.value() + 50);
         } else {
             // light system theme
             sys_window_tinted_lc2.setHsv(sys_window.hue(), sys_window.saturation(), sys_window.value() - 6);
-            sys_window_tinted_lc.setHsv(sys_window.hue(),  sys_window.saturation(), sys_window.value() - 14);
-            sys_window_tinted.setHsv(sys_window.hue(),     sys_window.saturation(), sys_window.value() - 20);
-            sys_window_tinted_hc.setHsv(sys_window.hue(),  sys_window.saturation(), sys_window.value() - 35);
+            sys_window_tinted_lc.setHsv(sys_window.hue(), sys_window.saturation(), sys_window.value() - 14);
+            sys_window_tinted.setHsv(sys_window.hue(), sys_window.saturation(), sys_window.value() - 20);
+            sys_window_tinted_hc.setHsv(sys_window.hue(), sys_window.saturation(), sys_window.value() - 35);
             sys_window_tinted_hc2.setHsv(sys_window.hue(), sys_window.saturation(), sys_window.value() - 50);
         }
 
@@ -184,78 +186,78 @@ void Settings::loadStylesheet() {
 
         // pseudo-dpi to scale some widget widths
         int text_height_base = 22;
-        qreal pDpr = qMax( ((qreal)(text_height) / text_height_base), 1.0);
+        qreal pDpr = qMax(((qreal)(text_height) / text_height_base), 1.0);
         int context_menu_width = 212 * pDpr;
         int context_menu_button_height = 32 * pDpr;
         int rename_overlay_width = 380 * pDpr;
 
-        //qDebug()<< "dpr=" << qApp->devicePixelRatio() << "pDpr=" << pDpr;
+        // qDebug()<< "dpr=" << qApp->devicePixelRatio() << "pDpr=" << pDpr;
 
         // --- write variables into stylesheet --------------------------
-        styleSheet.replace("%font_small%", QString::number(font_small)+"pt");
-        styleSheet.replace("%font_large%", QString::number(font_large)+"pt");
-        styleSheet.replace("%button_height%", QString::number(button_height)+"px");
-        styleSheet.replace("%top_panel_height%", QString::number(top_panel_height)+"px");
-        styleSheet.replace("%overlay_header_size%", QString::number(overlay_header_size)+"px");
-        styleSheet.replace("%context_menu_width%", QString::number(context_menu_width)+"px");
-        styleSheet.replace("%context_menu_button_height%", QString::number(context_menu_button_height)+"px");
-        styleSheet.replace("%rename_overlay_width%", QString::number(rename_overlay_width)+"px");
+        styleSheet.replace("%font_small%", QString::number(font_small) + "pt");
+        styleSheet.replace("%font_large%", QString::number(font_large) + "pt");
+        styleSheet.replace("%button_height%", QString::number(button_height) + "px");
+        styleSheet.replace("%top_panel_height%", QString::number(top_panel_height) + "px");
+        styleSheet.replace("%overlay_header_size%", QString::number(overlay_header_size) + "px");
+        styleSheet.replace("%context_menu_width%", QString::number(context_menu_width) + "px");
+        styleSheet.replace("%context_menu_button_height%", QString::number(context_menu_button_height) + "px");
+        styleSheet.replace("%rename_overlay_width%", QString::number(rename_overlay_width) + "px");
 
-        styleSheet.replace("%icontheme%",  "light");
+        styleSheet.replace("%icontheme%", "light");
         // Qt::Popup can't do transparency under windows, use square window
 #ifdef _WIN32
-        styleSheet.replace("%contextmenu_border_radius%",  "0px");
+        styleSheet.replace("%contextmenu_border_radius%", "0px");
 #else
-        styleSheet.replace("%contextmenu_border_radius%",  "3px");
+        styleSheet.replace("%contextmenu_border_radius%", "3px");
 #endif
-        styleSheet.replace("%sys_window%",    sys_window.name());
-        styleSheet.replace("%sys_window_tinted%",    sys_window_tinted.name());
+        styleSheet.replace("%sys_window%", sys_window.name());
+        styleSheet.replace("%sys_window_tinted%", sys_window_tinted.name());
         styleSheet.replace("%sys_window_tinted_lc%", sys_window_tinted_lc.name());
         styleSheet.replace("%sys_window_tinted_lc2%", sys_window_tinted_lc2.name());
         styleSheet.replace("%sys_window_tinted_hc%", sys_window_tinted_hc.name());
         styleSheet.replace("%sys_window_tinted_hc2%", sys_window_tinted_hc2.name());
-        styleSheet.replace("%sys_text_secondary_rgba%", "rgba(" + QString::number(sys_text.red())   + ","
-                                                      + QString::number(sys_text.green()) + ","
-                                                      + QString::number(sys_text.blue())  + ",50%)");
+        styleSheet.replace("%sys_text_secondary_rgba%", "rgba(" + QString::number(sys_text.red()) + "," +
+                                                            QString::number(sys_text.green()) + "," +
+                                                            QString::number(sys_text.blue()) + ",50%)");
 
-        styleSheet.replace("%button%",               colors.button.name());
-        styleSheet.replace("%button_hover%",         colors.button_hover.name());
-        styleSheet.replace("%button_pressed%",       colors.button_pressed.name());
-        styleSheet.replace("%panel_button%",         colors.panel_button.name());
-        styleSheet.replace("%panel_button_hover%",   colors.panel_button_hover.name());
+        styleSheet.replace("%button%", colors.button.name());
+        styleSheet.replace("%button_hover%", colors.button_hover.name());
+        styleSheet.replace("%button_pressed%", colors.button_pressed.name());
+        styleSheet.replace("%panel_button%", colors.panel_button.name());
+        styleSheet.replace("%panel_button_hover%", colors.panel_button_hover.name());
         styleSheet.replace("%panel_button_pressed%", colors.panel_button_pressed.name());
-        styleSheet.replace("%widget%",               colors.widget.name());
-        styleSheet.replace("%widget_border%",        colors.widget_border.name());
-        styleSheet.replace("%folderview%",           colors.folderview.name());
-        styleSheet.replace("%folderview_topbar%",    colors.folderview_topbar.name());
-        styleSheet.replace("%folderview_hc%",        colors.folderview_hc.name());
-        styleSheet.replace("%folderview_hc2%",       colors.folderview_hc2.name());
-        styleSheet.replace("%accent%",               colors.accent.name());
-        styleSheet.replace("%input_field_focus%",    colors.input_field_focus.name());
-        styleSheet.replace("%overlay%",              colors.overlay.name());
-        styleSheet.replace("%icons%",                colors.icons.name());
-        styleSheet.replace("%text_hc2%",             colors.text_hc2.name());
-        styleSheet.replace("%text_hc%",              colors.text_hc.name());
-        styleSheet.replace("%text%",                 colors.text.name());
-        styleSheet.replace("%overlay_text%",         colors.overlay_text.name());
-        styleSheet.replace("%text_lc%",              colors.text_lc.name());
-        styleSheet.replace("%text_lc2%",             colors.text_lc2.name());
-        styleSheet.replace("%scrollbar%",            colors.scrollbar.name());
-        styleSheet.replace("%scrollbar_hover%",      colors.scrollbar_hover.name());
-        styleSheet.replace("%folderview_button_hover%",   colors.folderview_button_hover.name());
+        styleSheet.replace("%widget%", colors.widget.name());
+        styleSheet.replace("%widget_border%", colors.widget_border.name());
+        styleSheet.replace("%folderview%", colors.folderview.name());
+        styleSheet.replace("%folderview_topbar%", colors.folderview_topbar.name());
+        styleSheet.replace("%folderview_hc%", colors.folderview_hc.name());
+        styleSheet.replace("%folderview_hc2%", colors.folderview_hc2.name());
+        styleSheet.replace("%accent%", colors.accent.name());
+        styleSheet.replace("%input_field_focus%", colors.input_field_focus.name());
+        styleSheet.replace("%overlay%", colors.overlay.name());
+        styleSheet.replace("%icons%", colors.icons.name());
+        styleSheet.replace("%text_hc2%", colors.text_hc2.name());
+        styleSheet.replace("%text_hc%", colors.text_hc.name());
+        styleSheet.replace("%text%", colors.text.name());
+        styleSheet.replace("%overlay_text%", colors.overlay_text.name());
+        styleSheet.replace("%text_lc%", colors.text_lc.name());
+        styleSheet.replace("%text_lc2%", colors.text_lc2.name());
+        styleSheet.replace("%scrollbar%", colors.scrollbar.name());
+        styleSheet.replace("%scrollbar_hover%", colors.scrollbar_hover.name());
+        styleSheet.replace("%folderview_button_hover%", colors.folderview_button_hover.name());
         styleSheet.replace("%folderview_button_pressed%", colors.folderview_button_pressed.name());
-        styleSheet.replace("%text_secondary_rgba%",  "rgba(" + QString::number(colors.text.red())   + ","
-                                                             + QString::number(colors.text.green()) + ","
-                                                             + QString::number(colors.text.blue())  + ",62%)");
-        styleSheet.replace("%accent_hover_rgba%",    "rgba(" + QString::number(colors.accent.red())   + ","
-                                                             + QString::number(colors.accent.green()) + ","
-                                                             + QString::number(colors.accent.blue())  + ",65%)");
-        styleSheet.replace("%overlay_rgba%",         "rgba(" + QString::number(colors.overlay.red())   + ","
-                                                             + QString::number(colors.overlay.green()) + ","
-                                                             + QString::number(colors.overlay.blue())  + ",90%)");
-        styleSheet.replace("%fv_backdrop_rgba%",     "rgba(" + QString::number(colors.folderview_hc2.red())   + ","
-                                                             + QString::number(colors.folderview_hc2.green()) + ","
-                                                             + QString::number(colors.folderview_hc2.blue())  + ",80%)");
+        styleSheet.replace("%text_secondary_rgba%", "rgba(" + QString::number(colors.text.red()) + "," +
+                                                        QString::number(colors.text.green()) + "," +
+                                                        QString::number(colors.text.blue()) + ",62%)");
+        styleSheet.replace("%accent_hover_rgba%", "rgba(" + QString::number(colors.accent.red()) + "," +
+                                                      QString::number(colors.accent.green()) + "," +
+                                                      QString::number(colors.accent.blue()) + ",65%)");
+        styleSheet.replace("%overlay_rgba%", "rgba(" + QString::number(colors.overlay.red()) + "," +
+                                                 QString::number(colors.overlay.green()) + "," +
+                                                 QString::number(colors.overlay.blue()) + ",90%)");
+        styleSheet.replace("%fv_backdrop_rgba%", "rgba(" + QString::number(colors.folderview_hc2.red()) + "," +
+                                                     QString::number(colors.folderview_hc2.green()) + "," +
+                                                     QString::number(colors.folderview_hc2.blue()) + ",80%)");
         // do not show separator line if topbar color matches folderview
         if(colors.folderview != colors.folderview_topbar)
             styleSheet.replace("%topbar_border_rgba%", "rgba(0,0,0,14%)");
@@ -273,19 +275,19 @@ void Settings::loadTheme() {
     } else {
         BaseColorScheme base;
         themeConf->beginGroup("Colors");
-        base.background            = QColor(themeConf->value("background",            "#1a1a1a").toString());
+        base.background = QColor(themeConf->value("background", "#1a1a1a").toString());
         base.background_fullscreen = QColor(themeConf->value("background_fullscreen", "#1a1a1a").toString());
-        base.text                  = QColor(themeConf->value("text",                  "#b6b6b6").toString());
-        base.icons                 = QColor(themeConf->value("icons",                 "#a4a4a4").toString());
-        base.widget                = QColor(themeConf->value("widget",                "#252525").toString());
-        base.widget_border         = QColor(themeConf->value("widget_border",         "#2c2c2c").toString());
-        base.accent                = QColor(themeConf->value("accent",                "#8c9b81").toString());
-        base.folderview            = QColor(themeConf->value("folderview",            "#242424").toString());
-        base.folderview_topbar     = QColor(themeConf->value("folderview_topbar",     "#383838").toString());
-        base.scrollbar             = QColor(themeConf->value("scrollbar",             "#5a5a5a").toString());
-        base.overlay_text          = QColor(themeConf->value("overlay_text",          "#d2d2d2").toString());
-        base.overlay               = QColor(themeConf->value("overlay",               "#1a1a1a").toString());
-        base.tid                   = themeConf->value("tid", "-1").toInt();
+        base.text = QColor(themeConf->value("text", "#b6b6b6").toString());
+        base.icons = QColor(themeConf->value("icons", "#a4a4a4").toString());
+        base.widget = QColor(themeConf->value("widget", "#252525").toString());
+        base.widget_border = QColor(themeConf->value("widget_border", "#2c2c2c").toString());
+        base.accent = QColor(themeConf->value("accent", "#8c9b81").toString());
+        base.folderview = QColor(themeConf->value("folderview", "#242424").toString());
+        base.folderview_topbar = QColor(themeConf->value("folderview_topbar", "#383838").toString());
+        base.scrollbar = QColor(themeConf->value("scrollbar", "#5a5a5a").toString());
+        base.overlay_text = QColor(themeConf->value("overlay_text", "#d2d2d2").toString());
+        base.overlay = QColor(themeConf->value("overlay", "#1a1a1a").toString());
+        base.tid = themeConf->value("tid", "-1").toInt();
         themeConf->endGroup();
         setColorScheme(ColorScheme(base));
     }
@@ -294,23 +296,23 @@ void Settings::saveTheme() {
     if(settings->useSystemColorScheme())
         return;
     themeConf->beginGroup("Colors");
-    themeConf->setValue("background",            mColorScheme.background.name());
+    themeConf->setValue("background", mColorScheme.background.name());
     themeConf->setValue("background_fullscreen", mColorScheme.background_fullscreen.name());
-    themeConf->setValue("text",                  mColorScheme.text.name());
-    themeConf->setValue("icons",                 mColorScheme.icons.name());
-    themeConf->setValue("widget",                mColorScheme.widget.name());
-    themeConf->setValue("widget_border",         mColorScheme.widget_border.name());
-    themeConf->setValue("accent",                mColorScheme.accent.name());
-    themeConf->setValue("folderview",            mColorScheme.folderview.name());
-    themeConf->setValue("folderview_topbar",     mColorScheme.folderview_topbar.name());
-    themeConf->setValue("scrollbar",             mColorScheme.scrollbar.name());
-    themeConf->setValue("overlay_text",          mColorScheme.overlay_text.name());
-    themeConf->setValue("overlay",               mColorScheme.overlay.name());
-    themeConf->setValue("tid",                   mColorScheme.tid);
+    themeConf->setValue("text", mColorScheme.text.name());
+    themeConf->setValue("icons", mColorScheme.icons.name());
+    themeConf->setValue("widget", mColorScheme.widget.name());
+    themeConf->setValue("widget_border", mColorScheme.widget_border.name());
+    themeConf->setValue("accent", mColorScheme.accent.name());
+    themeConf->setValue("folderview", mColorScheme.folderview.name());
+    themeConf->setValue("folderview_topbar", mColorScheme.folderview_topbar.name());
+    themeConf->setValue("scrollbar", mColorScheme.scrollbar.name());
+    themeConf->setValue("overlay_text", mColorScheme.overlay_text.name());
+    themeConf->setValue("overlay", mColorScheme.overlay.name());
+    themeConf->setValue("tid", mColorScheme.tid);
     themeConf->endGroup();
 }
 //------------------------------------------------------------------------------
-const ColorScheme& Settings::colorScheme() {
+const ColorScheme &Settings::colorScheme() {
     return mColorScheme;
 }
 //------------------------------------------------------------------------------
@@ -379,13 +381,13 @@ void Settings::fillVideoFormats() {
 QString Settings::mpvBinary() {
     QString mpvPath = settings->settingsConf->value("mpvBinary", "").toString();
     if(!QFile::exists(mpvPath)) {
-    #ifdef _WIN32
+#ifdef _WIN32
         mpvPath = QCoreApplication::applicationDirPath() + "/mpv.exe";
-    #elif defined __linux__
+#elif defined __linux__
         mpvPath = "/usr/bin/mpv";
-    #elif defined __FreeBSD__
+#elif defined __FreeBSD__
         mpvPath = "/usr/local/bin/mpv";
-    #endif
+#endif
         if(!QFile::exists(mpvPath))
             mpvPath = "";
     }
@@ -673,18 +675,18 @@ PanelPosition Settings::panelPosition() {
 void Settings::setPanelPosition(PanelPosition pos) {
     QString posString;
     switch(pos) {
-        case PANEL_TOP:
-            posString = "top";
-            break;
-        case PANEL_BOTTOM:
-            posString = "bottom";
-            break;
-        case PANEL_LEFT:
-            posString = "left";
-            break;
-        case PANEL_RIGHT:
-            posString = "right";
-            break;
+    case PANEL_TOP:
+        posString = "top";
+        break;
+    case PANEL_BOTTOM:
+        posString = "bottom";
+        break;
+    case PANEL_LEFT:
+        posString = "left";
+        break;
+    case PANEL_RIGHT:
+        posString = "right";
+        break;
     }
     settings->settingsConf->setValue("panelPosition", posString);
 }
@@ -752,7 +754,7 @@ void Settings::readShortcuts(QMap<QString, QString> &shortcuts) {
         pair = in[i].split("=");
         if(!pair[0].isEmpty() && !pair[1].isEmpty()) {
             if(pair[1].endsWith("eq"))
-                pair[1]=pair[1].chopped(2) + "=";
+                pair[1] = pair[1].chopped(2) + "=";
             shortcuts.insert(pair[1], pair[0]);
         }
     }
@@ -778,7 +780,7 @@ void Settings::readScripts(QMap<QString, Script> &scripts) {
     scripts.clear();
     settings->settingsConf->beginGroup("Scripts");
     int size = settings->settingsConf->beginReadArray("script");
-    for(int i=0; i < size; i++) {
+    for(int i = 0; i < size; i++) {
         settings->settingsConf->setArrayIndex(i);
         QString name = settings->settingsConf->value("name").toString();
         QVariant value = settings->settingsConf->value("value");

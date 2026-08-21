@@ -7,10 +7,10 @@ MW::MW(QWidget *parent)
       cropPanel(nullptr), cropOverlay(nullptr), saveOverlay(nullptr), changelogWindow(nullptr), copyOverlay(nullptr),
       renameOverlay(nullptr), imageInfoOverlay(nullptr), infoBarFullscreen(nullptr), floatingMessage(nullptr) {
     setAttribute(Qt::WA_TranslucentBackground, true);
-    layout.setContentsMargins(0,0,0,0);
+    layout.setContentsMargins(0, 0, 0, 0);
     layout.setSpacing(0);
 
-    setMinimumSize(10,10);
+    setMinimumSize(10, 10);
 
     // do not steal focus when clicked
     // this is just a container. accept key events only
@@ -19,8 +19,7 @@ MW::MW(QWidget *parent)
 
     this->setLayout(&layout);
 
-    setWindowTitle(QCoreApplication::applicationName() + " " +
-                   QCoreApplication::applicationVersion());
+    setWindowTitle(QCoreApplication::applicationName() + " " + QCoreApplication::applicationVersion());
 
     this->setMouseTracking(true);
     this->setAcceptDrops(true);
@@ -70,25 +69,25 @@ void MW::setupUi() {
     connect(viewerWidget.get(), &ViewerWidget::draggedOut, this, qOverload<>(&MW::draggedOut));
     connect(viewerWidget.get(), &ViewerWidget::playbackFinished, this, &MW::playbackFinished);
     connect(viewerWidget.get(), &ViewerWidget::showScriptSettings, this, &MW::showScriptSettings);
-    connect(this, &MW::zoomIn,        viewerWidget.get(), &ViewerWidget::zoomIn);
-    connect(this, &MW::zoomOut,       viewerWidget.get(), &ViewerWidget::zoomOut);
-    connect(this, &MW::zoomInCursor,  viewerWidget.get(), &ViewerWidget::zoomInCursor);
+    connect(this, &MW::zoomIn, viewerWidget.get(), &ViewerWidget::zoomIn);
+    connect(this, &MW::zoomOut, viewerWidget.get(), &ViewerWidget::zoomOut);
+    connect(this, &MW::zoomInCursor, viewerWidget.get(), &ViewerWidget::zoomInCursor);
     connect(this, &MW::zoomOutCursor, viewerWidget.get(), &ViewerWidget::zoomOutCursor);
-    connect(this, &MW::scrollUp,    viewerWidget.get(), &ViewerWidget::scrollUp);
-    connect(this, &MW::scrollDown,  viewerWidget.get(), &ViewerWidget::scrollDown);
-    connect(this, &MW::scrollLeft,  viewerWidget.get(), &ViewerWidget::scrollLeft);
+    connect(this, &MW::scrollUp, viewerWidget.get(), &ViewerWidget::scrollUp);
+    connect(this, &MW::scrollDown, viewerWidget.get(), &ViewerWidget::scrollDown);
+    connect(this, &MW::scrollLeft, viewerWidget.get(), &ViewerWidget::scrollLeft);
     connect(this, &MW::scrollRight, viewerWidget.get(), &ViewerWidget::scrollRight);
-    connect(this, &MW::pauseVideo,     viewerWidget.get(), &ViewerWidget::pauseResumePlayback);
-    connect(this, &MW::stopPlayback,   viewerWidget.get(), &ViewerWidget::stopPlayback);
+    connect(this, &MW::pauseVideo, viewerWidget.get(), &ViewerWidget::pauseResumePlayback);
+    connect(this, &MW::stopPlayback, viewerWidget.get(), &ViewerWidget::stopPlayback);
     connect(this, &MW::seekVideoForward, viewerWidget.get(), &ViewerWidget::seekForward);
-    connect(this, &MW::seekVideoBackward,  viewerWidget.get(), &ViewerWidget::seekBackward);
-    connect(this, &MW::frameStep,      viewerWidget.get(), &ViewerWidget::frameStep);
-    connect(this, &MW::frameStepBack,  viewerWidget.get(), &ViewerWidget::frameStepBack);
-    connect(this, &MW::toggleMute,  viewerWidget.get(), &ViewerWidget::toggleMute);
-    connect(this, &MW::volumeUp,  viewerWidget.get(), &ViewerWidget::volumeUp);
-    connect(this, &MW::volumeDown,  viewerWidget.get(), &ViewerWidget::volumeDown);
+    connect(this, &MW::seekVideoBackward, viewerWidget.get(), &ViewerWidget::seekBackward);
+    connect(this, &MW::frameStep, viewerWidget.get(), &ViewerWidget::frameStep);
+    connect(this, &MW::frameStepBack, viewerWidget.get(), &ViewerWidget::frameStepBack);
+    connect(this, &MW::toggleMute, viewerWidget.get(), &ViewerWidget::toggleMute);
+    connect(this, &MW::volumeUp, viewerWidget.get(), &ViewerWidget::volumeUp);
+    connect(this, &MW::volumeDown, viewerWidget.get(), &ViewerWidget::volumeDown);
     connect(this, &MW::toggleTransparencyGrid, viewerWidget.get(), &ViewerWidget::toggleTransparencyGrid);
-    connect(this, &MW::setLoopPlayback,  viewerWidget.get(), &ViewerWidget::setLoopPlayback);
+    connect(this, &MW::setLoopPlayback, viewerWidget.get(), &ViewerWidget::setLoopPlayback);
 }
 
 void MW::setupFullUi() {
@@ -105,8 +104,8 @@ void MW::setupCropPanel() {
     cropOverlay = new CropOverlay(viewerWidget.get());
     cropPanel = new CropPanel(cropOverlay, this);
     connect(cropPanel, &CropPanel::cancel, this, &MW::hideCropPanel);
-    connect(cropPanel, &CropPanel::crop,   this, &MW::hideCropPanel);
-    connect(cropPanel, &CropPanel::crop,   this, &MW::cropRequested);
+    connect(cropPanel, &CropPanel::crop, this, &MW::hideCropPanel);
+    connect(cropPanel, &CropPanel::crop, this, &MW::cropRequested);
     connect(cropPanel, &CropPanel::cropAndSave, this, &MW::hideCropPanel);
     connect(cropPanel, &CropPanel::cropAndSave, this, &MW::cropAndSaveRequested);
 }
@@ -119,8 +118,8 @@ void MW::setupCopyOverlay() {
 
 void MW::setupSaveOverlay() {
     saveOverlay = new SaveConfirmOverlay(viewerWidget.get());
-    connect(saveOverlay, &SaveConfirmOverlay::saveClicked,    this, &MW::saveRequested);
-    connect(saveOverlay, &SaveConfirmOverlay::saveAsClicked,  this, &MW::saveAsClicked);
+    connect(saveOverlay, &SaveConfirmOverlay::saveClicked, this, &MW::saveRequested);
+    connect(saveOverlay, &SaveConfirmOverlay::saveAsClicked, this, &MW::saveAsClicked);
     connect(saveOverlay, &SaveConfirmOverlay::discardClicked, this, &MW::discardEditsRequested);
 }
 
@@ -227,7 +226,7 @@ void MW::preShowResize(QSize sz) {
     } else {
         sz = maxSz;
     }
-    QRect newGeom(0,0, sz.width(), sz.height());
+    QRect newGeom(0, 0, sz.width(), sz.height());
     newGeom.moveCenter(availableGeom.center());
     newGeom.translate(0, decorationSize / 2);
 
@@ -266,18 +265,30 @@ void MW::onSortingChanged(SortingMode mode) {
     folderView.get()->onSortingChanged(mode);
     if(centralWidget.get()->currentViewMode() == ViewMode::MODE_DOCUMENT) {
         switch(mode) {
-            case SortingMode::SORT_NAME:      showMessage("Sorting: By Name");              break;
-            case SortingMode::SORT_NAME_DESC: showMessage("Sorting: By Name (desc.)");      break;
-            case SortingMode::SORT_TIME:      showMessage("Sorting: By Time");              break;
-            case SortingMode::SORT_TIME_DESC: showMessage("Sorting: By Time (desc.)");      break;
-            case SortingMode::SORT_SIZE:      showMessage("Sorting: By File Size");         break;
-            case SortingMode::SORT_SIZE_DESC: showMessage("Sorting: By File Size (desc.)"); break;
+        case SortingMode::SORT_NAME:
+            showMessage("Sorting: By Name");
+            break;
+        case SortingMode::SORT_NAME_DESC:
+            showMessage("Sorting: By Name (desc.)");
+            break;
+        case SortingMode::SORT_TIME:
+            showMessage("Sorting: By Time");
+            break;
+        case SortingMode::SORT_TIME_DESC:
+            showMessage("Sorting: By Time (desc.)");
+            break;
+        case SortingMode::SORT_SIZE:
+            showMessage("Sorting: By File Size");
+            break;
+        case SortingMode::SORT_SIZE_DESC:
+            showMessage("Sorting: By File Size (desc.)");
+            break;
         }
     }
 }
 
 void MW::setDirectoryPath(QString path) {
-    //closeImage();
+    // closeImage();
     info.directoryPath = path;
     info.directoryName = path.split("/").last();
     folderView->setDirectoryPath(path);
@@ -337,8 +348,7 @@ void MW::toggleScalingFilter() {
     ScalingFilter configuredFilter = settings->scalingFilter();
     if(viewerWidget->scalingFilter() == configuredFilter) {
         setFilterNearest();
-    }
-    else {
+    } else {
         setFilter(configuredFilter);
     }
 }
@@ -355,25 +365,25 @@ void MW::setFilterBilinear() {
 
 void MW::setFilter(ScalingFilter filter) {
     QString filterName;
-    switch (filter) {
-        case QI_FILTER_NEAREST:
-            filterName = "nearest";
-            break;
-        case ScalingFilter::QI_FILTER_BILINEAR:
-            filterName = "bilinear";
-            break;
-        case QI_FILTER_CV_BILINEAR_SHARPEN:
-            filterName = "bilinear + sharpen";
-            break;
-        case QI_FILTER_CV_CUBIC:
-            filterName = "bicubic";
-            break;
-        case QI_FILTER_CV_CUBIC_SHARPEN:
-            filterName = "bicubic + sharpen";
-            break;
-        default:
-            filterName = "configured " + QString::number(static_cast<int>(filter));
-            break;
+    switch(filter) {
+    case QI_FILTER_NEAREST:
+        filterName = "nearest";
+        break;
+    case ScalingFilter::QI_FILTER_BILINEAR:
+        filterName = "bilinear";
+        break;
+    case QI_FILTER_CV_BILINEAR_SHARPEN:
+        filterName = "bilinear + sharpen";
+        break;
+    case QI_FILTER_CV_CUBIC:
+        filterName = "bicubic";
+        break;
+    case QI_FILTER_CV_CUBIC_SHARPEN:
+        filterName = "bicubic + sharpen";
+        break;
+    default:
+        filterName = "configured " + QString::number(static_cast<int>(filter));
+        break;
     }
     showMessage("Filter " + filterName, 600);
     viewerWidget->setScalingFilter(filter);
@@ -415,9 +425,9 @@ void MW::saveCurrentDisplay() {
     settings->setLastDisplay(qApp->screens().indexOf(this->window()->screen()));
 }
 
-//#############################################################
-//######################### EVENTS ############################
-//#############################################################
+// #############################################################
+// ######################### EVENTS ############################
+// #############################################################
 
 void MW::mouseMoveEvent(QMouseEvent *event) {
     event->ignore();
@@ -520,23 +530,37 @@ QString MW::getSaveFileName(QString filePath) {
     // generate filter for writable images
     // todo: some may need to be blacklisted
     auto writerFormats = QImageWriter::supportedImageFormats();
-    if(writerFormats.contains("jpg"))  filters.append("JPEG (*.jpg *.jpeg *jpe *jfif)");
-    if(writerFormats.contains("png"))  filters.append("PNG (*.png)");
-    if(writerFormats.contains("webp")) filters.append("WebP (*.webp)");
+    if(writerFormats.contains("jpg"))
+        filters.append("JPEG (*.jpg *.jpeg *jpe *jfif)");
+    if(writerFormats.contains("png"))
+        filters.append("PNG (*.png)");
+    if(writerFormats.contains("webp"))
+        filters.append("WebP (*.webp)");
     // may not work..
-    if(writerFormats.contains("jp2"))  filters.append("JPEG 2000 (*.jp2 *.j2k *.jpf *.jpx *.jpm *.jpgx)");
-    if(writerFormats.contains("jxl"))  filters.append("JPEG-XL (*.jxl)");
-    if(writerFormats.contains("avif")) filters.append("AVIF (*.avif *.avifs)");
-    if(writerFormats.contains("tif"))  filters.append("TIFF (*.tif *.tiff)");
-    if(writerFormats.contains("bmp"))  filters.append("BMP (*.bmp)");
+    if(writerFormats.contains("jp2"))
+        filters.append("JPEG 2000 (*.jp2 *.j2k *.jpf *.jpx *.jpm *.jpgx)");
+    if(writerFormats.contains("jxl"))
+        filters.append("JPEG-XL (*.jxl)");
+    if(writerFormats.contains("avif"))
+        filters.append("AVIF (*.avif *.avifs)");
+    if(writerFormats.contains("tif"))
+        filters.append("TIFF (*.tif *.tiff)");
+    if(writerFormats.contains("bmp"))
+        filters.append("BMP (*.bmp)");
 #ifdef _WIN32
-    if(writerFormats.contains("ico"))  filters.append("Icon Files (*.ico)");
+    if(writerFormats.contains("ico"))
+        filters.append("Icon Files (*.ico)");
 #endif
-    if(writerFormats.contains("ppm"))  filters.append("PPM (*.ppm)");
-    if(writerFormats.contains("xbm"))  filters.append("XBM (*.xbm)");
-    if(writerFormats.contains("xpm"))  filters.append("XPM (*.xpm)");
-    if(writerFormats.contains("dds"))  filters.append("DDS (*.dds)");
-    if(writerFormats.contains("wbmp")) filters.append("WBMP (*.wbmp)");
+    if(writerFormats.contains("ppm"))
+        filters.append("PPM (*.ppm)");
+    if(writerFormats.contains("xbm"))
+        filters.append("XBM (*.xbm)");
+    if(writerFormats.contains("xpm"))
+        filters.append("XPM (*.xpm)");
+    if(writerFormats.contains("dds"))
+        filters.append("DDS (*.dds)");
+    if(writerFormats.contains("wbmp"))
+        filters.append("WBMP (*.wbmp)");
     // add everything else from imagewriter
     for(auto fmt : writerFormats) {
         if(filters.filter(fmt).isEmpty())
@@ -553,7 +577,8 @@ QString MW::getSaveFileName(QString filePath) {
             break;
         }
     }
-    QString newFilePath = QFileDialog::getSaveFileName(this, tr("Save File as..."), filePath, filterString, &selectedFilter);
+    QString newFilePath =
+        QFileDialog::getSaveFileName(this, tr("Save File as..."), filePath, filterString, &selectedFilter);
     return newFilePath;
 }
 
@@ -613,16 +638,15 @@ void MW::triggerFullScreen() {
 }
 
 void MW::showFullScreen() {
-    //do not save immediately on application start
+    // do not save immediately on application start
     if(!isHidden())
         saveWindowGeometry();
     auto screens = qApp->screens();
     // todo: why check the screen again?
     int _currentDisplay = screens.indexOf(this->window()->screen());
-    //move to target screen
+    // move to target screen
     if(screens.count() > currentDisplay && currentDisplay != _currentDisplay) {
-        this->move(screens.at(currentDisplay)->geometry().x(),
-                   screens.at(currentDisplay)->geometry().y());
+        this->move(screens.at(currentDisplay)->geometry().x(), screens.at(currentDisplay)->geometry().y());
     }
     QWidget::showFullScreen();
     // try to repaint sooner
@@ -765,7 +789,8 @@ void MW::closeFullScreenOrExit() {
 }
 
 // todo: this is crap, use shared state object
-void MW::setCurrentInfo(int _index, int _fileCount, QString _filePath, QString _fileName, QSize _imageSize, qint64 _fileSize, bool slideshow, bool shuffle, bool edited) {
+void MW::setCurrentInfo(int _index, int _fileCount, QString _filePath, QString _fileName, QSize _imageSize,
+                        qint64 _fileSize, bool slideshow, bool shuffle, bool edited) {
     info.index = _index;
     info.fileCount = _fileCount;
     info.fileName = _fileName;
@@ -828,8 +853,10 @@ void MW::onInfoUpdated() {
         if(info.edited)
             windowTitle.prepend("* ");
 
-        infoBarFullscreen->setInfo(posString, info.fileName + (info.edited ? "  *" : ""), resString + "  " + sizeString);
-        infoBarWindowed->setInfo(posString, info.fileName + (info.edited ? "  *" : ""), resString + "  " + sizeString + " " + states);
+        infoBarFullscreen->setInfo(posString, info.fileName + (info.edited ? "  *" : ""),
+                                   resString + "  " + sizeString);
+        infoBarWindowed->setInfo(posString, info.fileName + (info.edited ? "  *" : ""),
+                                 resString + "  " + sizeString + " " + states);
     }
     setWindowTitle(windowTitle);
 }
@@ -855,12 +882,12 @@ void MW::showMessageDirectory(QString dirName) {
 
 void MW::showMessageDirectoryEnd() {
     // TODO replace with something nicer (integrate with click overlay?)
-    //floatingMessage->showMessage("", FloatingWidgetPosition::RIGHT, FloatingMessageIcon::ICON_RIGHT_EDGE, 400);
+    // floatingMessage->showMessage("", FloatingWidgetPosition::RIGHT, FloatingMessageIcon::ICON_RIGHT_EDGE, 400);
 }
 
 void MW::showMessageDirectoryStart() {
     // TODO replace with something nicer (integrate with click overlay?)
-    //floatingMessage->showMessage("", FloatingWidgetPosition::LEFT, FloatingMessageIcon::ICON_LEFT_EDGE, 400);
+    // floatingMessage->showMessage("", FloatingWidgetPosition::LEFT, FloatingMessageIcon::ICON_LEFT_EDGE, 400);
 }
 
 void MW::showMessageFitWindow() {
@@ -876,7 +903,7 @@ void MW::showMessageFitOriginal() {
 }
 
 void MW::showMessage(QString text) {
-    floatingMessage->showMessage(text,  FloatingMessageIcon::NO_ICON, 1500);
+    floatingMessage->showMessage(text, FloatingMessageIcon::NO_ICON, 1500);
 }
 
 void MW::showMessage(QString text, int duration) {
@@ -884,15 +911,15 @@ void MW::showMessage(QString text, int duration) {
 }
 
 void MW::showMessageSuccess(QString text) {
-    floatingMessage->showMessage(text,  FloatingMessageIcon::ICON_SUCCESS, 1500);
+    floatingMessage->showMessage(text, FloatingMessageIcon::ICON_SUCCESS, 1500);
 }
 
 void MW::showWarning(QString text) {
-    floatingMessage->showMessage(text,  FloatingMessageIcon::ICON_WARNING, 1500);
+    floatingMessage->showMessage(text, FloatingMessageIcon::ICON_WARNING, 1500);
 }
 
 void MW::showError(QString text) {
-    floatingMessage->showMessage(text,  FloatingMessageIcon::ICON_ERROR, 2800);
+    floatingMessage->showMessage(text, FloatingMessageIcon::ICON_ERROR, 2800);
 }
 
 bool MW::showConfirmation(QString title, QString msg) {
@@ -919,7 +946,7 @@ void MW::readSettings() {
 // todo: remove/rename?
 void MW::applyWindowedBackground() {
 #ifdef USE_KDE_BLUR
-    QWindow* window = this->windowHandle();
+    QWindow *window = this->windowHandle();
     if(window) {
         if(settings->backgroundOpacity() == 1.0)
             KWindowEffects::enableBlurBehind(window, false);
@@ -931,7 +958,7 @@ void MW::applyWindowedBackground() {
 
 void MW::applyFullscreenBackground() {
 #ifdef USE_KDE_BLUR
-    QWindow* window = this->windowHandle();
+    QWindow *window = this->windowHandle();
     if(window)
         KWindowEffects::enableBlurBehind(window, false);
 #endif
@@ -947,7 +974,7 @@ void MW::adaptToWindowState() {
         if(showInfoBarFullscreen)
             infoBarFullscreen->showWhenReady();
         else
-            infoBarFullscreen->hide();    
+            infoBarFullscreen->hide();
 
         auto pos = settings->panelPosition();
         if(!settings->panelEnabled() || pos == PANEL_BOTTOM || pos == PANEL_LEFT)
@@ -982,6 +1009,6 @@ void MW::leaveEvent(QEvent *event) {
 }
 
 // block native tab-switching so we can use it in shortcuts
-//bool MW::focusNextPrevChild(bool) {
+// bool MW::focusNextPrevChild(bool) {
 //    return false;
 //}

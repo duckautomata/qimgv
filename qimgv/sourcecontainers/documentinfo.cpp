@@ -13,11 +13,7 @@ static const QSet<QByteArray> &readableFormats() {
 }
 
 DocumentInfo::DocumentInfo(QString path)
-    : mDocumentType(DocumentType::NONE),
-      mOrientation(0),
-      mFormat(""),
-      exifLoaded(false)
-{
+    : mDocumentType(DocumentType::NONE), mOrientation(0), mFormat(""), exifLoaded(false) {
     fileInfo.setFile(path);
     if(!fileInfo.isFile()) {
         qDebug() << "FileInfo: cannot open: " << path;
@@ -26,8 +22,7 @@ DocumentInfo::DocumentInfo(QString path)
     detectFormat();
 }
 
-DocumentInfo::~DocumentInfo() {
-}
+DocumentInfo::~DocumentInfo() {}
 
 // ##############################################################
 // ####################### PUBLIC METHODS #######################

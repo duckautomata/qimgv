@@ -1,19 +1,16 @@
 #include "settingsdialog.h"
 #include "ui_settingsdialog.h"
 
-SettingsDialog::SettingsDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::SettingsDialog)
-{
+SettingsDialog::SettingsDialog(QWidget *parent) : QDialog(parent), ui(new Ui::SettingsDialog) {
     ui->setupUi(this);
     this->setWindowTitle(tr("Preferences — ") + qApp->applicationName());
 
-    ui->shortcutsTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);   
+    ui->shortcutsTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->aboutAppTextBrowser->viewport()->setAutoFillBackground(false);
     ui->versionLabel->setText("" + QApplication::applicationVersion());
     ui->qtVersionLabel->setText(qVersion());
-    ui->appIconLabel->setPixmap(QIcon(":/res/icons/common/logo/app/22.png").pixmap(22,22));
-    ui->qtIconLabel->setPixmap(QIcon(":/res/icons/common/logo/3rdparty/qt22.png").pixmap(22,16));
+    ui->appIconLabel->setPixmap(QIcon(":/res/icons/common/logo/app/22.png").pixmap(22, 22));
+    ui->qtIconLabel->setPixmap(QIcon(":/res/icons/common/logo/3rdparty/qt22.png").pixmap(22, 16));
 
     // fake combobox that acts as a menu button
     // less code than using pushbutton with menu
@@ -23,10 +20,22 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
         ui->themeSelectorComboBox->setCurrentIndex(index);
         ui->themeSelectorComboBox->blockSignals(false);
         switch(index) {
-            case 0: setColorScheme(ThemeStore::colorScheme(COLORS_BLACK));    settings->setColorTid(COLORS_BLACK);    break;
-            case 1: setColorScheme(ThemeStore::colorScheme(COLORS_DARK));     settings->setColorTid(COLORS_DARK);     break;
-            case 2: setColorScheme(ThemeStore::colorScheme(COLORS_DARKBLUE)); settings->setColorTid(COLORS_DARKBLUE); break;
-            case 3: setColorScheme(ThemeStore::colorScheme(COLORS_LIGHT));    settings->setColorTid(COLORS_LIGHT);    break;
+        case 0:
+            setColorScheme(ThemeStore::colorScheme(COLORS_BLACK));
+            settings->setColorTid(COLORS_BLACK);
+            break;
+        case 1:
+            setColorScheme(ThemeStore::colorScheme(COLORS_DARK));
+            settings->setColorTid(COLORS_DARK);
+            break;
+        case 2:
+            setColorScheme(ThemeStore::colorScheme(COLORS_DARKBLUE));
+            settings->setColorTid(COLORS_DARKBLUE);
+            break;
+        case 3:
+            setColorScheme(ThemeStore::colorScheme(COLORS_LIGHT));
+            settings->setColorTid(COLORS_LIGHT);
+            break;
         }
     });
 
@@ -35,8 +44,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
             ui->themeSelectorComboBox->setCurrentIndex(-1);
             setColorScheme(ThemeStore::colorScheme(COLORS_SYSTEM));
             settings->setColorTid(COLORS_SYSTEM);
-        }
-        else {
+        } else {
             readColorScheme();
             settings->setColorTid(COLORS_CUSTOMIZED);
         }
@@ -69,9 +77,9 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
 #ifndef USE_MPV
     ui->videoPlaybackGroup->setEnabled(false);
-    //ui->novideoInfoLabel->setHidden(false);
+    // ui->novideoInfoLabel->setHidden(false);
 #else
-    //ui->novideoInfoLabel->setHidden(true);
+    // ui->novideoInfoLabel->setHidden(true);
 #endif
 
 #ifdef USE_OPENCV
@@ -144,15 +152,16 @@ void SettingsDialog::adjustSizeToContents() {
     ui->scrollAreaWidgetContents_3->layout()->activate();
     ui->scrollArea_3->setMinimumWidth(ui->scrollAreaWidgetContents_3->minimumSizeHint().width());
     // container
-    //ui->stackedWidget->layout()->activate();
+    // ui->stackedWidget->layout()->activate();
     this->setMinimumWidth(sizeHint().width() + 22);
 
-    //qDebug() << "window:" << this->sizeHint() << this->minimumSizeHint() << this->size();
-    //qDebug() << "stackedwidget:" << ui->stackedWidget->sizeHint() << ui->stackedWidget->minimumSizeHint() << ui->stackedWidget->size();
-    //qDebug() << "scrollarea:" << ui->scrollArea->sizeHint() << ui->scrollArea->minimumSizeHint() << ui->scrollArea->size();
-    //qDebug() << "scrollareawidget:" << ui->scrollAreaWidgetContents->sizeHint() << ui->scrollAreaWidgetContents->minimumSizeHint() << ui->scrollAreaWidgetContents->size();
-    //qDebug() << "grid" << ui->gridLayout_15->sizeHint();
-    //qDebug() << "wtf" << ui->startInFolderViewCheckBox->sizeHint() << ui->startInFolderViewCheckBox->minimumSizeHint();
+    // qDebug() << "window:" << this->sizeHint() << this->minimumSizeHint() << this->size();
+    // qDebug() << "stackedwidget:" << ui->stackedWidget->sizeHint() << ui->stackedWidget->minimumSizeHint() <<
+    // ui->stackedWidget->size(); qDebug() << "scrollarea:" << ui->scrollArea->sizeHint() <<
+    // ui->scrollArea->minimumSizeHint() << ui->scrollArea->size(); qDebug() << "scrollareawidget:" <<
+    // ui->scrollAreaWidgetContents->sizeHint() << ui->scrollAreaWidgetContents->minimumSizeHint() <<
+    // ui->scrollAreaWidgetContents->size(); qDebug() << "grid" << ui->gridLayout_15->sizeHint(); qDebug() << "wtf" <<
+    // ui->startInFolderViewCheckBox->sizeHint() << ui->startInFolderViewCheckBox->minimumSizeHint();
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::resetToDesktopTheme() {
@@ -160,9 +169,7 @@ void SettingsDialog::resetToDesktopTheme() {
     this->readColorScheme();
 }
 //------------------------------------------------------------------------------
-void SettingsDialog::setupSidebar() {
-
-}
+void SettingsDialog::setupSidebar() {}
 //------------------------------------------------------------------------------
 void SettingsDialog::readSettings() {
     ui->checkUpdatesCheckBox->setChecked(settings->checkForUpdates());
@@ -291,7 +298,7 @@ void SettingsDialog::readSettings() {
     ui->modifySystemSchemeLabel->setVisible(settings->useSystemColorScheme());
     ui->themeSelectorComboBox->setEnabled(!settings->useSystemColorScheme());
     ui->colorConfigSubgroup->setEnabled(!settings->useSystemColorScheme());
-    
+
     readColorScheme();
     readShortcuts();
     readScripts();
@@ -448,12 +455,22 @@ void SettingsDialog::readColorScheme() {
 }
 
 void SettingsDialog::setColorScheme(ColorScheme colors) {
-    switch (colors.tid) {
-        case COLORS_LIGHT: ui->themeSelectorComboBox->setCurrentIndex(3);   break;
-        case COLORS_BLACK: ui->themeSelectorComboBox->setCurrentIndex(0);   break;
-        case COLORS_DARK: ui->themeSelectorComboBox->setCurrentIndex(1);    break;
-        case COLORS_DARKBLUE: ui->themeSelectorComboBox->setCurrentIndex(2);break;
-        default: ui->themeSelectorComboBox->setCurrentIndex(-1);            break;
+    switch(colors.tid) {
+    case COLORS_LIGHT:
+        ui->themeSelectorComboBox->setCurrentIndex(3);
+        break;
+    case COLORS_BLACK:
+        ui->themeSelectorComboBox->setCurrentIndex(0);
+        break;
+    case COLORS_DARK:
+        ui->themeSelectorComboBox->setCurrentIndex(1);
+        break;
+    case COLORS_DARKBLUE:
+        ui->themeSelectorComboBox->setCurrentIndex(2);
+        break;
+    default:
+        ui->themeSelectorComboBox->setCurrentIndex(-1);
+        break;
     }
     ui->colorSelectorAccent->setColor(colors.accent);
     ui->colorSelectorBackground->setColor(colors.background);
@@ -539,7 +556,7 @@ void SettingsDialog::editScript() {
     }
 }
 //------------------------------------------------------------------------------
-void SettingsDialog::editScript(QListWidgetItem* item) {
+void SettingsDialog::editScript(QListWidgetItem *item) {
     if(item) {
         editScript(item->text());
     }
@@ -561,7 +578,7 @@ void SettingsDialog::removeScript() {
         QString scriptName = ui->scriptsListWidget->currentItem()->text();
         delete ui->scriptsListWidget->takeItem(row);
         saveShortcuts();
-        actionManager->removeAllShortcuts("s:"+scriptName);
+        actionManager->removeAllShortcuts("s:" + scriptName);
         readShortcuts();
         scriptManager->removeScript(scriptName);
     }
@@ -682,7 +699,7 @@ void SettingsDialog::onZoomStepSliderChanged(int value) {
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onMouseScrollingSpeedSliderChanged(int value) {
-    ui->mouseScrollingSpeedLabel->setText(QString::number(0.5f + (value*0.25f), 'f', 2) + "x");
+    ui->mouseScrollingSpeedLabel->setText(QString::number(0.5f + (value * 0.25f), 'f', 2) + "x");
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onThumbnailerThreadsSliderChanged(int value) {

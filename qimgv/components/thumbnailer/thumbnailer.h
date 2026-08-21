@@ -5,8 +5,7 @@
 #include "components/cache/thumbnailcache.h"
 #include "settings.h"
 
-class Thumbnailer : public QObject
-{
+class Thumbnailer : public QObject {
     Q_OBJECT
 public:
     explicit Thumbnailer();

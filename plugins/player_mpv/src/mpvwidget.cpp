@@ -29,13 +29,13 @@ static bool setMpvProperty(mpv_handle *mpv, const char *name, const QString &val
 }
 
 static void wakeup(void *ctx) {
-    QMetaObject::invokeMethod((MpvWidget*)ctx, "on_mpv_events", Qt::QueuedConnection);
+    QMetaObject::invokeMethod((MpvWidget *)ctx, "on_mpv_events", Qt::QueuedConnection);
 }
 
 static void *get_proc_address(void *ctx, const char *name) {
     Q_UNUSED(ctx);
     QOpenGLContext *glctx = QOpenGLContext::currentContext();
-    if (!glctx)
+    if(!glctx)
         return nullptr;
     return reinterpret_cast<void *>(glctx->getProcAddress(QByteArray(name)));
 }
@@ -55,9 +55,7 @@ QSurfaceFormat MpvWidget::surfaceFormat() {
     return fmt;
 }
 
-MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f)
-    : QOpenGLWidget(parent, f)
-{
+MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f) : QOpenGLWidget(parent, f) {
     setFormat(surfaceFormat());
 
     mpv = mpv_create();
@@ -79,7 +77,7 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f)
     if(!setMpvOption(mpv, "background", "none"))
         setMpvOption(mpv, "alpha", "yes");
 
-    if (mpv_initialize(mpv) < 0)
+    if(mpv_initialize(mpv) < 0)
         throw std::runtime_error("could not initialize mpv context");
 
     // Hardware decoding, with a safe fallback to software. "auto-safe" only
@@ -88,7 +86,7 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f)
     // decoding.
     mpv::qt::set_property(mpv, "hwdec", "auto-safe");
 
-    //mpv::qt::set_property(mpv, "video-unscaled", "downscale-big");
+    // mpv::qt::set_property(mpv, "video-unscaled", "downscale-big");
 
     // Loop video
     setRepeat(true);
@@ -104,16 +102,16 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f)
 
 MpvWidget::~MpvWidget() {
     makeCurrent();
-    if (mpv_gl)
+    if(mpv_gl)
         mpv_render_context_free(mpv_gl);
     mpv_terminate_destroy(mpv);
 }
 
-void MpvWidget::command(const QVariant& params) {
+void MpvWidget::command(const QVariant &params) {
     mpv::qt::command(mpv, params);
 }
 
-void MpvWidget::setProperty(const QString& name, const QVariant& value) {
+void MpvWidget::setProperty(const QString &name, const QVariant &value) {
     mpv::qt::set_property(mpv, name, value);
 }
 
@@ -121,17 +119,15 @@ QVariant MpvWidget::getProperty(const QString &name) const {
     return mpv::qt::get_property(mpv, name);
 }
 
-void MpvWidget::setOption(const QString& name, const QVariant& value) {
+void MpvWidget::setOption(const QString &name, const QVariant &value) {
     mpv::qt::set_property(mpv, name, value);
 }
 
 void MpvWidget::initializeGL() {
     mpv_opengl_init_params gl_init_params{get_proc_address, nullptr};
-    mpv_render_param params[]{
-        {MPV_RENDER_PARAM_API_TYPE, const_cast<char *>(MPV_RENDER_API_TYPE_OPENGL)},
-        {MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, &gl_init_params},
-        {MPV_RENDER_PARAM_INVALID, nullptr}
-    };
+    mpv_render_param params[]{{MPV_RENDER_PARAM_API_TYPE, const_cast<char *>(MPV_RENDER_API_TYPE_OPENGL)},
+                              {MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, &gl_init_params},
+                              {MPV_RENDER_PARAM_INVALID, nullptr}};
 
     if(mpv_render_context_create(&mpv_gl, mpv, params) < 0)
         throw std::runtime_error("failed to initialize mpv GL context");
@@ -160,10 +156,7 @@ void MpvWidget::renderMpv() {
     int flip_y{1};
 
     mpv_render_param params[] = {
-        {MPV_RENDER_PARAM_OPENGL_FBO, &mpfbo},
-        {MPV_RENDER_PARAM_FLIP_Y, &flip_y},
-        {MPV_RENDER_PARAM_INVALID, nullptr}
-    };
+        {MPV_RENDER_PARAM_OPENGL_FBO, &mpfbo}, {MPV_RENDER_PARAM_FLIP_Y, &flip_y}, {MPV_RENDER_PARAM_INVALID, nullptr}};
     // See render_gl.h on what OpenGL environment mpv expects, and
     // other API details.
     mpv_render_context_render(mpv_gl, params);
@@ -189,9 +182,9 @@ void MpvWidget::paintGL() {
 
 void MpvWidget::on_mpv_events() {
     // Process all events, until the event queue is empty.
-    while (mpv) {
+    while(mpv) {
         mpv_event *event = mpv_wait_event(mpv, 0);
-        if (event->event_id == MPV_EVENT_NONE) {
+        if(event->event_id == MPV_EVENT_NONE) {
             break;
         }
         handle_mpv_event(event);
@@ -199,28 +192,28 @@ void MpvWidget::on_mpv_events() {
 }
 
 void MpvWidget::handle_mpv_event(mpv_event *event) {
-    switch (event->event_id) {
+    switch(event->event_id) {
     case MPV_EVENT_PROPERTY_CHANGE: {
-        mpv_event_property *prop = reinterpret_cast<mpv_event_property*>(event->data);
+        mpv_event_property *prop = reinterpret_cast<mpv_event_property *>(event->data);
         if(strcmp(prop->name, "time-pos") == 0) {
-            if (prop->format == MPV_FORMAT_DOUBLE) {
-                double time = *reinterpret_cast<double*>(prop->data);
+            if(prop->format == MPV_FORMAT_DOUBLE) {
+                double time = *reinterpret_cast<double *>(prop->data);
                 emit positionChanged(static_cast<int>(time));
             }
         } else if(strcmp(prop->name, "duration") == 0) {
             if(prop->format == MPV_FORMAT_DOUBLE) {
-                double time = *reinterpret_cast<double*>(prop->data);
+                double time = *reinterpret_cast<double *>(prop->data);
                 emit durationChanged(static_cast<int>(time));
             } else if(prop->format == MPV_FORMAT_NONE) {
                 emit playbackFinished();
             }
         } else if(strcmp(prop->name, "pause") == 0) {
-            int mode = *reinterpret_cast<int*>(prop->data);
+            int mode = *reinterpret_cast<int *>(prop->data);
             emit videoPaused(mode == 1);
         }
         break;
     }
-    default: ;
+    default:;
         // Ignore uninteresting or unknown events.
     }
 }
@@ -245,7 +238,7 @@ void MpvWidget::maybeUpdate() {
 }
 
 void MpvWidget::on_update(void *ctx) {
-    QMetaObject::invokeMethod((MpvWidget*)ctx, "maybeUpdate");
+    QMetaObject::invokeMethod((MpvWidget *)ctx, "maybeUpdate");
 }
 
 void MpvWidget::setMuted(bool mode) {

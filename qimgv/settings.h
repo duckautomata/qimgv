@@ -20,29 +20,11 @@
 #include "utils/script.h"
 #include "themestore.h"
 
-enum SortingMode {
-    SORT_NAME,
-    SORT_NAME_DESC,
-    SORT_SIZE,
-    SORT_SIZE_DESC,
-    SORT_TIME,
-    SORT_TIME_DESC
-};
+enum SortingMode { SORT_NAME, SORT_NAME_DESC, SORT_SIZE, SORT_SIZE_DESC, SORT_TIME, SORT_TIME_DESC };
 
-enum ImageFitMode {
-    FIT_WINDOW,
-    FIT_WIDTH,
-    FIT_ORIGINAL,
-    FIT_WINDOW_STRETCH,
-    FIT_FREE
-};
+enum ImageFitMode { FIT_WINDOW, FIT_WIDTH, FIT_ORIGINAL, FIT_WINDOW_STRETCH, FIT_FREE };
 
-enum PanelPosition {
-    PANEL_TOP,
-    PANEL_BOTTOM,
-    PANEL_LEFT,
-    PANEL_RIGHT
-};
+enum PanelPosition { PANEL_TOP, PANEL_BOTTOM, PANEL_LEFT, PANEL_RIGHT };
 
 enum ScalingFilter {
     QI_FILTER_NEAREST,
@@ -52,56 +34,26 @@ enum ScalingFilter {
     QI_FILTER_CV_CUBIC_SHARPEN
 };
 
-enum ZoomIndicatorMode {
-    INDICATOR_DISABLED,
-    INDICATOR_ENABLED,
-    INDICATOR_AUTO
-};
+enum ZoomIndicatorMode { INDICATOR_DISABLED, INDICATOR_ENABLED, INDICATOR_AUTO };
 
-enum DefaultCropAction {
-    ACTION_CROP,
-    ACTION_CROP_SAVE
-};
+enum DefaultCropAction { ACTION_CROP, ACTION_CROP_SAVE };
 
-enum ImageFocusPoint {
-    FOCUS_TOP,
-    FOCUS_CENTER,
-    FOCUS_CURSOR
-};
+enum ImageFocusPoint { FOCUS_TOP, FOCUS_CENTER, FOCUS_CURSOR };
 
-enum ImageScrolling {
-    SCROLL_NONE,
-    SCROLL_BY_TRACKPAD,
-    SCROLL_BY_TRACKPAD_AND_WHEEL
-};
+enum ImageScrolling { SCROLL_NONE, SCROLL_BY_TRACKPAD, SCROLL_BY_TRACKPAD_AND_WHEEL };
 
-enum ViewMode {
-    MODE_DOCUMENT,
-    MODE_FOLDERVIEW
-};
+enum ViewMode { MODE_DOCUMENT, MODE_FOLDERVIEW };
 
-enum FolderEndAction {
-    FOLDER_END_NO_ACTION,
-    FOLDER_END_LOOP,
-    FOLDER_END_GOTO_ADJACENT
-};
+enum FolderEndAction { FOLDER_END_NO_ACTION, FOLDER_END_LOOP, FOLDER_END_GOTO_ADJACENT };
 
-enum FolderViewMode {
-    FV_SIMPLE,
-    FV_EXTENDED,
-    FV_EXT_FOLDERS
-};
+enum FolderViewMode { FV_SIMPLE, FV_EXTENDED, FV_EXT_FOLDERS };
 
-enum ThumbPanelStyle {
-    TH_PANEL_SIMPLE,
-    TH_PANEL_EXTENDED
-};
+enum ThumbPanelStyle { TH_PANEL_SIMPLE, TH_PANEL_EXTENDED };
 
-class Settings : public QObject
-{
+class Settings : public QObject {
     Q_OBJECT
 public:
-    static Settings* getInstance();
+    static Settings *getInstance();
     ~Settings();
     QStringList supportedMimeTypes();
     QList<QByteArray> supportedFormats();
@@ -170,7 +122,7 @@ public:
     bool blurBackground();
     void setBlurBackground(bool mode);
     void setSortingMode(SortingMode mode);
-    SortingMode sortingMode();    
+    SortingMode sortingMode();
     void readScripts(QMap<QString, Script> &scripts);
     void saveScripts(const QMap<QString, Script> &scripts);
     int folderViewIconSize();
@@ -235,7 +187,7 @@ public:
     FolderEndAction folderEndAction();
     void setFolderEndAction(FolderEndAction mode);
 
-    const ColorScheme& colorScheme();
+    const ColorScheme &colorScheme();
     void setColorScheme(ColorScheme scheme);
     void setColorTid(int tid);
 
@@ -333,7 +285,6 @@ signals:
 
 public slots:
     void sendChangeNotification();
-
 };
 
 extern Settings *settings;

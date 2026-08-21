@@ -32,5 +32,5 @@ private:
     ActionButton *openButton, *settingsButton, *exitButton, *folderViewButton, *pinButton;
 
 protected:
-    virtual void paintEvent(QPaintEvent* event);
+    virtual void paintEvent(QPaintEvent *event);
 };

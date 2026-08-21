@@ -1,10 +1,6 @@
 #include "iconwidget.h"
 
-IconWidget::IconWidget(QWidget *parent)
-    : QWidget(parent),
-      hiResPixmap(false),
-      pixmap(nullptr)
-{
+IconWidget::IconWidget(QWidget *parent) : QWidget(parent), hiResPixmap(false), pixmap(nullptr) {
     dpr = this->devicePixelRatioF();
     color = settings->colorScheme().icons;
     connect(settings, &Settings::settingsChanged, this, &IconWidget::onSettingsChanged);
@@ -103,11 +99,10 @@ void IconWidget::paintEvent(QPaintEvent *event) {
         p.setRenderHint(QPainter::SmoothPixmapTransform);
         QPointF pos;
         if(hiResPixmap) {
-            pos = QPointF(width()  / 2 - pixmap->width()  / (2 * pixmapDrawScale),
+            pos = QPointF(width() / 2 - pixmap->width() / (2 * pixmapDrawScale),
                           height() / 2 - pixmap->height() / (2 * pixmapDrawScale));
         } else {
-            pos = QPointF(width()  / 2 - pixmap->width()  / 2,
-                          height() / 2 - pixmap->height() / 2);
+            pos = QPointF(width() / 2 - pixmap->width() / 2, height() / 2 - pixmap->height() / 2);
         }
         p.drawPixmap(pos + iconOffset, *pixmap);
     }

@@ -1,13 +1,7 @@
 #include "thumbnailerrunnable.h"
 
-ThumbnailerRunnable::ThumbnailerRunnable(ThumbnailCache* _cache, QString _path, int _size, bool _crop, bool _force) :
-    path(_path),
-    size(_size),
-    crop(_crop),
-    force(_force),
-    cache(_cache)
-{
-}
+ThumbnailerRunnable::ThumbnailerRunnable(ThumbnailCache *_cache, QString _path, int _size, bool _crop, bool _force)
+    : path(_path), size(_size), crop(_crop), force(_force), cache(_cache) {}
 
 void ThumbnailerRunnable::run() {
     emit taskStart(path, size);
@@ -19,11 +13,12 @@ QString ThumbnailerRunnable::generateIdString(QString path, int size, bool crop)
     QString queryStr = path + QString::number(size);
     if(crop)
         queryStr.append("s");
-    queryStr = QString("%1").arg(QString(QCryptographicHash::hash(queryStr.toUtf8(),QCryptographicHash::Md5).toHex()));
+    queryStr = QString("%1").arg(QString(QCryptographicHash::hash(queryStr.toUtf8(), QCryptographicHash::Md5).toHex()));
     return queryStr;
 }
 
-std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache* cache, QString path, int size, bool crop, bool force) {
+std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache, QString path, int size, bool crop,
+                                                         bool force) {
     DocumentInfo imgInfo(path);
     QString thumbnailId = generateIdString(path, size, crop);
     std::unique_ptr<QImage> image;
@@ -41,7 +36,7 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache* cache, 
             std::shared_ptr<Thumbnail> thumbnail(new Thumbnail(imgInfo.fileName(), "", size, nullptr));
             return thumbnail;
         }
-        std::pair<QImage*, QSize> pair;
+        std::pair<QImage *, QSize> pair;
         if(imgInfo.type() == VIDEO)
             pair = createVideoThumbnail(path, size, crop);
         else
@@ -68,32 +63,28 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache* cache, 
                 cache->saveThumbnail(image.get(), thumbnailId);
         }
     }
-    auto && tmpPixmap = new QPixmap(image->size());
+    auto &&tmpPixmap = new QPixmap(image->size());
     *tmpPixmap = QPixmap::fromImage(*image);
     tmpPixmap->setDevicePixelRatio(qApp->devicePixelRatio());
 
     QString label;
     if(tmpPixmap->width() == 0) {
         label = "error";
-    } else  {
+    } else {
         // put info into Thumbnail object
-        label = image->text("originalWidth") +
-                "x" +
-                image->text("originalHeight") +
-                image->text("label");
+        label = image->text("originalWidth") + "x" + image->text("originalHeight") + image->text("label");
     }
     std::shared_ptr<QPixmap> pixmapPtr(tmpPixmap);
     std::shared_ptr<Thumbnail> thumbnail(new Thumbnail(imgInfo.fileName(), label, size, pixmapPtr));
     return thumbnail;
 }
 
-ThumbnailerRunnable::~ThumbnailerRunnable() {
-}
+ThumbnailerRunnable::~ThumbnailerRunnable() {}
 
-std::pair<QImage*, QSize> ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size, bool squared) {
+std::pair<QImage *, QSize> ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
+                                                                bool squared) {
     QImageReader *reader = new QImageReader(path, format);
-    Qt::AspectRatioMode ARMode = squared?
-                (Qt::KeepAspectRatioByExpanding):(Qt::KeepAspectRatio);
+    Qt::AspectRatioMode ARMode = squared ? (Qt::KeepAspectRatioByExpanding) : (Qt::KeepAspectRatio);
     QImage *result = nullptr;
     QSize originalSize;
     bool indexed = (reader->imageFormat() == QImage::Format_Indexed8);
@@ -103,7 +94,7 @@ std::pair<QImage*, QSize> ThumbnailerRunnable::createThumbnail(QString path, con
         reader->setScaledSize(scaledSize);
         if(squared) {
             QRect clip(0, 0, size, size);
-            QRect scaledRect(QPoint(0,0), scaledSize);
+            QRect scaledRect(QPoint(0, 0), scaledSize);
             clip.moveCenter(scaledRect.center());
             reader->setScaledClipRect(clip);
         }
@@ -138,7 +129,7 @@ std::pair<QImage*, QSize> ThumbnailerRunnable::createThumbnail(QString path, con
         QSize scaledSize = fullSize->size().scaled(size, size, ARMode);
         if(squared) {
             QRect clip(0, 0, size, size);
-            QRect scaledRect(QPoint(0,0), scaledSize);
+            QRect scaledRect(QPoint(0, 0), scaledSize);
             clip.moveCenter(scaledRect.center());
             QImage scaled = QImage(fullSize->scaled(scaledSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
             result = ImageLib::croppedRaw(&scaled, clip);
@@ -153,7 +144,7 @@ std::pair<QImage*, QSize> ThumbnailerRunnable::createThumbnail(QString path, con
     return std::make_pair(result, originalSize);
 }
 
-std::pair<QImage*, QSize> ThumbnailerRunnable::createVideoThumbnail(QString path, int size, bool squared) {
+std::pair<QImage *, QSize> ThumbnailerRunnable::createVideoThumbnail(QString path, int size, bool squared) {
     QFileInfo fi(path);
     QImageReader reader;
     QString tmpFilePath = settings->tmpDir() + fi.fileName() + ".png";
@@ -161,24 +152,20 @@ std::pair<QImage*, QSize> ThumbnailerRunnable::createVideoThumbnail(QString path
     tmpFilePathEsc.replace("%", "%%");
     QProcess process;
     process.setProcessChannelMode(QProcess::MergedChannels);
-    process.start(settings->mpvBinary(),
-                  QStringList() << "--start=30%"
-                                << "--frames=1"
-                                << "--aid=no"
-                                << "--sid=no"
-                                << "--no-config"
-                                << "--load-scripts=no"
-                                << "--no-terminal"
-                                << "--o=" + tmpFilePathEsc
-                                << path
-                  );
+    process.start(settings->mpvBinary(), QStringList() << "--start=30%"
+                                                       << "--frames=1"
+                                                       << "--aid=no"
+                                                       << "--sid=no"
+                                                       << "--no-config"
+                                                       << "--load-scripts=no"
+                                                       << "--no-terminal"
+                                                       << "--o=" + tmpFilePathEsc << path);
     process.waitForFinished(8000);
     process.close();
 
     reader.setFileName(tmpFilePath);
     reader.setFormat("png");
-    Qt::AspectRatioMode ARMode = squared?
-                (Qt::KeepAspectRatioByExpanding):(Qt::KeepAspectRatio);
+    Qt::AspectRatioMode ARMode = squared ? (Qt::KeepAspectRatioByExpanding) : (Qt::KeepAspectRatio);
     QImage *result = nullptr;
 
     // scale & crop
@@ -186,7 +173,7 @@ std::pair<QImage*, QSize> ThumbnailerRunnable::createVideoThumbnail(QString path
     reader.setScaledSize(scaledSize);
     if(squared) {
         QRect clip(0, 0, size, size);
-        QRect scaledRect(QPoint(0,0), scaledSize);
+        QRect scaledRect(QPoint(0, 0), scaledSize);
         clip.moveCenter(scaledRect.center());
         reader.setScaledClipRect(clip);
     }

@@ -7,14 +7,9 @@
 #include "gui/customwidgets/floatingwidget.h"
 #include "utils/imagelib.h"
 
-enum ActiveHighlightZone {
-    HIGHLIGHT_NONE,
-    HIGHLIGHT_LEFT,
-    HIGHLIGHT_RIGHT
-};
+enum ActiveHighlightZone { HIGHLIGHT_NONE, HIGHLIGHT_LEFT, HIGHLIGHT_RIGHT };
 
-class ClickZoneOverlay : public FloatingWidget
-{
+class ClickZoneOverlay : public FloatingWidget {
     Q_OBJECT
 public:
     explicit ClickZoneOverlay(FloatingWidgetContainer *parent);
@@ -31,7 +26,7 @@ public slots:
     void readSettings();
 
 private:
-    QPixmap* loadPixmap(QString path);
+    QPixmap *loadPixmap(QString path);
     QPixmap *pixmapLeft = nullptr, *pixmapRight = nullptr;
     QRect mLeftZone, mRightZone;
     qreal dpr, pixmapDrawScale;

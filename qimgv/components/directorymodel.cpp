@@ -1,18 +1,15 @@
 #include "directorymodel.h"
 
-DirectoryModel::DirectoryModel(QObject *parent) :
-    QObject(parent),
-    fileListSource(SOURCE_DIRECTORY)
-{
+DirectoryModel::DirectoryModel(QObject *parent) : QObject(parent), fileListSource(SOURCE_DIRECTORY) {
     scaler = new Scaler(&cache);
 
-    connect(&dirManager, &DirectoryManager::fileRemoved,  this, &DirectoryModel::onFileRemoved);
-    connect(&dirManager, &DirectoryManager::fileAdded,    this, &DirectoryModel::onFileAdded);
-    connect(&dirManager, &DirectoryManager::fileRenamed,  this, &DirectoryModel::onFileRenamed);
+    connect(&dirManager, &DirectoryManager::fileRemoved, this, &DirectoryModel::onFileRemoved);
+    connect(&dirManager, &DirectoryManager::fileAdded, this, &DirectoryModel::onFileAdded);
+    connect(&dirManager, &DirectoryManager::fileRenamed, this, &DirectoryModel::onFileRenamed);
     connect(&dirManager, &DirectoryManager::fileModified, this, &DirectoryModel::onFileModified);
-    connect(&dirManager, &DirectoryManager::dirRemoved,  this, &DirectoryModel::dirRemoved);
-    connect(&dirManager, &DirectoryManager::dirAdded,    this, &DirectoryModel::dirAdded);
-    connect(&dirManager, &DirectoryManager::dirRenamed,  this, &DirectoryModel::dirRenamed);
+    connect(&dirManager, &DirectoryManager::dirRemoved, this, &DirectoryModel::dirRemoved);
+    connect(&dirManager, &DirectoryManager::dirAdded, this, &DirectoryModel::dirAdded);
+    connect(&dirManager, &DirectoryManager::dirRenamed, this, &DirectoryModel::dirRenamed);
 
     connect(&dirManager, &DirectoryManager::loaded, this, &DirectoryModel::loaded);
     connect(&dirManager, &DirectoryManager::sortingChanged, this, &DirectoryModel::onSortingChanged);
@@ -190,7 +187,7 @@ void DirectoryModel::unload(QString filePath) {
 void DirectoryModel::unloadExcept(QString filePath, bool keepNearby) {
     QList<QString> list;
     list << filePath;
-    if(keepNearby)  {
+    if(keepNearby) {
         list << prevOf(filePath);
         list << nextOf(filePath);
     }

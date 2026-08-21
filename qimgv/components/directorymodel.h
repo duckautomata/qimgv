@@ -84,7 +84,7 @@ signals:
     void loadFailed(const QString &path);
     void sortingChanged(SortingMode);
     void indexChanged(int oldIndex, int index);
-    void imageReady(std::shared_ptr<Image> img, const QString&);
+    void imageReady(std::shared_ptr<Image> img, const QString &);
     void imageUpdated(QString filePath);
 
 private:

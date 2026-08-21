@@ -1,11 +1,8 @@
 #include "croppanel.h"
 #include "ui_croppanel.h"
 
-CropPanel::CropPanel(CropOverlay *_overlay, QWidget *parent) :
-    SidePanelWidget(parent),
-    ui(new Ui::CropPanel),
-    overlay(_overlay)
-{
+CropPanel::CropPanel(CropOverlay *_overlay, QWidget *parent)
+    : SidePanelWidget(parent), ui(new Ui::CropPanel), overlay(_overlay) {
     ui->setupUi(this);
     setFocusPolicy(Qt::NoFocus);
 
@@ -37,12 +34,9 @@ CropPanel::CropPanel(CropOverlay *_overlay, QWidget *parent) :
     connect(ui->ARY, SIGNAL(valueChanged(double)), this, SLOT(onAspectRatioChange()));
     connect(ui->ARcomboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onAspectRatioSelected()));
 
-    connect(overlay, SIGNAL(selectionChanged(QRect)),
-            this, SLOT(onSelectionOutsideChange(QRect)));
-    connect(this, SIGNAL(selectionChanged(QRect)),
-            overlay, SLOT(onSelectionOutsideChange(QRect)));
-    connect(this, SIGNAL(aspectRatioChanged(QPointF)),
-            overlay, SLOT(setAspectRatio(QPointF)));
+    connect(overlay, SIGNAL(selectionChanged(QRect)), this, SLOT(onSelectionOutsideChange(QRect)));
+    connect(this, SIGNAL(selectionChanged(QRect)), overlay, SLOT(onSelectionOutsideChange(QRect)));
+    connect(this, SIGNAL(aspectRatioChanged(QPointF)), overlay, SLOT(setAspectRatio(QPointF)));
     connect(overlay, SIGNAL(escPressed()), this, SIGNAL(cancel()));
     connect(overlay, SIGNAL(cropDefault()), this, SLOT(doCropDefaultAction()));
     connect(overlay, SIGNAL(cropSave()), this, SLOT(doCropSave()));
@@ -72,8 +66,7 @@ void CropPanel::doCropDefaultAction() {
 }
 
 void CropPanel::doCrop() {
-    QRect target(ui->posX->value(), ui->posY->value(),
-                 ui->width->value(), ui->height->value());
+    QRect target(ui->posX->value(), ui->posY->value(), ui->width->value(), ui->height->value());
     if(target.width() > 0 && target.height() > 0 && target.size() != realSize)
         emit crop(target);
     else
@@ -81,8 +74,7 @@ void CropPanel::doCrop() {
 }
 
 void CropPanel::doCropSave() {
-    QRect target(ui->posX->value(), ui->posY->value(),
-                 ui->width->value(), ui->height->value());
+    QRect target(ui->posX->value(), ui->posY->value(), ui->width->value(), ui->height->value());
     if(target.width() > 0 && target.height() > 0 && target.size() != realSize)
         emit cropAndSave(target);
     else
@@ -91,10 +83,7 @@ void CropPanel::doCropSave() {
 
 // on user input
 void CropPanel::onSelectionChange() {
-    emit selectionChanged(QRect(ui->posX->value(),
-                                ui->posY->value(),
-                                ui->width->value(),
-                                ui->height->value()));
+    emit selectionChanged(QRect(ui->posX->value(), ui->posY->value(), ui->width->value(), ui->height->value()));
 }
 
 void CropPanel::onAspectRatioChange() {
@@ -113,25 +102,21 @@ void CropPanel::onAspectRatioSelected() {
 
     int index = ui->ARcomboBox->currentIndex();
     switch(index) {
-    case 0:
-    {
+    case 0: {
         overlay->setLockAspectRatio(false);
         if(realSize.height() != 0)
             newAR = QPointF(qreal(realSize.width()) / realSize.height(), 1.0);
         break;
     }
-    case 1:
-    {
+    case 1: {
         newAR = QPointF(ui->ARX->value(), ui->ARY->value());
         break;
     }
-    case 2:
-    {
+    case 2: {
         newAR = QPointF(qreal(realSize.width()) / realSize.height(), 1.0);
         break;
     }
-    case 3:
-    {
+    case 3: {
         QScreen *screen = nullptr;
         screen = QGuiApplication::screenAt(mapToGlobal(ui->ARcomboBox->geometry().topLeft()));
         if(!screen)
@@ -139,23 +124,19 @@ void CropPanel::onAspectRatioSelected() {
         newAR = QPointF(qreal(screen->geometry().width()) / screen->geometry().height(), 1.0);
         break;
     }
-    case 4:
-    {
+    case 4: {
         newAR = QPointF(1.0, 1.0);
         break;
     }
-    case 5:
-    {
+    case 5: {
         newAR = QPointF(4.0, 3.0);
         break;
     }
-    case 6:
-    {
+    case 6: {
         newAR = QPointF(16.0, 9.0);
         break;
     }
-    case 7:
-    {
+    case 7: {
         newAR = QPointF(16.0, 10.0);
         break;
     }
@@ -215,7 +196,7 @@ void CropPanel::paintEvent(QPaintEvent *) {
 void CropPanel::show() {
     QWidget::show();
     // stackoverflow sorcery
-    QTimer::singleShot(0,ui->width,SLOT(setFocus()));
+    QTimer::singleShot(0, ui->width, SLOT(setFocus()));
 }
 
 void CropPanel::keyPressEvent(QKeyEvent *event) {

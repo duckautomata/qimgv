@@ -9,7 +9,7 @@ class LinuxWatcher : public DirectoryWatcher {
 public:
     explicit LinuxWatcher();
     virtual ~LinuxWatcher();
-    virtual void setWatchPath(const QString& p);
+    virtual void setWatchPath(const QString &p);
 
 private:
     Q_DECLARE_PRIVATE(LinuxWatcher)

@@ -73,5 +73,4 @@ private slots:
 
 signals:
     void playbackFinished();
-
 };

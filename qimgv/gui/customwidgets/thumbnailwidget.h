@@ -13,11 +13,7 @@
 #include "settings.h"
 #include "sharedresources.h"
 
-enum ThumbnailStyle {
-    THUMB_SIMPLE,
-    THUMB_NORMAL,
-    THUMB_NORMAL_CENTERED
-};
+enum ThumbnailStyle { THUMB_SIMPLE, THUMB_NORMAL, THUMB_NORMAL_CENTERED };
 
 class ThumbnailWidget : public QGraphicsWidget {
     Q_OBJECT
@@ -56,7 +52,7 @@ public:
 
 protected:
     void setupTextLayout();
-    void drawThumbnail(QPainter* painter, const QPixmap *pixmap);
+    void drawThumbnail(QPainter *painter, const QPixmap *pixmap);
     void drawIcon(QPainter *painter, const QPixmap *pixmap);
     void drawHighlight(QPainter *painter);
     void drawHoverBg(QPainter *painter);

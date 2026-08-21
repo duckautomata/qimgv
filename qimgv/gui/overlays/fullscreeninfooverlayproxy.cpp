@@ -1,10 +1,7 @@
 #include "fullscreeninfooverlayproxy.h"
 
 FullscreenInfoOverlayProxy::FullscreenInfoOverlayProxy(FloatingWidgetContainer *parent)
-    : container(parent),
-      infoOverlay(nullptr)
-{
-}
+    : container(parent), infoOverlay(nullptr) {}
 
 FullscreenInfoOverlayProxy::~FullscreenInfoOverlayProxy() {
     if(infoOverlay)

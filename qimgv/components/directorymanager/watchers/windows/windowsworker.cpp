@@ -1,11 +1,9 @@
 #include "windowsworker.h"
 
-WindowsWorker::WindowsWorker() : WatcherWorker() {
-
-}
+WindowsWorker::WindowsWorker() : WatcherWorker() {}
 
 void WindowsWorker::setDirectoryHandle(HANDLE hDir) {
-    //qDebug() << "setHandle" << this->hDir << " -> " << hDir;
+    // qDebug() << "setHandle" << this->hDir << " -> " << hDir;
     freeHandle();
     this->hDir = hDir;
 }
@@ -21,7 +19,7 @@ void WindowsWorker::run() {
     bool bPending = false;
     DWORD dwBytes = 0;
     OVERLAPPED ovl = {}; // value-init: {0} trips -Wmissing-field-initializers
-    std::vector<BYTE> buffer(1024*64);
+    std::vector<BYTE> buffer(1024 * 64);
 
     ovl.hEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
@@ -32,12 +30,12 @@ void WindowsWorker::run() {
     ::ResetEvent(ovl.hEvent); // is this needed?
 
     while(isRunning) {
-        //qDebug() << "_1";
+        // qDebug() << "_1";
         bPending = ReadDirectoryChangesW(hDir, buffer.data(), static_cast<DWORD>(buffer.size()), FALSE,
                                          FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME |
                                              FILE_NOTIFY_CHANGE_LAST_WRITE,
                                          &dwBytes, &ovl, nullptr);
-        //qDebug() << "_2";
+        // qDebug() << "_2";
         if(!bPending) {
             error = GetLastError();
             if(error == ERROR_IO_INCOMPLETE) {
@@ -45,7 +43,7 @@ void WindowsWorker::run() {
                 continue;
             }
         }
-        //qDebug() << "_3";
+        // qDebug() << "_3";
         bool WAIT = false;
         if(GetOverlappedResult(hDir, &ovl, &dwBytes, WAIT)) {
             bPending = false;
@@ -57,8 +55,9 @@ void WindowsWorker::run() {
                     }
                     if(fni->NextEntryOffset == 0)
                         break;
-                    fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(reinterpret_cast<PCHAR>(fni) + fni->NextEntryOffset);
-                } while (true);
+                    fni = reinterpret_cast<FILE_NOTIFY_INFORMATION *>(reinterpret_cast<PCHAR>(fni) +
+                                                                      fni->NextEntryOffset);
+                } while(true);
             }
         }
         Sleep(POLL_RATE_MS);

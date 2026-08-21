@@ -7,22 +7,21 @@
 #include <QColor>
 
 enum CursorAction {
-    NO_DRAG,          // 0
-    SELECTION_START,  // 1
-    DRAG_SELECT,      // 2
-    DRAG_MOVE,        // 3
-    DRAG_LEFT,        // 4
-    DRAG_RIGHT,       // 5
-    DRAG_TOP,         // 6
-    DRAG_BOTTOM,      // 7
-    DRAG_TOPLEFT,     // 8
-    DRAG_TOPRIGHT,    // 9
-    DRAG_BOTTOMLEFT,  // 10
-    DRAG_BOTTOMRIGHT  // 11
+    NO_DRAG,         // 0
+    SELECTION_START, // 1
+    DRAG_SELECT,     // 2
+    DRAG_MOVE,       // 3
+    DRAG_LEFT,       // 4
+    DRAG_RIGHT,      // 5
+    DRAG_TOP,        // 6
+    DRAG_BOTTOM,     // 7
+    DRAG_TOPLEFT,    // 8
+    DRAG_TOPRIGHT,   // 9
+    DRAG_BOTTOMLEFT, // 10
+    DRAG_BOTTOMRIGHT // 11
 };
 
-class CropOverlay : public FloatingWidget
-{
+class CropOverlay : public FloatingWidget {
     Q_OBJECT
 public:
     explicit CropOverlay(FloatingWidgetContainer *parent = nullptr);
@@ -42,14 +41,16 @@ signals:
 protected:
     virtual void paintEvent(QPaintEvent *event);
     virtual void mousePressEvent(QMouseEvent *event);
-    virtual void mouseMoveEvent(QMouseEvent* event);
-    virtual void mouseReleaseEvent(QMouseEvent* event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
+    virtual void mouseReleaseEvent(QMouseEvent *event);
 
     void keyPressEvent(QKeyEvent *event);
     void resizeEvent(QResizeEvent *event);
+
 private:
     QPoint startPos, endPos, moveStartPos, resizeAnchor;
-    QRect imageRect, imageDrawRect, imageDrawRectDpi, selectionRect, selectionDrawRect, selectionDrawRectDpi, handles[8];
+    QRect imageRect, imageDrawRect, imageDrawRectDpi, selectionRect, selectionDrawRect, selectionDrawRectDpi,
+        handles[8];
     bool lockAspectRatio;
     float scale;
     QBrush brushInactiveTint, brushDarkGray, brushGray, brushLightGray;
@@ -62,8 +63,8 @@ private:
 
     QPoint setInsidePoint(QPoint, QRect);
     QRect placeInside(QRect what, QRect where);
-    void drawSelection(QPainter*);
-    void drawHandles(QBrush&, QPainter*);
+    void drawSelection(QPainter *);
+    void drawHandles(QBrush &, QPainter *);
     void updateHandlePositions();
     void prepareDrawElements();
     CursorAction hoverTarget(QPoint pos);

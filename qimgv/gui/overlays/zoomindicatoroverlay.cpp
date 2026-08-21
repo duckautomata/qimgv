@@ -5,7 +5,7 @@ ZoomIndicatorOverlay::ZoomIndicatorOverlay(FloatingWidgetContainer *parent) : Ov
     visibilityTimer.setSingleShot(true);
     visibilityTimer.setInterval(hideDelay);
 
-    layout.setContentsMargins(0,0,0,0);
+    layout.setContentsMargins(0, 0, 0, 0);
     layout.addWidget(&label);
     fm = new QFontMetrics(QApplication::font());
     label.setAlignment(Qt::AlignCenter);
@@ -25,7 +25,7 @@ ZoomIndicatorOverlay::ZoomIndicatorOverlay(FloatingWidgetContainer *parent) : Ov
 }
 
 void ZoomIndicatorOverlay::setScale(qreal scale) {
-    label.setText(QString::number(qRound(scale * 100.0))+"%");
+    label.setText(QString::number(qRound(scale * 100.0)) + "%");
     label.setFixedSize(fm->horizontalAdvance(label.text()) + 14, fm->height() + 12);
     recalculateGeometry();
 }

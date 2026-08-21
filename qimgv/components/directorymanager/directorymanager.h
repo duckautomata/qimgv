@@ -34,7 +34,7 @@ class DirectoryManager;
 
 typedef bool (DirectoryManager::*CompareFunction)(const FSEntry &e1, const FSEntry &e2) const;
 
-//TODO: rename? EntrySomething?
+// TODO: rename? EntrySomething?
 
 class DirectoryManager : public QObject {
     Q_OBJECT
@@ -81,9 +81,9 @@ public:
     void renameFileEntry(const QString &oldFilePath, const QString &newName);
 
     bool insertDirEntry(const QString &dirPath);
-    //bool forceInsertDirEntry(const QString &dirPath);
+    // bool forceInsertDirEntry(const QString &dirPath);
     void removeDirEntry(const QString &dirPath);
-    //void updateDirEntry(const QString &dirPath);
+    // void updateDirEntry(const QString &dirPath);
     void renameDirEntry(const QString &oldDirPath, const QString &newName);
 
     FileListSource source() const;
@@ -97,7 +97,7 @@ private:
     const FSEntry defaultEntry;
     QString mDirectoryPath;
 
-    DirectoryWatcher* watcher;
+    DirectoryWatcher *watcher;
     void readSettings();
     SortingMode mSortingMode;
     FileListSource mListSource;

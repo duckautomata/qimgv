@@ -1,18 +1,15 @@
 #include "videoplayerinitproxy.h"
 
 #ifdef _QIMGV_PLAYER_PLUGIN
-    #define QIMGV_PLAYER_PLUGIN _QIMGV_PLAYER_PLUGIN
+#define QIMGV_PLAYER_PLUGIN _QIMGV_PLAYER_PLUGIN
 #else
-    #define QIMGV_PLAYER_PLUGIN ""
+#define QIMGV_PLAYER_PLUGIN ""
 #endif
 
-VideoPlayerInitProxy::VideoPlayerInitProxy(QWidget *parent)
-    : VideoPlayer(parent),
-      player(nullptr)
-{
+VideoPlayerInitProxy::VideoPlayerInitProxy(QWidget *parent) : VideoPlayer(parent), player(nullptr) {
     setAccessibleName("VideoPlayerInitProxy");
     setMouseTracking(true);
-    layout.setContentsMargins(0,0,0,0);
+    layout.setContentsMargins(0, 0, 0, 0);
     setLayout(&layout);
     connect(settings, &Settings::settingsChanged, this, &VideoPlayerInitProxy::onSettingsChanged);
     updateBackgroundColor();
@@ -38,8 +35,7 @@ VideoPlayerInitProxy::VideoPlayerInitProxy(QWidget *parent)
 #endif
 }
 
-VideoPlayerInitProxy::~VideoPlayerInitProxy() {
-}
+VideoPlayerInitProxy::~VideoPlayerInitProxy() {}
 
 void VideoPlayerInitProxy::onSettingsChanged() {
     // Background first: it must track the theme even before a video is loaded.
@@ -99,11 +95,11 @@ inline bool VideoPlayerInitProxy::initPlayer() {
         return false;
     }
 
-// load lib
-    typedef VideoPlayer* (*createPlayerWidgetFn)();
-    createPlayerWidgetFn fn = (createPlayerWidgetFn) playerLib.resolve("CreatePlayerWidget");
+    // load lib
+    typedef VideoPlayer *(*createPlayerWidgetFn)();
+    createPlayerWidgetFn fn = (createPlayerWidgetFn)playerLib.resolve("CreatePlayerWidget");
     if(fn) {
-        VideoPlayer* pl = fn();
+        VideoPlayer *pl = fn();
         player.reset(pl);
     }
     if(!player) {
@@ -122,8 +118,8 @@ inline bool VideoPlayerInitProxy::initPlayer() {
     setFocusProxy(player.get());
     connect(player.get(), SIGNAL(durationChanged(int)), this, SIGNAL(durationChanged(int)));
     connect(player.get(), SIGNAL(positionChanged(int)), this, SIGNAL(positionChanged(int)));
-    connect(player.get(), SIGNAL(videoPaused(bool)),    this, SIGNAL(videoPaused(bool)));
-    connect(player.get(), SIGNAL(playbackFinished()),   this, SIGNAL(playbackFinished()));
+    connect(player.get(), SIGNAL(videoPaused(bool)), this, SIGNAL(videoPaused(bool)));
+    connect(player.get(), SIGNAL(playbackFinished()), this, SIGNAL(playbackFinished()));
 
     if(eventFilterObj)
         player.get()->installEventFilter(eventFilterObj);
@@ -237,7 +233,7 @@ void VideoPlayerInitProxy::show() {
         errorLabel = new QLabel(this);
         errorLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
         errorLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        //errorLabel->setAlignment(Qt::AlignVCenter);
+        // errorLabel->setAlignment(Qt::AlignVCenter);
         QString errString = "Could not load " + libFile + " from:";
         for(auto path : libDirs)
             errString.append("\n" + path + "/");

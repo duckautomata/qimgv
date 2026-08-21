@@ -2,10 +2,7 @@
 
 namespace fs = std::filesystem;
 
-DirectoryManager::DirectoryManager() :
-    watcher(nullptr),
-    mSortingMode(SORT_NAME)
-{
+DirectoryManager::DirectoryManager() : watcher(nullptr), mSortingMode(SORT_NAME) {
     regex.setPatternOptions(QRegularExpression::CaseInsensitiveOption);
     collator.setNumericMode(true);
 
@@ -14,9 +11,8 @@ DirectoryManager::DirectoryManager() :
     connect(settings, &Settings::settingsChanged, this, &DirectoryManager::readSettings);
 }
 
-template< typename T, typename Pred >
-typename std::vector<T>::iterator
-insert_sorted(std::vector<T> & vec, T const& item, Pred pred) {
+template<typename T, typename Pred>
+typename std::vector<T>::iterator insert_sorted(std::vector<T> &vec, T const &item, Pred pred) {
     return vec.insert(std::upper_bound(vec.begin(), vec.end(), item, pred), item);
 }
 
@@ -36,19 +32,19 @@ bool DirectoryManager::name_entry_compare_reverse(const FSEntry &e1, const FSEnt
     return collator.compare(e1.name, e2.name) > 0;
 };
 
-bool DirectoryManager::date_entry_compare(const FSEntry& e1, const FSEntry& e2) const {
+bool DirectoryManager::date_entry_compare(const FSEntry &e1, const FSEntry &e2) const {
     return e1.modifyTime < e2.modifyTime;
 }
 
-bool DirectoryManager::date_entry_compare_reverse(const FSEntry& e1, const FSEntry& e2) const {
+bool DirectoryManager::date_entry_compare_reverse(const FSEntry &e1, const FSEntry &e2) const {
     return e1.modifyTime > e2.modifyTime;
 }
 
-bool DirectoryManager::size_entry_compare(const FSEntry& e1, const FSEntry& e2) const {
+bool DirectoryManager::size_entry_compare(const FSEntry &e1, const FSEntry &e2) const {
     return e1.size < e2.size;
 }
 
-bool DirectoryManager::size_entry_compare_reverse(const FSEntry& e1, const FSEntry& e2) const {
+bool DirectoryManager::size_entry_compare_reverse(const FSEntry &e1, const FSEntry &e2) const {
     return e1.size > e2.size;
 }
 
@@ -73,10 +69,14 @@ void DirectoryManager::startFileWatcher(QString directoryPath) {
     if(!watcher)
         watcher = DirectoryWatcher::newInstance();
 
-    connect(watcher, &DirectoryWatcher::fileCreated,  this, &DirectoryManager::onFileAddedExternal,    Qt::UniqueConnection);
-    connect(watcher, &DirectoryWatcher::fileDeleted,  this, &DirectoryManager::onFileRemovedExternal,  Qt::UniqueConnection);
-    connect(watcher, &DirectoryWatcher::fileModified, this, &DirectoryManager::onFileModifiedExternal, Qt::UniqueConnection);
-    connect(watcher, &DirectoryWatcher::fileRenamed,  this, &DirectoryManager::onFileRenamedExternal,  Qt::UniqueConnection);
+    connect(watcher, &DirectoryWatcher::fileCreated, this, &DirectoryManager::onFileAddedExternal,
+            Qt::UniqueConnection);
+    connect(watcher, &DirectoryWatcher::fileDeleted, this, &DirectoryManager::onFileRemovedExternal,
+            Qt::UniqueConnection);
+    connect(watcher, &DirectoryWatcher::fileModified, this, &DirectoryManager::onFileModifiedExternal,
+            Qt::UniqueConnection);
+    connect(watcher, &DirectoryWatcher::fileRenamed, this, &DirectoryManager::onFileRenamedExternal,
+            Qt::UniqueConnection);
 
     watcher->setWatchPath(directoryPath);
     watcher->observe();
@@ -88,10 +88,10 @@ void DirectoryManager::stopFileWatcher() {
 
     watcher->stopObserving();
 
-    disconnect(watcher, &DirectoryWatcher::fileCreated,  this, &DirectoryManager::onFileAddedExternal);
-    disconnect(watcher, &DirectoryWatcher::fileDeleted,  this, &DirectoryManager::onFileRemovedExternal);
+    disconnect(watcher, &DirectoryWatcher::fileCreated, this, &DirectoryManager::onFileAddedExternal);
+    disconnect(watcher, &DirectoryWatcher::fileDeleted, this, &DirectoryManager::onFileRemovedExternal);
     disconnect(watcher, &DirectoryWatcher::fileModified, this, &DirectoryManager::onFileModifiedExternal);
-    disconnect(watcher, &DirectoryWatcher::fileRenamed,  this, &DirectoryManager::onFileRenamedExternal);
+    disconnect(watcher, &DirectoryWatcher::fileRenamed, this, &DirectoryManager::onFileRenamedExternal);
 }
 
 // ##############################################################
@@ -158,18 +158,16 @@ QString DirectoryManager::directoryPath() const {
 }
 
 int DirectoryManager::indexOfFile(QString filePath) const {
-    auto item = find_if(fileEntryVec.begin(), fileEntryVec.end(), [filePath](const FSEntry& e) {
-        return e.path == filePath;
-    });
+    auto item =
+        find_if(fileEntryVec.begin(), fileEntryVec.end(), [filePath](const FSEntry &e) { return e.path == filePath; });
     if(item != fileEntryVec.end())
         return distance(fileEntryVec.begin(), item);
     return -1;
 }
 
 int DirectoryManager::indexOfDir(QString dirPath) const {
-    auto item = find_if(dirEntryVec.begin(), dirEntryVec.end(), [dirPath](const FSEntry& e) {
-        return e.path == dirPath;
-    });
+    auto item =
+        find_if(dirEntryVec.begin(), dirEntryVec.end(), [dirPath](const FSEntry &e) { return e.path == dirPath; });
     if(item != dirEntryVec.end())
         return distance(dirEntryVec.begin(), item);
     return -1;
@@ -272,9 +270,8 @@ QDateTime DirectoryManager::lastModified(QString filePath) const {
 }
 
 // TODO: what about symlinks?
-inline
-bool DirectoryManager::isSupportedFile(QString path) const {
-    return ( isFile(path) && regex.match(path).hasMatch() );
+inline bool DirectoryManager::isSupportedFile(QString path) const {
+    return (isFile(path) && regex.match(path).hasMatch());
 }
 
 bool DirectoryManager::isFile(QString path) const {
@@ -324,7 +321,7 @@ void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, Q
     // per directory entry showed up as real cost on large directories.
     const bool showHidden = settings->showHiddenFiles();
 
-    for(const auto & entry : fs::directory_iterator(toStdString(directoryPath))) {
+    for(const auto &entry : fs::directory_iterator(toStdString(directoryPath))) {
         QString name = QString::fromStdString(entry.path().filename().generic_string());
 #ifndef Q_OS_WIN32
         // ignore hidden files
@@ -349,9 +346,9 @@ void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, Q
                 newEntry.name = name;
                 newEntry.path = path;
                 newEntry.isDirectory = true;
-                //newEntry.size = entry.file_size();
-                //newEntry.modifyTime = entry.last_write_time();
-            } catch (const std::filesystem::filesystem_error &err) {
+                // newEntry.size = entry.file_size();
+                // newEntry.modifyTime = entry.last_write_time();
+            } catch(const std::filesystem::filesystem_error &err) {
                 qDebug() << "[DirectoryManager]" << err.what();
                 continue;
             }
@@ -364,7 +361,7 @@ void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, Q
                 newEntry.isDirectory = false;
                 newEntry.size = entry.file_size();
                 newEntry.modifyTime = entry.last_write_time();
-            } catch (const std::filesystem::filesystem_error &err) {
+            } catch(const std::filesystem::filesystem_error &err) {
                 qDebug() << "[DirectoryManager]" << err.what();
                 continue;
             }
@@ -374,7 +371,7 @@ void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, Q
 }
 
 void DirectoryManager::addEntriesFromDirectoryRecursive(std::vector<FSEntry> &entryVec, QString directoryPath) {
-    for(const auto & entry : fs::recursive_directory_iterator(toStdString(directoryPath))) {
+    for(const auto &entry : fs::recursive_directory_iterator(toStdString(directoryPath))) {
         QString name = QString::fromStdString(entry.path().filename().generic_string());
         // is_directory() first: it is the cheaper test, and it lets us skip
         // the regex entirely for subdirectories.
@@ -391,7 +388,7 @@ void DirectoryManager::addEntriesFromDirectoryRecursive(std::vector<FSEntry> &en
                 newEntry.isDirectory = false;
                 newEntry.size = entry.file_size();
                 newEntry.modifyTime = entry.last_write_time();
-            } catch (const std::filesystem::filesystem_error &err) {
+            } catch(const std::filesystem::filesystem_error &err) {
                 qDebug() << "[DirectoryManager]" << err.what();
                 continue;
             }
@@ -402,10 +399,13 @@ void DirectoryManager::addEntriesFromDirectoryRecursive(std::vector<FSEntry> &en
 
 void DirectoryManager::sortEntryLists() {
     if(settings->sortFolders())
-        std::sort(dirEntryVec.begin(), dirEntryVec.end(), std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+        std::sort(dirEntryVec.begin(), dirEntryVec.end(),
+                  std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
     else
-        std::sort(dirEntryVec.begin(), dirEntryVec.end(), std::bind(&DirectoryManager::path_entry_compare, this, std::placeholders::_1, std::placeholders::_2));
-    std::sort(fileEntryVec.begin(), fileEntryVec.end(), std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+        std::sort(dirEntryVec.begin(), dirEntryVec.end(),
+                  std::bind(&DirectoryManager::path_entry_compare, this, std::placeholders::_1, std::placeholders::_2));
+    std::sort(fileEntryVec.begin(), fileEntryVec.end(),
+              std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void DirectoryManager::setSortingMode(SortingMode mode) {
@@ -437,7 +437,8 @@ bool DirectoryManager::forceInsertFileEntry(const QString &filePath) {
     std::filesystem::directory_entry stdEntry(toStdString(filePath));
     QString fileName = QString::fromStdString(stdEntry.path().filename().generic_string()); // isn't it beautiful
     FSEntry FSEntry(filePath, fileName, stdEntry.file_size(), stdEntry.last_write_time(), stdEntry.is_directory());
-    insert_sorted(fileEntryVec, FSEntry, std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    insert_sorted(fileEntryVec, FSEntry,
+                  std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
     if(!directoryPath().isEmpty()) {
         qDebug() << "fileIns" << filePath << directoryPath();
         emit fileAdded(filePath);
@@ -489,8 +490,10 @@ void DirectoryManager::renameFileEntry(const QString &oldFilePath, const QString
     fileEntryVec.erase(fileEntryVec.begin() + oldIndex);
     // insert
     std::filesystem::directory_entry stdEntry(toStdString(newFilePath));
-    FSEntry FSEntry(newFilePath, newFileName, stdEntry.file_size(), stdEntry.last_write_time(), stdEntry.is_directory());
-    insert_sorted(fileEntryVec, FSEntry, std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    FSEntry FSEntry(newFilePath, newFileName, stdEntry.file_size(), stdEntry.last_write_time(),
+                    stdEntry.is_directory());
+    insert_sorted(fileEntryVec, FSEntry,
+                  std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
     qDebug() << "fileRen" << oldFilePath << newFilePath;
     emit fileRenamed(oldFilePath, oldIndex, newFilePath, indexOfFile(newFilePath));
 }
@@ -506,7 +509,8 @@ bool DirectoryManager::insertDirEntry(const QString &dirPath) {
     FSEntry.name = dirName;
     FSEntry.path = dirPath;
     FSEntry.isDirectory = true;
-    insert_sorted(dirEntryVec, FSEntry, std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    insert_sorted(dirEntryVec, FSEntry,
+                  std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
     qDebug() << "dirIns" << dirPath;
     emit dirAdded(dirPath);
     return true;
@@ -535,11 +539,11 @@ void DirectoryManager::renameDirEntry(const QString &oldDirPath, const QString &
     FSEntry.name = newDirName;
     FSEntry.path = newDirPath;
     FSEntry.isDirectory = true;
-    insert_sorted(dirEntryVec, FSEntry, std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    insert_sorted(dirEntryVec, FSEntry,
+                  std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
     qDebug() << "dirRen" << oldDirPath << newDirPath;
     emit dirRenamed(oldDirPath, oldIndex, newDirPath, indexOfDir(newDirPath));
 }
-
 
 FileListSource DirectoryManager::source() const {
     return mListSource;
@@ -547,7 +551,7 @@ FileListSource DirectoryManager::source() const {
 
 QStringList DirectoryManager::fileList() const {
     QStringList list;
-    for(auto const& value : fileEntryVec)
+    for(auto const &value : fileEntryVec)
         list << value.path;
     return list;
 }

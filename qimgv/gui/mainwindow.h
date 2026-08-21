@@ -52,23 +52,20 @@ struct CurrentInfo {
     bool edited;
 };
 
-enum ActiveSidePanel {
-    SIDEPANEL_CROP,
-    SIDEPANEL_NONE
-};
+enum ActiveSidePanel { SIDEPANEL_CROP, SIDEPANEL_NONE };
 
-class MW : public FloatingWidgetContainer
-{
+class MW : public FloatingWidgetContainer {
     Q_OBJECT
 public:
     explicit MW(QWidget *parent = nullptr);
     bool isCropPanelActive();
-    void onScalingFinished(std::unique_ptr<QPixmap>scaled);
+    void onScalingFinished(std::unique_ptr<QPixmap> scaled);
     void showImage(std::unique_ptr<QPixmap> pixmap);
     void showAnimation(std::shared_ptr<QMovie> movie);
     void showVideo(QString file);
 
-    void setCurrentInfo(int fileIndex, int fileCount, QString filePath, QString fileName, QSize imageSize, qint64 fileSize, bool slideshow, bool shuffle, bool edited);
+    void setCurrentInfo(int fileIndex, int fileCount, QString filePath, QString fileName, QSize imageSize,
+                        qint64 fileSize, bool slideshow, bool shuffle, bool edited);
     void setExifInfo(QMap<QString, QString>);
     std::shared_ptr<FolderViewProxy> getFolderView();
     std::shared_ptr<ThumbnailStripProxy> getThumbnailPanel();
@@ -149,7 +146,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event);
     void leaveEvent(QEvent *event);
 
-   // bool focusNextPrevChild(bool);
+    // bool focusNextPrevChild(bool);
 signals:
     void opened(QString);
     void fullscreenStateChanged(bool);
@@ -188,7 +185,7 @@ signals:
     void volumeUp();
     void volumeDown();
     void toggleTransparencyGrid();
-    void droppedIn(const QMimeData*, QObject*);
+    void droppedIn(const QMimeData *, QObject *);
     void draggedOut();
     void setLoopPlayback(bool);
     void playbackFinished();

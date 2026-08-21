@@ -14,8 +14,7 @@ namespace Ui {
 class ShortcutCreatorDialog;
 }
 
-class ShortcutCreatorDialog : public QDialog
-{
+class ShortcutCreatorDialog : public QDialog {
     Q_OBJECT
 
 public:

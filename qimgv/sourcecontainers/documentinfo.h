@@ -32,7 +32,7 @@ class DocumentInfo {
 public:
     DocumentInfo(QString path);
     ~DocumentInfo();
-    
+
     QString directoryPath() const;
     QString filePath() const;
     QString fileName() const;

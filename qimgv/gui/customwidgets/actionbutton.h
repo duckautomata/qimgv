@@ -3,10 +3,7 @@
 #include "gui/customwidgets/iconbutton.h"
 #include "components/actionmanager/actionmanager.h"
 
-enum TriggerMode {
-    PressTrigger,
-    ClickTrigger
-};
+enum TriggerMode { PressTrigger, ClickTrigger };
 
 class ActionButton : public IconButton {
 public:

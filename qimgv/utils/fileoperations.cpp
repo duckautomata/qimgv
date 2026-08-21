@@ -63,7 +63,8 @@ QString FileOperations::decodeResult(const FileOpResult &result) {
     return nullptr;
 }
 
-void FileOperations::copyFileTo(const QString &srcFilePath, const QString &destDirPath, bool force, FileOpResult &result) {
+void FileOperations::copyFileTo(const QString &srcFilePath, const QString &destDirPath, bool force,
+                                FileOpResult &result) {
     QFileInfo srcFile(srcFilePath);
     QString tmpPath;
     bool exists = false;
@@ -137,7 +138,8 @@ void FileOperations::copyFileTo(const QString &srcFilePath, const QString &destD
     return;
 }
 
-void FileOperations::moveFileTo(const QString &srcFilePath, const QString &destDirPath, bool force, FileOpResult &result) {
+void FileOperations::moveFileTo(const QString &srcFilePath, const QString &destDirPath, bool force,
+                                FileOpResult &result) {
     QFileInfo srcFile(srcFilePath);
     QString tmpPath;
     bool exists = false;
@@ -150,12 +152,12 @@ void FileOperations::moveFileTo(const QString &srcFilePath, const QString &destD
         result = FileOpResult::SOURCE_DOES_NOT_EXIST;
         return;
     }
-    #ifdef Q_OS_WIN32
+#ifdef Q_OS_WIN32
     if(!srcFile.isWritable()) {
         result = FileOpResult::SOURCE_NOT_WRITABLE;
         return;
     }
-    #endif
+#endif
     QFileInfo destDir(destDirPath);
     if(!destDir.exists()) {
         result = FileOpResult::DESTINATION_DOES_NOT_EXIST;

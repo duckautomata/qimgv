@@ -16,7 +16,7 @@
 #include "gui/folderview/fvoptionspopup.h"
 
 namespace Ui {
-    class FolderView;
+class FolderView;
 }
 
 class FolderView : public FloatingWidgetContainer, public IDirectoryView {
@@ -45,7 +45,6 @@ public slots:
     void onFullscreenModeChanged(bool mode);
     void onSortingChanged(SortingMode mode);
 
-
 protected:
     void wheelEvent(QWheelEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
@@ -66,7 +65,7 @@ signals:
     void showFoldersChanged(bool mode);
     void copyUrlsRequested(QList<QString>, QString path);
     void moveUrlsRequested(QList<QString>, QString path);
-    void droppedInto(const QMimeData*, QObject*, int) override;
+    void droppedInto(const QMimeData *, QObject *, int) override;
     void draggedOver(int) override;
 
 private slots:

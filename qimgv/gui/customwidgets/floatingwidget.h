@@ -15,8 +15,7 @@
 
 #include <QWheelEvent>
 
-class FloatingWidget : public QWidget
-{
+class FloatingWidget : public QWidget {
     Q_OBJECT
 public:
     explicit FloatingWidget(FloatingWidgetContainer *parent);
@@ -37,6 +36,7 @@ protected:
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
+
 private:
     // size of whatever widget we are overlayed on
     QSize container;

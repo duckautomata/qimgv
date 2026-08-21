@@ -9,13 +9,10 @@
 #include "settings.h"
 #include "components/actionmanager/actionmanager.h"
 
-enum CopyOverlayMode {
-    OVERLAY_COPY,
-    OVERLAY_MOVE
-};
+enum CopyOverlayMode { OVERLAY_COPY, OVERLAY_MOVE };
 
 namespace Ui {
-    class CopyOverlay;
+class CopyOverlay;
 }
 
 class CopyOverlay : public OverlayWidget {
@@ -23,7 +20,7 @@ class CopyOverlay : public OverlayWidget {
 public:
     CopyOverlay(FloatingWidgetContainer *parent);
     ~CopyOverlay();
-    void saveSettings();    
+    void saveSettings();
     void setDialogMode(CopyOverlayMode _mode);
     CopyOverlayMode operationMode();
 
@@ -48,11 +45,10 @@ private:
     void createPathWidgets();
     void createShortcuts();
     Ui::CopyOverlay *ui;
-    QList<PathSelectorMenuItem*> pathWidgets;
+    QList<PathSelectorMenuItem *> pathWidgets;
     const int maxPathCount = 9;
     QStringList paths;
     QMap<QString, int> shortcuts;
     CopyOverlayMode mode;
     void removePathWidgets();
-
 };

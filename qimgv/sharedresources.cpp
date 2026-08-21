@@ -4,9 +4,7 @@
 
 SharedResources *shrRes = nullptr;
 
-SharedResources::SharedResources()
-{
-}
+SharedResources::SharedResources() {}
 
 SharedResources::~SharedResources() {
     delete shrRes;

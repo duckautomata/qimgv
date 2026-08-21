@@ -8,8 +8,7 @@ namespace Ui {
 class ImageInfoOverlay;
 }
 
-class ImageInfoOverlay : public OverlayWidget
-{
+class ImageInfoOverlay : public OverlayWidget {
     Q_OBJECT
 
 public:
@@ -22,8 +21,9 @@ public slots:
 
 protected:
     void wheelEvent(QWheelEvent *event);
+
 private:
     Ui::ImageInfoOverlay *ui;
-    QList<EntryInfoItem*> entries;
+    QList<EntryInfoItem *> entries;
     QLabel entryStub;
 };

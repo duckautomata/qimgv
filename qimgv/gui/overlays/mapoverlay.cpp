@@ -63,18 +63,20 @@ void MapOverlay::MapOverlayPrivate::moveMainImage(float xPos, float yPos) {
     float invisibleX = windowRect.width() - drawingRect.width();
     float invisibleY = windowRect.height() - drawingRect.height();
 
-    if(x < invisibleX) x = invisibleX;
-    if(x > 0) x = 0;
+    if(x < invisibleX)
+        x = invisibleX;
+    if(x > 0)
+        x = 0;
 
-    if(y < invisibleY) y = invisibleY;
-    if(y > 0) y = 0;
+    if(y < invisibleY)
+        y = invisibleY;
+    if(y > 0)
+        y = 0;
 
     emit q->positionChanged(x, y);
 }
 
-MapOverlay::MapOverlay(QWidget *parent) : QWidget(parent),
-    visibilityEnabled(true),
-    d(new MapOverlayPrivate(this)) {
+MapOverlay::MapOverlay(QWidget *parent) : QWidget(parent), visibilityEnabled(true), d(new MapOverlayPrivate(this)) {
     this->setMouseTracking(true);
     d->opacityAnimation = new QPropertyAnimation(this, "opacity");
     d->opacityAnimation->setEasingCurve(QEasingCurve::OutSine);
@@ -113,41 +115,42 @@ void MapOverlay::setOpacity(float opacity) {
 }
 
 void MapOverlay::animateVisible(bool isVisible) {
-    if(isVisible) this->setOpacity(1.0f);
+    if(isVisible)
+        this->setOpacity(1.0f);
     else {
         d->opacityAnimation->setEndValue(1.0f * isVisible);
 
         switch(location()) {
-            case MapOverlay::LeftTop:
-            case MapOverlay::RightTop:
-                if(isVisible) {
-                    d->transitionAnimation->setStartValue(0);
-                    d->transitionAnimation->setEndValue(margin());
-                } else {
-                    d->transitionAnimation->setStartValue(margin());
-                    d->transitionAnimation->setEndValue(0);
-                }
-                break;
-            case MapOverlay::RightBottom:
-            case MapOverlay::LeftBottom:
-                int h = parentWidget()->height();
-                int offset = d->outerRect.height() + margin();
+        case MapOverlay::LeftTop:
+        case MapOverlay::RightTop:
+            if(isVisible) {
+                d->transitionAnimation->setStartValue(0);
+                d->transitionAnimation->setEndValue(margin());
+            } else {
+                d->transitionAnimation->setStartValue(margin());
+                d->transitionAnimation->setEndValue(0);
+            }
+            break;
+        case MapOverlay::RightBottom:
+        case MapOverlay::LeftBottom:
+            int h = parentWidget()->height();
+            int offset = d->outerRect.height() + margin();
 
-                if(isVisible) {
-                    d->transitionAnimation->setStartValue(h);
-                    d->transitionAnimation->setEndValue(h - offset);
-                } else {
-                    d->transitionAnimation->setStartValue(h - offset);
-                    d->transitionAnimation->setEndValue(h);
-                }
-                break;
+            if(isVisible) {
+                d->transitionAnimation->setStartValue(h);
+                d->transitionAnimation->setEndValue(h - offset);
+            } else {
+                d->transitionAnimation->setStartValue(h - offset);
+                d->transitionAnimation->setEndValue(h);
+            }
+            break;
         }
 
         d->opacityAnimation->start();
-        //d->transitionAnimation->start();
+        // d->transitionAnimation->start();
     }
-    //if (QWidget::isVisible() == isVisible) // already in this state
-    //    return;
+    // if (QWidget::isVisible() == isVisible) // already in this state
+    //     return;
 }
 
 void MapOverlay::resize(int size) {
@@ -184,22 +187,22 @@ void MapOverlay::updatePosition() {
 
     int x = 0, y = 0;
     switch(location()) {
-        case MapOverlay::LeftTop:
-            x = parentRect.left() + margin();
-            y = parentRect.top() + margin();
-            break;
-        case MapOverlay::RightTop:
-            x = parentRect.right() - (margin() + d->outerRect.width());
-            y = parentRect.top() + margin();
-            break;
-        case MapOverlay::RightBottom:
-            x = parentRect.right() - (margin() + d->outerRect.width());
-            y = parentRect.bottom() - (margin() + d->outerRect.height());
-            break;
-        case MapOverlay::LeftBottom:
-            x = parentRect.left() + margin();
-            y = parentRect.bottom() - (margin() + d->outerRect.height());
-            break;
+    case MapOverlay::LeftTop:
+        x = parentRect.left() + margin();
+        y = parentRect.top() + margin();
+        break;
+    case MapOverlay::RightTop:
+        x = parentRect.right() - (margin() + d->outerRect.width());
+        y = parentRect.top() + margin();
+        break;
+    case MapOverlay::RightBottom:
+        x = parentRect.right() - (margin() + d->outerRect.width());
+        y = parentRect.bottom() - (margin() + d->outerRect.height());
+        break;
+    case MapOverlay::LeftBottom:
+        x = parentRect.left() + margin();
+        y = parentRect.bottom() - (margin() + d->outerRect.height());
+        break;
     }
 
     /**
@@ -234,11 +237,9 @@ void MapOverlay::updateMap(const QRectF &drawingRect) {
 
     float aspect = outerSz.width() / drawingRect.width();
 
-    float innerWidth = std::min((float) windowRect.width() * aspect,
-                                (float) outerSz.width());
+    float innerWidth = std::min((float)windowRect.width() * aspect, (float)outerSz.width());
 
-    float innerHeight = std::min((float) windowRect.height() * aspect,
-                                 (float) outerSz.height());
+    float innerHeight = std::min((float)windowRect.height() * aspect, (float)outerSz.height());
 
     QSizeF innerSz(innerWidth, innerHeight);
     d->innerRect.setSize(innerSz);
@@ -246,8 +247,8 @@ void MapOverlay::updateMap(const QRectF &drawingRect) {
     d->xSpeedDiff = innerSz.width() / windowRect.width();
     d->ySpeedDiff = innerSz.height() / windowRect.height();
 
-    float x = (float) - drawingRect.left() * d->xSpeedDiff;
-    float y = (float) - drawingRect.top() * d->ySpeedDiff;
+    float x = (float)-drawingRect.left() * d->xSpeedDiff;
+    float y = (float)-drawingRect.top() * d->ySpeedDiff;
 
     d->moveInnerWidget(x, y);
     update();

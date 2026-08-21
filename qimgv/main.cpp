@@ -24,13 +24,12 @@ void saveSettings() {
 }
 //------------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
-
     // force some env variables
 
 #ifdef _WIN32
     // if this is set by other app, platform plugin may fail to load
     // https://github.com/easymodo/qimgv/issues/410 (upstream)
-    qputenv("QT_PLUGIN_PATH","");
+    qputenv("QT_PLUGIN_PATH", "");
 
     // Put the CRT's narrow-string functions in UTF-8 mode. exiv2 >= 0.28 has
     // no wide-path API left, so DocumentInfo::loadExifTags() has to hand it a
@@ -42,11 +41,11 @@ int main(int argc, char *argv[]) {
 #endif
 
     // for hidpi testing
-    //qputenv("QT_SCALE_FACTOR","1.5");
-    //qputenv("QT_SCREEN_SCALE_FACTORS", "1;1.7");
+    // qputenv("QT_SCALE_FACTOR","1.5");
+    // qputenv("QT_SCREEN_SCALE_FACTORS", "1;1.7");
 
     // do we still need this?
-    qputenv("QT_AUTO_SCREEN_SCALE_FACTOR","0");
+    qputenv("QT_AUTO_SCREEN_SCALE_FACTOR", "0");
 
     // Qt6 hidpi rendering on windows still has artifacts
     // This disables it for scale factors < 1.75
@@ -55,9 +54,9 @@ int main(int argc, char *argv[]) {
     QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::RoundPreferFloor);
 #endif
 
-    //qDebug() << qgetenv("QT_SCALE_FACTOR");
-    //qDebug() << qgetenv("QT_SCREEN_SCALE_FACTORS");
-    //qDebug() << qgetenv("QT_ENABLE_HIGHDPI_SCALING");
+    // qDebug() << qgetenv("QT_SCALE_FACTOR");
+    // qDebug() << qgetenv("QT_SCREEN_SCALE_FACTORS");
+    // qDebug() << qgetenv("QT_ENABLE_HIGHDPI_SCALING");
 
 #ifdef __APPLE__
     MacOSApplication a(argc, argv);
@@ -103,7 +102,7 @@ int main(int argc, char *argv[]) {
 
     atexit(saveSettings);
 
-// parse args ------------------------------------------------------------------
+    // parse args ------------------------------------------------------------------
     QCommandLineParser parser;
     QString appDescription = qApp->applicationName() + " - Fast and configurable image viewer.";
     appDescription.append("\nVersion: " + qApp->applicationVersion());
@@ -113,14 +112,12 @@ int main(int argc, char *argv[]) {
     parser.addVersionOption();
     parser.addPositionalArgument("path", QCoreApplication::translate("main", "File or directory path."));
     parser.addOptions({
-        {"gen-thumbs",
-            QCoreApplication::translate("main", "Generate all thumbnails for directory."),
-            QCoreApplication::translate("main", "directory-path")},
+        {"gen-thumbs", QCoreApplication::translate("main", "Generate all thumbnails for directory."),
+         QCoreApplication::translate("main", "directory-path")},
         {"gen-thumbs-size",
-            QCoreApplication::translate("main", "Thumbnail size. Current size is used if not specified."),
-            QCoreApplication::translate("main", "thumbnail-size")},
-        {"build-options",
-            QCoreApplication::translate("main", "Show build options.")},
+         QCoreApplication::translate("main", "Thumbnail size. Current size is used if not specified."),
+         QCoreApplication::translate("main", "thumbnail-size")},
+        {"build-options", QCoreApplication::translate("main", "Show build options.")},
     });
     parser.process(a);
 
@@ -134,12 +131,11 @@ int main(int argc, char *argv[]) {
             size = parser.value("gen-thumbs-size").toInt();
 
         CmdOptionsRunner r;
-        QTimer::singleShot(0, &r,
-                           std::bind(&CmdOptionsRunner::generateThumbs, &r, parser.value("gen-thumbs"), size));
+        QTimer::singleShot(0, &r, std::bind(&CmdOptionsRunner::generateThumbs, &r, parser.value("gen-thumbs"), size));
         return a.exec();
     }
 
-// -----------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------
 
     Core core;
 

@@ -1,7 +1,6 @@
 #include "cache.h"
 
-Cache::Cache() {
-}
+Cache::Cache() {}
 
 bool Cache::contains(QString path) const {
     return items.contains(path);

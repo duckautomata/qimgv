@@ -12,6 +12,7 @@ public:
     int size();
     bool hasAlphaChannel();
     std::shared_ptr<QPixmap> pixmap();
+
 private:
     QString mName, mInfo;
     std::shared_ptr<QPixmap> mPixmap;

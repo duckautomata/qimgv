@@ -32,7 +32,7 @@ signals:
     void showScriptSettings();
 
 protected:
-    void mousePressEvent(QMouseEvent*);
+    void mousePressEvent(QMouseEvent *);
     void paintEvent(QPaintEvent *);
     void keyPressEvent(QKeyEvent *event);
 private slots:

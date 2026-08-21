@@ -18,8 +18,7 @@ namespace Ui {
 class CropPanel;
 }
 
-class CropPanel : public SidePanelWidget
-{
+class CropPanel : public SidePanelWidget {
     Q_OBJECT
 
 public:
@@ -49,12 +48,13 @@ private slots:
     void doCrop();
     void doCropSave();
     void onSelectionChange();
-    void onAspectRatioChange(); // via manual input
+    void onAspectRatioChange();   // via manual input
     void onAspectRatioSelected(); // via ComboBox
     void setFocusCropBtn();
     void setFocusCropSaveBtn();
 
     void doCropDefaultAction();
+
 private:
     Ui::CropPanel *ui;
     QRect cropRect;

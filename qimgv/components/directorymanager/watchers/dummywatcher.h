@@ -2,8 +2,7 @@
 
 #include "directorywatcher.h"
 
-class DummyWatcher : public DirectoryWatcher
-{
+class DummyWatcher : public DirectoryWatcher {
 public:
     DummyWatcher();
 };

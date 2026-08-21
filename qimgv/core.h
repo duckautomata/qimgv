@@ -30,10 +30,7 @@ struct State {
     std::shared_ptr<Image> currentImg;
 };
 
-enum MimeDataTarget {
-    TARGET_CLIPBOARD,
-    TARGET_DROP
-};
+enum MimeDataTarget { TARGET_CLIPBOARD, TARGET_DROP };
 
 class Core : public QObject {
     Q_OBJECT
@@ -99,7 +96,8 @@ private:
     QList<QString> currentSelection();
 
     template<typename... Args>
-    void edit_template(bool save, QString actionName, const std::function<QImage*(std::shared_ptr<const QImage>, Args...)>& func, Args&&... as);
+    void edit_template(bool save, QString actionName,
+                       const std::function<QImage *(std::shared_ptr<const QImage>, Args...)> &func, Args &&...as);
 
     void doInteractiveCopy(QString path, QString destDirectory, DialogResult &overwriteAllFiles);
     void doInteractiveMove(QString path, QString destDirectory, DialogResult &overwriteAllFiles);
@@ -111,7 +109,7 @@ private slots:
     void nextImageSlideshow();
     void jumpToFirst();
     void jumpToLast();
-    void onModelItemReady(std::shared_ptr<Image>, const QString&);
+    void onModelItemReady(std::shared_ptr<Image>, const QString &);
     void onModelItemUpdated(QString fileName);
     void onModelSortingChanged(SortingMode mode);
     void onLoadFailed(const QString &path);
@@ -119,7 +117,7 @@ private slots:
     void rotateRight();
     void close();
     void scalingRequest(QSize, ScalingFilter);
-    void onScalingFinished(QPixmap* scaled, ScalerRequest req);
+    void onScalingFinished(QPixmap *scaled, ScalerRequest req);
     void copyCurrentFile(QString destDirectory);
     void moveCurrentFile(QString destDirectory);
     void copyPathsTo(QList<QString> paths, QString destDirectory);
@@ -143,7 +141,7 @@ private slots:
     void requestSavePath();
     void saveCurrentFile();
     void saveCurrentFileAs(QString);
-    void runScript(const QString&);
+    void runScript(const QString &);
     void setWallpaper();
     void removePermanent();
     void moveToTrash();
@@ -160,7 +158,7 @@ private slots:
     void showRenameDialog();
     void onDraggedOut();
     void onDraggedOut(QList<QString> paths);
-    void onDropIn(const QMimeData *mimeData, QObject* source);
+    void onDropIn(const QMimeData *mimeData, QObject *source);
     void toggleShuffle();
     void onModelLoaded();
     void outputError(const FileOpResult &error) const;

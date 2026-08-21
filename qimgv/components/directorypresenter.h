@@ -8,7 +8,7 @@
 #include "sharedresources.h"
 #include <QMimeData>
 
-//tmp
+// tmp
 #include <QtSvg/QSvgRenderer>
 
 class DirectoryPresenter : public QObject {
@@ -37,7 +37,6 @@ public:
 
     QList<QString> selectedPaths() const;
 
-
 signals:
     void dirActivated(QString dirPath);
     void fileActivated(QString filePath);
@@ -57,6 +56,7 @@ private slots:
     void onDraggedOver(int index);
 
     void onDroppedInto(const QMimeData *data, QObject *source, int targetIndex);
+
 private:
     std::shared_ptr<IDirectoryView> view = nullptr;
     std::shared_ptr<DirectoryModel> model = nullptr;

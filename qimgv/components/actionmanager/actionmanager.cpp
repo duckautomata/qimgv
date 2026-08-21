@@ -2,8 +2,7 @@
 
 ActionManager *actionManager = nullptr;
 
-ActionManager::ActionManager(QObject *parent) : QObject(parent) {
-}
+ActionManager::ActionManager(QObject *parent) : QObject(parent) {}
 //------------------------------------------------------------------------------
 ActionManager::~ActionManager() {
     delete actionManager;
@@ -74,7 +73,8 @@ void ActionManager::initDefaults() {
     actionManager->defaults.insert("Backspace", "folderView");
     actionManager->defaults.insert("F5", "reloadImage");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+C", "copyFileClipboard");
-    actionManager->defaults.insert(InputMap::keyNameCtrl() + "+" + InputMap::keyNameShift() + "+C", "copyPathClipboard");
+    actionManager->defaults.insert(InputMap::keyNameCtrl() + "+" + InputMap::keyNameShift() + "+C",
+                                   "copyPathClipboard");
     actionManager->defaults.insert("F2", "renameFile");
     actionManager->defaults.insert("RMB", "contextMenu");
     actionManager->defaults.insert("Menu", "contextMenu");
@@ -96,7 +96,7 @@ void ActionManager::initDefaults() {
     actionManager->defaults.insert("P", "openSettings");
 #endif
 
-    //actionManager->defaults.insert("Backspace", "goUp"); // todo: shortcut scopes?
+    // actionManager->defaults.insert("Backspace", "goUp"); // todo: shortcut scopes?
 }
 
 //------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ void ActionManager::removeAllShortcuts(QString actionName) {
     if(validateAction(actionName) == ActionType::ACTION_INVALID)
         return;
 
-    for (auto i = shortcuts.begin(); i != shortcuts.end();) {
+    for(auto i = shortcuts.begin(); i != shortcuts.end();) {
         if(i.value() == actionName)
             i = shortcuts.erase(i);
         else
@@ -168,12 +168,12 @@ void ActionManager::resetDefaults(QString action) {
 //------------------------------------------------------------------------------
 void ActionManager::adjustFromVersion(QVersionNumber lastVer) {
     // swap Ctrl-P & P
-    if(lastVer < QVersionNumber(0,9,2)) {
+    if(lastVer < QVersionNumber(0, 9, 2)) {
         actionManager->resetDefaults("print");
         actionManager->resetDefaults("openSettings");
     }
     // swap WheelUp/WheelDown. derp
-    if(lastVer < QVersionNumber(1,0,1)) {
+    if(lastVer < QVersionNumber(1, 0, 1)) {
         qDebug() << "[actionManager]: swapping WheelUp/WheelDown";
         QMapIterator<QString, QString> i(shortcuts);
         QMap<QString, QString> swapped;
@@ -197,7 +197,8 @@ void ActionManager::adjustFromVersion(QVersionNumber lastVer) {
                 shortcuts.insert(i.key(), i.value());
                 qDebug() << "[ActionManager] new action " << i.value() << " - assigning as [" << i.key() << "]";
             } else if(i.value() != actionForShortcut(i.key())) {
-                qDebug() << "[ActionManager] new action " << i.value() << " - shortcut [" << i.key() << "] already assigned to another action " << actionForShortcut(i.key());
+                qDebug() << "[ActionManager] new action " << i.value() << " - shortcut [" << i.key()
+                         << "] already assigned to another action " << actionForShortcut(i.key());
             }
         }
     }
@@ -245,7 +246,7 @@ bool ActionManager::invokeActionForShortcut(const QString &shortcut) {
 }
 //------------------------------------------------------------------------------
 void ActionManager::validateShortcuts() {
-    for (auto i = shortcuts.begin(); i != shortcuts.end();) {
+    for(auto i = shortcuts.begin(); i != shortcuts.end();) {
         if(validateAction(i.value()) == ActionType::ACTION_INVALID)
             i = shortcuts.erase(i);
         else
@@ -253,8 +254,7 @@ void ActionManager::validateShortcuts() {
     }
 }
 //------------------------------------------------------------------------------
-inline
-ActionType ActionManager::validateAction(const QString &actionName) {
+inline ActionType ActionManager::validateAction(const QString &actionName) {
     if(appActions->getMap().contains(actionName))
         return ActionType::ACTION_NORMAL;
     if(actionName.startsWith("s:")) {

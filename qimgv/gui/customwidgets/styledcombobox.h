@@ -7,8 +7,7 @@
 #include "settings.h"
 #include "utils/imagelib.h"
 
-class StyledComboBox : public QComboBox
-{
+class StyledComboBox : public QComboBox {
 public:
     StyledComboBox(QWidget *parent = nullptr);
     void setIconPath(QString path);

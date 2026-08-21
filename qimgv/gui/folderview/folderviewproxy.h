@@ -48,7 +48,7 @@ signals:
     void directorySelected(QString);
     void copyUrlsRequested(QList<QString>, QString path);
     void moveUrlsRequested(QList<QString>, QString path);
-    void droppedInto(const QMimeData*, QObject*, int) override;
+    void droppedInto(const QMimeData *, QObject *, int) override;
     void draggedOver(int) override;
 
 private:

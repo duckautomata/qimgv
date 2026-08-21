@@ -13,8 +13,7 @@ namespace Ui {
 class RenameOverlay;
 }
 
-class RenameOverlay : public OverlayWidget
-{
+class RenameOverlay : public OverlayWidget {
     Q_OBJECT
 
 public:
