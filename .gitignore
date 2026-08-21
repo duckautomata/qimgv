@@ -43,6 +43,9 @@ ui_*.h
 *.exe
 *.msi
 
+# ---- Logs from pipeline runs -------------------------------------------------------------
+logs_*/
+
 # ---- Editors / IDEs --------------------------------------------------------
 # Note the trailing /* rather than /: git cannot re-include a file whose parent
 # directory is itself excluded, so ".vscode/" would make the two ! lines dead.
