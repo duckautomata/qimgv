@@ -1,0 +1,67 @@
+// Copy to .vscode/settings.json and adjust the C:/msys64 paths if your MSYS2
+// lives elsewhere. .vscode/settings.json itself is gitignored so everyone can
+// keep their own; this file is the shared starting point.
+//
+// Assumes the MSYS2 UCRT64 toolchain from scripts/setup-msys2.sh, and the
+// cpptools + CMake Tools extensions (see .vscode/extensions.json).
+{
+  // ---- C/C++ (ms-vscode.cpptools) ------------------------------------------
+  // The real per-file flags come from CMake Tools / compile_commands.json via
+  // .vscode/c_cpp_properties.json. These only cover files outside the build.
+  "C_Cpp.default.compilerPath": "C:/msys64/ucrt64/bin/g++.exe",
+  "C_Cpp.default.cppStandard": "c++20",
+  "C_Cpp.default.cStandard": "c17",
+  "C_Cpp.default.intelliSenseMode": "windows-gcc-x64",
+
+  // Format with the repo's .clang-format. cpptools ships its own clang-format
+  // binary, so this works without installing one.
+  "C_Cpp.formatting": "clangFormat",
+  "C_Cpp.clang_format_style": "file",
+  "C_Cpp.clang_format_fallbackStyle": "none",
+
+  // ---- CMake Tools ---------------------------------------------------------
+  "cmake.useCMakePresets": "always",
+  "cmake.cmakePath": "C:/msys64/ucrt64/bin/cmake.exe",
+  "cmake.configureOnOpen": false,
+  // VS Code launches cmake from a plain Windows shell, which has no MSYS2 on
+  // PATH -- without this it cannot find ninja, gcc, moc or pkg-config.
+  "cmake.environment": {
+    "MSYSTEM": "UCRT64",
+    "PATH": "C:/msys64/ucrt64/bin;${env:PATH}"
+  },
+
+  // ---- Formatting ----------------------------------------------------------
+  // "modifications" reformats only the lines you actually changed. The project
+  // rule is not to reformat files wholesale, and CI only clang-format-checks
+  // files a PR touches -- a plain formatOnSave would fight both.
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "modifications",
+  "[cpp]": { "editor.defaultFormatter": "ms-vscode.cpptools" },
+  "[c]": { "editor.defaultFormatter": "ms-vscode.cpptools" },
+
+  // ---- Terminal ------------------------------------------------------------
+  // Every documented command (cmake --preset, ctest, scripts/*.sh) assumes the
+  // UCRT64 shell. Remove this block if you would rather open it yourself.
+  "terminal.integrated.profiles.windows": {
+    "MSYS2 UCRT64": {
+      "path": "C:/msys64/usr/bin/bash.exe",
+      "args": ["--login", "-i"],
+      "env": { "MSYSTEM": "UCRT64", "CHERE_INVOKING": "1" },
+      "icon": "terminal-bash"
+    }
+  },
+  "terminal.integrated.defaultProfile.windows": "MSYS2 UCRT64",
+
+  // ---- Qt / workspace hygiene ---------------------------------------------
+  "files.associations": {
+    "*.qss": "css",
+    "*.ui": "xml",
+    "*.qrc": "xml"
+  },
+  "files.watcherExclude": { "**/build/**": true },
+  "search.exclude": { "build": true },
+  "C_Cpp.files.exclude": {
+    "**/.git": true,
+    "**/build/*/CMakeFiles": true
+  }
+}
