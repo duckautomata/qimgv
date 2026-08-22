@@ -118,9 +118,11 @@ broken cases (single-image directory + shuffle, and script persistence) are
 covered. Video playback, fit modes, folder view and the panels have all been
 driven by hand.
 
-Still unexercised: HiDPI at 125%/150%, and a genuinely large folder — the
-structural problems below are all about scale, and nothing here has been run
-against 20k files.
+A 20,000-file corpus has since been driven through folder open, scrolling,
+thumbnail generation and navigation while the structural problems below were
+worked through. HiDPI has been compared at `QT_SCALE_FACTOR=1.5` by rendering
+the folder grid offscreen and diffing it, but not yet used by hand at 125%/150%
+on a real monitor, which is the remaining gap.
 
 Note for anyone automating this: synthetic input (SendKeys / SendInput, with or
 without real scan codes) does not reach the window, so UI checks have to be
@@ -218,43 +220,56 @@ fixed on the branch. Listed because most of it is invisible on Linux.
 
 ---
 
-## Known structural problems (deliberately not touched)
+## Known structural problems — all now addressed
 
-Found during the audit, verified in the source, all real. Each is a project
-rather than a cleanup, and the maintainer's stated top priority is speed.
-Roughly in impact order:
+Found during the audit, verified in the source, all real. Each was worked
+through on the `bug-fixes` branch; what follows is what each one turned out to
+be, since two of them were not what the audit assumed. Everything below was
+measured on a generated 20,000-file corpus, not estimated.
 
-1. **No thumbnail-view virtualization.** `ThumbnailView::populate()`
-   (`qimgv/gui/customwidgets/thumbnailview.cpp`) eagerly constructs one
-   `ThumbnailWidget` QGraphicsItem per file and inserts it into the layout. A
-   20k-file folder is 20k items built on the GUI thread before a single
-   thumbnail is even requested. Almost certainly the largest directory-open
-   cost.
-2. **Directory scanning is synchronous on the GUI thread.**
-   `Core::setDirectory` → `DirectoryModel::setDirectory` →
-   `DirectoryManager::setDirectory`. No worker thread anywhere in that path.
-3. **`DirectoryPresenter::onThumbnailReady` is O(n²).** It calls
-   `indexOfFile()` per delivered thumbnail, which is a linear
-   `std::find_if` over the whole vector. Needs a path→index hash.
-4. **21 `qApp->processEvents()` call sites**, several inside `populate()` —
-   i.e. nested event loops during folder loading. Risky to remove, easy to
-   deadlock on.
-5. **`ThumbnailerRunnable::generate` builds a `QPixmap` on a worker thread**
-   (`new QPixmap(size)` then immediately overwritten by
-   `QPixmap::fromImage`). QPixmap off the GUI thread is unsupported in Qt, and
-   the sized ctor allocates a full buffer that is discarded one line later.
-6. **`ImageLib::scaled_CV` has a dead branch**: when `destSize == source
-   size` it writes nothing and returns an empty QImage. A no-op scale request
-   yields a null image.
-7. **Thumbnail cache saves PNG at "quality 15"**, which Qt maps *inversely*
-   onto zlib compression — that is near-maximum CPU per thumbnail write. A
-   one-line change worth measuring.
-8. **`DeviceCoordinateCache` is disabled on fractional DPI**
-   (`thumbnailwidget.cpp`, guarded by `trunc(dpr) == dpr`) — so the common
-   HiDPI case gets no item caching at all.
+1. **No thumbnail-view virtualization.** *Skipped, deliberately.* The audit
+   called this "almost certainly the largest directory-open cost". Measured, it
+   is not: `populate()` for 20k items takes 82 ms in `FolderGridView` and 48 ms
+   in `ThumbnailStrip`. The real cost was the directory scan (item 2). Building
+   every widget up front does cost memory — 130 MB to 258 MB across 20k — and
+   the maintainer's call was that memory is not the constraint for realistic
+   folders. Virtualizing a `QGraphicsView` is a large, regression-prone change
+   for a cost that was already paid down elsewhere.
+2. **Directory scanning was synchronous on the GUI thread.** Enumeration now
+   runs on a single-threaded pool and the result is delivered by queued signal;
+   a stale scan is discarded by generation counter. Opening a 20k folder went
+   from 3.54 s to 0.69 s before the window appears. Sorting stayed on the GUI
+   thread on purpose: `QCollator` is not thread-safe, and re-sorting 20k names
+   is 45 ms against ~1.8 s to enumerate them. `setDirectoryRecursive()` is
+   still blocking — `--gen-thumbs` reads the list on the next line.
+3. **`DirectoryPresenter::onThumbnailReady` was O(n²).** `indexOfFile` and
+   `indexOfDir` are now backed by lazily-rebuilt path→index hashes, invalidated
+   at the 15 sites that mutate the lists. Sweeping `indexOfFile` across 20k
+   files: 1885 ms to 1 ms. Navigating a whole folder: 1870 ms to 1 ms.
+4. **21 `qApp->processEvents()` call sites.** Not removed — the risk the audit
+   flagged is real. Instead every one now passes `ExcludeUserInputEvents`, so a
+   nested loop can no longer deliver a click or a keypress into a half-built
+   widget tree, and `populate()` refuses re-entry and coalesces the pending
+   count.
+5. **`ThumbnailerRunnable::generate` built a `QPixmap` on a worker thread.**
+   `Thumbnail` now carries a `QImage` and creates the `QPixmap` on first use,
+   which is always on the GUI thread.
+6. **`ImageLib::scaled_CV` had a dead branch.** The equal-size case now returns
+   a copy of the source instead of a null image.
+7. **Thumbnail cache saved PNG at "quality 15".** Now 50. Per 200x200
+   thumbnail: 2.99 ms to 1.12 ms, for 9149 to 9937 bytes. Past 80 compression
+   effectively switches off and the same file becomes 160 KB.
+8. **`DeviceCoordinateCache` disabled on fractional DPI.** *The workaround was
+   kept, and a bug next to it fixed.* Rendering the grid at
+   `QT_SCALE_FACTOR=1.5` with the cache on and off, 13.5% of pixels differ by
+   up to 231/255 — the cache still lands the item on a different pixel grid on
+   Qt 6.11, so enabling it would have been wrong. The actual defect was that
+   the check only ever switched the cache *on*: a widget built while the
+   primary screen was at 100% kept its cache after moving to a 150% monitor.
 
-The scan micro-optimizations that *were* done are worth ~3.4 ms per 20k files.
-Measured, and small. Do not expect them to matter next to items 1–3.
+Two other bugs surfaced while working through the above and are fixed:
+`--gen-thumbs` silently generated nothing after the scan went async, and the
+transparency grid never reached video with an alpha channel.
 
 ---
 
