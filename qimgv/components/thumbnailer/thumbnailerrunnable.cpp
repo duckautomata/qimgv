@@ -63,19 +63,19 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache, 
                 cache->saveThumbnail(image.get(), thumbnailId);
         }
     }
-    auto &&tmpPixmap = new QPixmap(image->size());
-    *tmpPixmap = QPixmap::fromImage(*image);
-    tmpPixmap->setDevicePixelRatio(qApp->devicePixelRatio());
-
+    // This runs on a thread pool, so it must not build a QPixmap: that is a GUI
+    // thread type, and constructing one here is undefined behaviour that
+    // happens to work often enough to survive. Thumbnail turns the image into a
+    // pixmap when something first paints it. The old code also allocated a
+    // full-size pixmap and overwrote it on the next line, which is now gone.
     QString label;
-    if(tmpPixmap->width() == 0) {
+    if(image->width() == 0) {
         label = "error";
     } else {
         // put info into Thumbnail object
         label = image->text("originalWidth") + "x" + image->text("originalHeight") + image->text("label");
     }
-    std::shared_ptr<QPixmap> pixmapPtr(tmpPixmap);
-    std::shared_ptr<Thumbnail> thumbnail(new Thumbnail(imgInfo.fileName(), label, size, pixmapPtr));
+    std::shared_ptr<Thumbnail> thumbnail(new Thumbnail(imgInfo.fileName(), label, size, std::move(image)));
     return thumbnail;
 }
 

@@ -191,16 +191,20 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size, bool c
             QSvgRenderer svgRenderer;
             svgRenderer.load(QString(":/res/icons/common/other/folder32-scalable.svg"));
             int factor = (size * 0.90f) / svgRenderer.defaultSize().width();
-            QPixmap *pixmap = new QPixmap(svgRenderer.defaultSize() * factor);
-            pixmap->fill(Qt::transparent);
-            QPainter pixPainter(pixmap);
+            QPixmap pixmap(svgRenderer.defaultSize() * factor);
+            pixmap.fill(Qt::transparent);
+            QPainter pixPainter(&pixmap);
             svgRenderer.render(&pixPainter);
             pixPainter.end();
 
-            ImageLib::recolor(*pixmap, settings->colorScheme().icons);
+            ImageLib::recolor(pixmap, settings->colorScheme().icons);
 
+            // Thumbnail stores a QImage so that decoding can happen off the GUI
+            // thread. This icon is built here, on the GUI thread, where a
+            // QPixmap is fine -- converting costs one copy per folder and keeps
+            // a single constructor that cannot be misused from a worker.
             std::shared_ptr<Thumbnail> thumb(
-                new Thumbnail(model->dirNameAt(i), "Folder", size, std::shared_ptr<QPixmap>(pixmap)));
+                new Thumbnail(model->dirNameAt(i), "Folder", size, std::make_shared<QImage>(pixmap.toImage())));
             // ^----------------------------------------------------------------
             view->setThumbnail(i, thumb);
         } else {
