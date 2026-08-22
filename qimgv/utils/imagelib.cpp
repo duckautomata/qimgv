@@ -202,8 +202,10 @@ QImage *ImageLib::scaled_CV(std::shared_ptr<const QImage> source, QSize destSize
     cv::Size destSizeCv(destSize.width(), destSize.height());
     QImage *dest = new QImage();
     if(destSize == source->size()) {
-        // TODO: should this return a copy?
-        // result.reset(new StaticImageContainer(std::make_shared<cv::Mat>(srcMat)));
+        // Nothing to scale. This branch used to fall through writing nothing,
+        // so asking for the size the image already is handed back a null
+        // QImage -- a blank result from a request that should be a no-op.
+        *dest = *source;
     } else if(destSize.width() > source.get()->width()) { // upscale
         cv::Mat dstMat(destSizeCv, srcMat.type());
         cv::resize(srcMat, dstMat, destSizeCv, 0, 0, filter);
