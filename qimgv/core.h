@@ -63,6 +63,11 @@ private:
     // See Core::modelDelayLoad().
     bool reattachCurrentImageOnLoad = false;
 
+    // See Core::nextDirectory(). Listing a directory is asynchronous, so the
+    // entry those want to open does not exist yet when they ask for it.
+    enum PendingSelection { SELECT_NONE, SELECT_FIRST, SELECT_LAST };
+    PendingSelection pendingSelection = SELECT_NONE;
+
     State state;
     bool loopSlideshow, slideshow, shuffle;
     FolderEndAction folderEndAction;

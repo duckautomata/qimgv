@@ -31,6 +31,8 @@ private slots:
     void navigationAgreesWithOrder();
     void staleScanIsDiscarded();
     void blockingLoadIsImmediate();
+    void asyncScanLeavesListEmptyOnReturn();
+    void recursiveLoadIsImmediate();
 
 private:
     QTemporaryDir dir;
@@ -200,6 +202,45 @@ void Test_DirectoryManager::blockingLoadIsImmediate() {
     DirectoryManager dm;
     QVERIFY(dm.setDirectoryBlocking(dir.path()));
     QVERIFY2(dm.fileCount() > 0, "setDirectoryBlocking returned before the listing was ready");
+    verifyMappingIsConsistent(dm);
+}
+
+// The trap that has now caused two separate bugs: setDirectory() returns before
+// the listing exists, so anything that reads the entries on the following line
+// gets nothing. It broke --gen-thumbs (reported "File count: 0" and generated
+// nothing) and Core::nextDirectory()/prevDirectory() (switched folders but
+// opened no image). Both read the list immediately after the call.
+//
+// Deterministic, not racy: the result is delivered by queued connection, so it
+// cannot arrive until someone runs the event loop, and this test never does.
+void Test_DirectoryManager::asyncScanLeavesListEmptyOnReturn() {
+    // Counted rather than hardcoded: earlier tests add and remove files in this
+    // shared directory, so the total depends on what ran before.
+    DirectoryManager reference;
+    QVERIFY(reference.setDirectoryBlocking(dir.path()));
+    int const expected = static_cast<int>(reference.fileCount());
+    QVERIFY(expected > 0);
+
+    DirectoryManager dm;
+    QSignalSpy spy(&dm, &DirectoryManager::loaded);
+    QVERIFY(dm.setDirectory(dir.path()));
+    QCOMPARE(static_cast<int>(dm.fileCount()), 0);
+    QCOMPARE(dm.filePathAt(0), QString());
+
+    // ...and it does arrive, once the caller lets the event loop turn.
+    QVERIFY(spy.wait(10000));
+    QCOMPARE(static_cast<int>(dm.fileCount()), expected);
+    verifyMappingIsConsistent(dm);
+}
+
+// --gen-thumbs reads fileList() on the line after this call and has no event
+// loop for a signal to arrive through, so unlike setDirectory() this one must
+// come back with the entries already in place.
+void Test_DirectoryManager::recursiveLoadIsImmediate() {
+    DirectoryManager dm;
+    QVERIFY(dm.setDirectoryRecursive(dir.path()));
+    // The regression was exactly this: zero, on a directory full of images.
+    QVERIFY2(dm.fileCount() > 0, "setDirectoryRecursive returned before the listing was ready");
     verifyMappingIsConsistent(dm);
 }
 

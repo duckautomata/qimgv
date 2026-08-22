@@ -357,6 +357,15 @@ void Core::onModelLoaded() {
     }
     thumbPanelPresenter.reloadModel();
     folderViewPresenter.reloadModel();
+    // nextDirectory()/prevDirectory() asked for an entry that did not exist
+    // until now. Open it before focusing, so the focus below is on the file
+    // this actually selected.
+    if(pendingSelection != SELECT_NONE) {
+        PendingSelection const wanted = pendingSelection;
+        pendingSelection = SELECT_NONE;
+        if(model->fileCount())
+            loadFileIndex(wanted == SELECT_LAST ? model->fileCount() - 1 : 0, false, true);
+    }
     thumbPanelPresenter.selectAndFocus(state.currentFilePath);
     folderViewPresenter.selectAndFocus(state.currentFilePath);
     if(shuffle)
@@ -1300,6 +1309,8 @@ bool Core::loadPath(QString path) {
 }
 
 bool Core::setDirectory(QString path) {
+    // Whatever the last caller wanted to open, it is not in this directory.
+    pendingSelection = SELECT_NONE;
     if(model->directoryPath() != path) {
         this->reset();
         if(!model->setDirectory(path)) {
@@ -1360,8 +1371,10 @@ void Core::nextDirectory() {
                 return;
             QFileInfo fi(next);
             mw->showMessageDirectory(fi.baseName());
-            if(model->fileCount())
-                loadFileIndex(0, false, true);
+            // The listing runs on a worker now, so the folder is still empty
+            // here and there is nothing to open yet. onModelLoaded() does it
+            // once the entries arrive.
+            pendingSelection = SELECT_FIRST;
         } else {
             mw->showMessageDirectoryEnd();
         }
@@ -1383,12 +1396,8 @@ void Core::prevDirectory(bool selectLast) {
                 return;
             QFileInfo fi(prev);
             mw->showMessageDirectory(fi.baseName());
-            if(model->fileCount()) {
-                if(selectLast)
-                    loadFileIndex(model->fileCount() - 1, false, true);
-                else
-                    loadFileIndex(0, false, true);
-            }
+            // Deferred for the same reason as in nextDirectory().
+            pendingSelection = selectLast ? SELECT_LAST : SELECT_FIRST;
         } else {
             mw->showMessageDirectoryStart();
         }
