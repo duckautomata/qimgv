@@ -132,6 +132,12 @@ bool DirectoryManager::setDirectory(QString dirPath) {
     mListSource = SOURCE_DIRECTORY;
     mDirectoryPath = dirPath;
 
+    // Stop watching the previous directory before the scan begins. The watcher
+    // is only re-pointed when the result lands, and its slots resolve a bare
+    // file name against watchPath() at delivery time -- so anything it reported
+    // while the scan was in flight would be attributed to the new directory.
+    stopFileWatcher();
+
     // Only the checks above are synchronous, so a path that does not exist or
     // cannot be read still fails here and the caller can say so. Anything that
     // goes wrong once the listing is under way surfaces through loaded().
