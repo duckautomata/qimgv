@@ -154,7 +154,16 @@ bool DirectoryManager::setDirectoryRecursive(QString dirPath) {
     stopFileWatcher();
     mListSource = SOURCE_DIRECTORY_RECURSIVE;
     mDirectoryPath = dirPath;
-    startScan(dirPath, true);
+
+    // Blocking, unlike setDirectory(). Its only caller is --gen-thumbs, which
+    // reads the list on the next line and has no event loop for a signal to
+    // arrive through. Making this asynchronous silently gave it an empty
+    // directory and it generated nothing at all.
+    auto result = std::make_shared<DirectoryScanResult>();
+    result->path = dirPath;
+    result->generation = ++scanGeneration;
+    scanDirectoryEntries(dirPath, true, settings->showHiddenFiles(), regex, result->files, result->dirs);
+    onScanFinished(result);
     return true;
 }
 
