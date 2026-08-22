@@ -1,7 +1,7 @@
 #include "thumbnailwidget.h"
 
 ThumbnailWidget::ThumbnailWidget(QGraphicsItem *parent)
-    : QGraphicsWidget(parent), isLoaded(false), thumbnail(nullptr), highlighted(false), hovered(false),
+    : QGraphicsWidget(parent), isLoaded(false), index(-1), thumbnail(nullptr), highlighted(false), hovered(false),
       dropHovered(false), mThumbnailSize(100), padding(5), marginX(2), marginY(2), labelSpacing(9), textHeight(5),
       thumbStyle(THUMB_SIMPLE) {
     setAttribute(Qt::WA_OpaquePaintEvent, true);

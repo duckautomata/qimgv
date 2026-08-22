@@ -25,6 +25,10 @@ public:
     int type() const override { return Type; }
 
     bool isLoaded;
+    // Position in the owning ThumbnailView's list. The view keeps this in sync
+    // so that a widget can be turned back into an index without searching for
+    // it; see ThumbnailView::reindexFrom().
+    int index;
     void setThumbnail(std::shared_ptr<Thumbnail> _thumbnail);
 
     void setHighlighted(bool mode);

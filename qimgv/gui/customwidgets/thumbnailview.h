@@ -121,6 +121,7 @@ protected:
 
     bool checkRange(int pos);
 
+    void reindexFrom(int start);
     virtual ThumbnailWidget *createThumbnailWidget() = 0;
     virtual void addItemToLayout(ThumbnailWidget *widget, int pos) = 0;
     virtual void removeItemFromLayout(int pos) = 0;

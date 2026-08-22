@@ -1,5 +1,7 @@
 #include "thumbnailview.h"
 
+#include <QSet>
+
 ThumbnailView::ThumbnailView(Qt::Orientation _orientation, QWidget *parent)
     : QGraphicsView(parent), blockThumbnailLoading(false), mDrawScrollbarIndicator(true), lastScrollFrameTime(0),
       mCropThumbnails(false), mouseReleaseSelect(false), selectMode(ACTIVATE_BY_PRESS), scrollTimeLine(nullptr),
@@ -273,6 +275,7 @@ void ThumbnailView::populate(int newCount) {
             for(int i = 0; i < newCount; i++) {
                 ThumbnailWidget *widget = createThumbnailWidget();
                 widget->setThumbnailSize(mThumbnailSize);
+                widget->index = i;
                 thumbnails.append(widget);
                 addItemToLayout(widget, i);
             }
@@ -303,6 +306,7 @@ void ThumbnailView::addItem() {
 void ThumbnailView::insertItem(int index) {
     ThumbnailWidget *widget = createThumbnailWidget();
     thumbnails.insert(index, widget);
+    reindexFrom(index);
     addItemToLayout(widget, index);
     updateLayout();
     fitSceneToContents();
@@ -318,12 +322,21 @@ void ThumbnailView::insertItem(int index) {
     loadVisibleThumbnails();
 }
 
+// Rewrites ThumbnailWidget::index for everything from start onwards, after an
+// insertion or removal has shifted the list. Linear, but so is the QList shift
+// that made it necessary.
+void ThumbnailView::reindexFrom(int start) {
+    for(int i = qMax(start, 0); i < thumbnails.count(); i++)
+        thumbnails.at(i)->index = i;
+}
+
 void ThumbnailView::removeItem(int index) {
     if(checkRange(index)) {
         auto newSelection = mSelection;
         clearSelection();
         removeItemFromLayout(index);
         delete thumbnails.takeAt(index);
+        reindexFrom(index);
         fitSceneToContents();
         newSelection.removeAll(index);
         for(int i = 0; i < newSelection.count(); i++) {
@@ -396,14 +409,21 @@ void ThumbnailView::loadVisibleThumbnails() {
             visibleItems = scene.items(visRect, Qt::IntersectsItemBoundingRect, Qt::DescendingOrder);
         visibleItems.append(scene.items(offRectBack, Qt::IntersectsItemBoundingRect, Qt::DescendingOrder));
         visibleItems.append(scene.items(offRectFront, Qt::IntersectsItemBoundingRect, Qt::AscendingOrder));
-        // select
+        // The same widget can come back from more than one of the three queries
+        // above where the rects meet, so track what has been seen. This used to
+        // be a linear scan of thumbnails for the index and a second one of
+        // loadList for the duplicate check, on every scroll event.
+        QSet<QGraphicsItem *> visibleSet;
+        visibleSet.reserve(visibleItems.count());
         QList<int> loadList;
         for(int i = 0; i < visibleItems.count(); i++) {
             ThumbnailWidget *widget = qgraphicsitem_cast<ThumbnailWidget *>(visibleItems.at(i));
-            if(widget && !widget->isLoaded) {
-                int idx = thumbnails.indexOf(widget);
-                if(!loadList.contains(idx))
-                    loadList.append(idx);
+            if(!widget)
+                continue;
+            if(!visibleSet.contains(widget)) {
+                visibleSet.insert(widget);
+                if(!widget->isLoaded)
+                    loadList.append(widget->index);
             }
         }
         // load
@@ -413,7 +433,7 @@ void ThumbnailView::loadVisibleThumbnails() {
         // unload offscreen
         if(settings->unloadThumbs()) {
             for(int i = 0; i < thumbnails.count(); i++)
-                if(!visibleItems.contains(thumbnails.at(i)))
+                if(!visibleSet.contains(thumbnails.at(i)))
                     thumbnails.at(i)->unsetThumbnail();
         }
     }
@@ -555,12 +575,12 @@ void ThumbnailView::scrollByItem(int delta) {
         ThumbnailWidget *widget = qgraphicsitem_cast<ThumbnailWidget *>(visibleItems.first());
         if(!widget)
             return;
-        target = thumbnails.indexOf(widget) - 1;
+        target = widget->index - 1;
     } else { // down / right
         ThumbnailWidget *widget = qgraphicsitem_cast<ThumbnailWidget *>(visibleItems.last());
         if(!widget)
             return;
-        target = thumbnails.indexOf(widget) + 1;
+        target = widget->index + 1;
     }
     scrollToItem(target);
 }
@@ -650,7 +670,7 @@ void ThumbnailView::mousePressEvent(QMouseEvent *event) {
     dragStartPos = QPoint(0, 0);
     ThumbnailWidget *item = dynamic_cast<ThumbnailWidget *>(itemAt(event->pos()));
     if(item) {
-        int index = thumbnails.indexOf(item);
+        int index = item->index;
         if(event->button() == Qt::LeftButton) {
             if(event->modifiers() & Qt::ControlModifier) {
                 if(!selection().contains(index))
@@ -684,7 +704,7 @@ void ThumbnailView::mouseMoveEvent(QMouseEvent *event) {
         return;
     if(QLineF(dragStartPos, event->pos()).length() >= 40) {
         auto *item = dynamic_cast<ThumbnailWidget *>(itemAt(dragStartPos));
-        if(item && selection().contains(thumbnails.indexOf(item)))
+        if(item && selection().contains(item->index))
             emit draggedOut();
     }
 }
@@ -694,8 +714,7 @@ void ThumbnailView::mouseReleaseEvent(QMouseEvent *event) {
     if(mouseReleaseSelect && QLineF(dragStartPos, event->pos()).length() < 40) {
         ThumbnailWidget *item = dynamic_cast<ThumbnailWidget *>(itemAt(event->pos()));
         if(item) {
-            int index = thumbnails.indexOf(item);
-            select(index);
+            select(item->index);
         }
     }
 }
@@ -704,7 +723,7 @@ void ThumbnailView::mouseDoubleClickEvent(QMouseEvent *event) {
     if(event->button() == Qt::LeftButton) {
         ThumbnailWidget *item = dynamic_cast<ThumbnailWidget *>(itemAt(event->pos()));
         if(item) {
-            emit itemActivated(thumbnails.indexOf(item));
+            emit itemActivated(item->index);
             return;
         }
     }
