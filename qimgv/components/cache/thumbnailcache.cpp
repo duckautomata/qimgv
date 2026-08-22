@@ -17,7 +17,14 @@ bool ThumbnailCache::exists(QString id) {
 void ThumbnailCache::saveThumbnail(QImage *image, QString id) {
     if(image) {
         QString filePath = thumbnailPath(id);
-        image->save(filePath, "PNG", 15);
+        // Qt maps PNG "quality" inversely onto zlib compression, so 15 asked
+        // for very nearly maximum effort. Measured on a 200x200 thumbnail,
+        // 1000 saves: quality 15 took 2989 ms for 9149 bytes, quality 50 takes
+        // 1117 ms for 9937 bytes. Two and a half times faster to write, 9%
+        // larger on disk, for a file that is regenerated whenever it is missing.
+        // Above 80 compression effectively switches off and the same thumbnail
+        // becomes 160 KB, so this is not a case of "higher is better".
+        image->save(filePath, "PNG", 50);
     }
 }
 
