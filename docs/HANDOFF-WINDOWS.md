@@ -55,6 +55,7 @@ Qt 6.11.1.
 | Animated AVIF | **verified end to end** on Linux *and* Windows — real ffmpeg/libaom file, `QImageReader` reports 10 frames, `QMovie` decodes all 10, and it animates in the running app |
 | Windows portable package | verified — `package-windows.sh` produces a `build/dist/` that runs with MSYS2 off `PATH`; avif/heic/jxl/webp/tiff all `[x]` |
 | Windows GUI | verified by the maintainer — every keyboard shortcut does its job; rendering, directory scan and title metadata all correct |
+| Directory scan on a slow network share | **verified by the maintainer, A/B against 2.0.0** — 2.0.0 locks the window until the listing finishes, then snaps back. The dev build stays responsive throughout, zoom and pan included. Only next/previous image is inactive, for the few seconds the listing takes, and now says so. |
 | ProRes 4444 alpha *decode* | **verified** — libmpv reports `pixelformat=yuva444p12`, `alpha=straight`, and accepts `background=none` |
 | ProRes 4444 alpha *compositing* | **verified** — transparency is visible and composites against the app background. Two bugs found doing it, both fixed; see "Windows bring-up" below. |
 | macOS build | **NEVER RUN** |
@@ -120,7 +121,8 @@ driven by hand.
 
 A 20,000-file corpus has since been driven through folder open, scrolling,
 thumbnail generation and navigation while the structural problems below were
-worked through. HiDPI has been compared at `QT_SCALE_FACTOR=1.5` by rendering
+worked through, and folder open has been driven by hand against a slow NAS, side
+by side with 2.0.0. HiDPI has been compared at `QT_SCALE_FACTOR=1.5` by rendering
 the folder grid offscreen and diffing it, but not yet used by hand at 125%/150%
 on a real monitor, which is the remaining gap.
 
@@ -210,8 +212,9 @@ fixed on the branch. Listed because most of it is invisible on Linux.
   instantiations anywhere in the tree. It is compiled into the binary. It was
   kept and fixed (its `enterEvent` had the wrong Qt6 signature) only because it
   was the sole thing the pre-existing test covered. Delete it, or wire it up.
-- **Version is 1.1.0.** The fork's first release. Upstream was at an unreleased
-  1.0.3 and the number had drifted across three files.
+- **Version is 2.0.0.** The fork's first release. The major version separates it
+  from upstream, which stopped at an unreleased 1.0.3, rather than implying a
+  continuation of it; the number had drifted across three files.
 - **APNG does not animate** and this is not a bug in qimgv. No maintained Qt 6
   APNG plugin is packaged by mainstream distros. `detectAPNG()` is correct and
   the gate on a present `apng` reader is deliberate — qimgv shows frame 1
@@ -242,6 +245,12 @@ measured on a generated 20,000-file corpus, not estimated.
    thread on purpose: `QCollator` is not thread-safe, and re-sorting 20k names
    is 45 ms against ~1.8 s to enumerate them. `setDirectoryRecursive()` is
    still blocking — `--gen-thumbs` reads the list on the next line.
+   Since confirmed against the slow NAS this was written for, side by side with
+   2.0.0: that release freezes the window until the listing lands, the dev build
+   stays responsive throughout. This was the hang. The synchronous decode in
+   `Core::loadPath()` is still there and is *not* what the maintainer was hitting
+   — worth revisiting only if an uncached file over a slow share turns out to
+   freeze the window on its own, which has not been observed.
 3. **`DirectoryPresenter::onThumbnailReady` was O(n²).** `indexOfFile` and
    `indexOfDir` are now backed by lazily-rebuilt path→index hashes, invalidated
    at the 15 sites that mutate the lists. Sweeping `indexOfFile` across 20k
