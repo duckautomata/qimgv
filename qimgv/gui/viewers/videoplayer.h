@@ -2,6 +2,7 @@
 
 #include <QWidget>
 #include <QColor>
+#include <QPixmap>
 
 class VideoPlayer : public QWidget {
     Q_OBJECT
@@ -26,6 +27,11 @@ public:
     // The colour the player must composite transparent video onto. Not pure:
     // a backend without alpha support can simply ignore it.
     virtual void setBackgroundColor(QColor) {}
+    // The tile to show through transparent video, so that alpha video gets the
+    // same chequerboard the image viewer draws. A null pixmap turns it off.
+    // The tile is passed in rather than named so the plugin does not need a
+    // copy of the application's resources.
+    virtual void setTransparencyGrid(QPixmap const &) {}
 
 signals:
     void durationChanged(int value);

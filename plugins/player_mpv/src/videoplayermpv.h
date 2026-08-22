@@ -19,6 +19,7 @@ public:
     void setVideoUnscaled(bool mode);
     int volume();
     void setBackgroundColor(QColor color) override;
+    void setTransparencyGrid(QPixmap const &tile) override;
 
 public slots:
     void seek(int pos);

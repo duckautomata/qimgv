@@ -134,6 +134,11 @@ void MpvWidget::initializeGL() {
     mpv_render_context_set_update_callback(mpv_gl, MpvWidget::on_update, reinterpret_cast<void *>(this));
 }
 
+void MpvWidget::setTransparencyGrid(QPixmap const &tile) {
+    mTransparencyGrid = tile;
+    update();
+}
+
 void MpvWidget::setBackgroundColor(QColor color) {
     if(mBackgroundColor == color)
         return;
@@ -177,6 +182,13 @@ void MpvWidget::paintGL() {
     // the GL content is not blended against the backing store. It has to be
     // composited here, under what mpv just drew, while we still own the alpha.
     painter.setCompositionMode(QPainter::CompositionMode_DestinationOver);
+    // Each DestinationOver pass goes underneath everything already drawn, so
+    // the grid slides between mpv's output and the background: it appears only
+    // where the video is actually transparent. The letterbox bars mpv fills in
+    // background-color are opaque and keep covering it, which is what the image
+    // viewer does too -- the grid marks the picture, not the padding around it.
+    if(!mTransparencyGrid.isNull())
+        painter.drawTiledPixmap(rect(), mTransparencyGrid);
     painter.fillRect(rect(), mBackgroundColor);
 }
 

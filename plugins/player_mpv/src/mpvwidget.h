@@ -12,6 +12,7 @@
 #include <QDebug>
 #include <QColor>
 #include <QPainter>
+#include <QPixmap>
 #include <ctime>
 #include <QSurfaceFormat>
 #include <QTimer>
@@ -35,6 +36,7 @@ public:
     void setRepeat(bool mode);
     // Colour transparent video is composited onto. See paintGL().
     void setBackgroundColor(QColor color);
+    void setTransparencyGrid(QPixmap const &tile);
 
     // Returns the QSurfaceFormat qimgv must install before the first
     // QOpenGLWidget is created, so that video with an alpha channel
@@ -58,6 +60,7 @@ protected:
 private:
     void renderMpv();
     QColor mBackgroundColor = Qt::black;
+    QPixmap mTransparencyGrid;
 
 private slots:
     void on_mpv_events();

@@ -42,6 +42,9 @@ ViewerWidget::ViewerWidget(QWidget *parent)
     zoomIndicator = new ZoomIndicatorOverlayProxy(this);
     clickZoneOverlay = new ClickZoneOverlay(this);
 
+    connect(this, &ViewerWidget::toggleTransparencyGrid, videoPlayer.get(),
+            &VideoPlayerInitProxy::toggleTransparencyGrid);
+
     connect(videoPlayer.get(), &VideoPlayer::playbackFinished, this, &ViewerWidget::onVideoPlaybackFinished);
 
     connect(videoControls, &VideoControlsProxyWrapper::seekBackward, this, &ViewerWidget::seekBackward);

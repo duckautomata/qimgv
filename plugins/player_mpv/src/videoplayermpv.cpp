@@ -31,6 +31,10 @@ void VideoPlayerMpv::setBackgroundColor(QColor color) {
     m_mpv->setBackgroundColor(color);
 }
 
+void VideoPlayerMpv::setTransparencyGrid(QPixmap const &tile) {
+    m_mpv->setTransparencyGrid(tile);
+}
+
 bool VideoPlayerMpv::showVideo(QString file) {
     if(file.isEmpty())
         return false;

@@ -13,6 +13,9 @@ VideoPlayerInitProxy::VideoPlayerInitProxy(QWidget *parent) : VideoPlayer(parent
     setLayout(&layout);
     connect(settings, &Settings::settingsChanged, this, &VideoPlayerInitProxy::onSettingsChanged);
     updateBackgroundColor();
+    // initPlayer() reads this when the plugin is eventually loaded, which is
+    // long before the first settingsChanged.
+    mTransparencyGrid = settings->transparencyGrid();
 
 #ifdef USE_MPV
     // Adding the first QOpenGLWidget to a window that is already on screen makes
@@ -40,6 +43,8 @@ VideoPlayerInitProxy::~VideoPlayerInitProxy() {}
 void VideoPlayerInitProxy::onSettingsChanged() {
     // Background first: it must track the theme even before a video is loaded.
     updateBackgroundColor();
+    mTransparencyGrid = settings->transparencyGrid();
+    updateTransparencyGrid();
     if(!player)
         return;
     player->setMuted(!settings->playVideoSounds());
@@ -65,6 +70,21 @@ void VideoPlayerInitProxy::updateBackgroundColor() {
     if(player)
         player->setBackgroundColor(bgColor);
     update();
+}
+
+// Mirrors ImageViewerV2::toggleTransparencyGrid(): a temporary override that is
+// deliberately not written back to settings.
+void VideoPlayerInitProxy::toggleTransparencyGrid() {
+    mTransparencyGrid = !mTransparencyGrid;
+    updateTransparencyGrid();
+}
+
+void VideoPlayerInitProxy::updateTransparencyGrid() {
+    if(!player)
+        return;
+    if(mTransparencyGrid && checkboard.isNull())
+        checkboard.load(QStringLiteral(":res/icons/common/other/checkerboard.png"));
+    player->setTransparencyGrid(mTransparencyGrid ? checkboard : QPixmap());
 }
 
 std::shared_ptr<VideoPlayer> VideoPlayerInitProxy::getPlayer() {
@@ -111,6 +131,7 @@ inline bool VideoPlayerInitProxy::initPlayer() {
     player->setVideoUnscaled(!settings->expandImage());
     player->setVolume(settings->volume());
     player->setBackgroundColor(bgColor);
+    updateTransparencyGrid();
 
     player->setParent(this);
     layout.addWidget(player.get());

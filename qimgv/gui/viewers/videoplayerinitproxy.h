@@ -41,6 +41,8 @@ public:
 
     // Called by ViewerWidget so the video background matches the image one.
     void onFullscreenModeChanged(bool mode);
+    // The same temporary, unsaved override the image viewer applies.
+    void toggleTransparencyGrid();
 
 public slots:
     void show();
@@ -63,6 +65,10 @@ private:
     void updateBackgroundColor();
     QColor bgColor;
     bool mIsFullscreen = false;
+
+    void updateTransparencyGrid();
+    QPixmap checkboard;
+    bool mTransparencyGrid = false;
 
     // See the constructor: keeps the window's backing store texture-composited
     // from startup so loading the player later does not recreate the window.
