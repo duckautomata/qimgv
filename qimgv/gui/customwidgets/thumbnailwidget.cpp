@@ -1,13 +1,27 @@
 #include "thumbnailwidget.h"
 
+// DeviceCoordinateCache renders an item into a pixmap measured in whole device
+// pixels and then blits it, so at a fractional scale factor the copy lands on a
+// slightly different grid than a direct paint would: outlines and glyphs get
+// resampled. Rendering a folder grid at QT_SCALE_FACTOR=1.5 both ways, 13.5% of
+// the pixels differ, by up to 231 of 255 -- every tile border and every label
+// shifted. Still true on Qt 6.11, so the 2021 workaround stays.
+//
+// It has to be re-evaluated rather than only ever switched on: the constructor
+// can only ask the primary screen, and a window dragged onto a 150%-scaled
+// second monitor repaints there. Turning the cache on and never off left those
+// widgets caching at exactly the scale factor it is wrong for.
+static QGraphicsItem::CacheMode cacheModeForDpr(qreal dpr) {
+    return trunc(dpr) == dpr ? QGraphicsItem::DeviceCoordinateCache : QGraphicsItem::NoCache;
+}
+
 ThumbnailWidget::ThumbnailWidget(QGraphicsItem *parent)
     : QGraphicsWidget(parent), isLoaded(false), index(-1), thumbnail(nullptr), highlighted(false), hovered(false),
       dropHovered(false), mThumbnailSize(100), padding(5), marginX(2), marginY(2), labelSpacing(9), textHeight(5),
       thumbStyle(THUMB_SIMPLE) {
     setAttribute(Qt::WA_OpaquePaintEvent, true);
     dpr = qApp->devicePixelRatio();
-    if(trunc(dpr) == dpr) // don't enable for fractional scaling
-        setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+    setCacheMode(cacheModeForDpr(dpr));
     setAcceptHoverEvents(true);
     font.setBold(false);
     QFontMetrics fm(font);
@@ -17,8 +31,7 @@ ThumbnailWidget::ThumbnailWidget(QGraphicsItem *parent)
 void ThumbnailWidget::updateDpr(qreal newDpr) {
     if(dpr != newDpr) {
         dpr = newDpr;
-        if(trunc(dpr) == dpr) // don't enable for fractional scaling
-            setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+        setCacheMode(cacheModeForDpr(dpr));
         updateThumbnailDrawPosition();
         updateBackgroundRect();
     }
