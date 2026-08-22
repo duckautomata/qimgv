@@ -198,6 +198,10 @@ bool DirectoryModel::loaderBusy() const {
     return loader.isBusy();
 }
 
+bool DirectoryModel::isScanning() const {
+    return dirManager.isScanning();
+}
+
 void DirectoryModel::onImageReady(std::shared_ptr<Image> img, const QString &path) {
     if(!img) {
         emit loadFailed(path);

@@ -880,6 +880,10 @@ void MW::showMessageDirectory(QString dirName) {
     floatingMessage->showMessage(dirName, FloatingMessageIcon::ICON_DIRECTORY, 1700);
 }
 
+void MW::showMessageLoadingFolder() {
+    floatingMessage->showMessage(tr("Loading folder..."), FloatingMessageIcon::ICON_DIRECTORY, 1500);
+}
+
 void MW::showMessageDirectoryEnd() {
     // TODO replace with something nicer (integrate with click overlay?)
     // floatingMessage->showMessage("", FloatingWidgetPosition::RIGHT, FloatingMessageIcon::ICON_RIGHT_EDGE, 400);

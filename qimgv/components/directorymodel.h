@@ -43,6 +43,7 @@ public:
     void unload(int index);
 
     bool loaderBusy() const;
+    bool isScanning() const;
 
     std::shared_ptr<Image> getImageAt(int index);
     std::shared_ptr<Image> getImage(QString filePath);

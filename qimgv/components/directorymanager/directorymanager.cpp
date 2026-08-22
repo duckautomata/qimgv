@@ -353,6 +353,13 @@ bool DirectoryManager::setDirectoryBlocking(QString dirPath) {
     return true;
 }
 
+// True between handing a listing to the worker and the result landing. The
+// lists are empty for that whole window, which callers cannot otherwise tell
+// apart from a genuinely empty directory.
+bool DirectoryManager::isScanning() const {
+    return scanPending;
+}
+
 void DirectoryManager::startScan(QString const &directoryPath, bool recursive) {
     // Empty the lists now rather than when the result lands, so the views do
     // not go on showing the previous directory while this one is read.
@@ -366,6 +373,7 @@ void DirectoryManager::startScan(QString const &directoryPath, bool recursive) {
     auto *runnable =
         new DirectoryScannerRunnable(directoryPath, recursive, settings->showHiddenFiles(), regex, ++scanGeneration);
     runnable->setAutoDelete(true);
+    scanPending = true;
     connect(runnable, &DirectoryScannerRunnable::finished, this, &DirectoryManager::onScanFinished,
             Qt::QueuedConnection);
     scanPool.start(runnable);
@@ -373,7 +381,9 @@ void DirectoryManager::startScan(QString const &directoryPath, bool recursive) {
 
 void DirectoryManager::onScanFinished(std::shared_ptr<DirectoryScanResult> result) {
     if(!result || result->generation != scanGeneration)
-        return; // a directory the user has already navigated away from
+        return; // a directory the user has already navigated away from; the scan
+                // that superseded it is still pending, so leave the flag alone
+    scanPending = false;
 
     fileEntryVec = std::move(result->files);
     dirEntryVec = std::move(result->dirs);

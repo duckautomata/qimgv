@@ -33,6 +33,7 @@ private slots:
     void blockingLoadIsImmediate();
     void asyncScanLeavesListEmptyOnReturn();
     void recursiveLoadIsImmediate();
+    void scanningFlagTracksTheListing();
 
 private:
     QTemporaryDir dir;
@@ -242,6 +243,43 @@ void Test_DirectoryManager::recursiveLoadIsImmediate() {
     // The regression was exactly this: zero, on a directory full of images.
     QVERIFY2(dm.fileCount() > 0, "setDirectoryRecursive returned before the listing was ready");
     verifyMappingIsConsistent(dm);
+}
+
+// Core::nextImage() uses this to tell "the folder is still being read" apart
+// from "the folder is empty" -- without it the keypress is silently dropped,
+// and worse, the FOLDER_END_GOTO_ADJACENT branch treats the empty list as the
+// end of the directory and synchronously lists the parent.
+void Test_DirectoryManager::scanningFlagTracksTheListing() {
+    DirectoryManager dm;
+    QVERIFY(!dm.isScanning());
+
+    QSignalSpy spy(&dm, &DirectoryManager::loaded);
+    QVERIFY(dm.setDirectory(dir.path()));
+    QVERIFY2(dm.isScanning(), "flag must be set while the worker is listing");
+    QVERIFY(spy.wait(10000));
+    QVERIFY2(!dm.isScanning(), "flag must clear once the result lands");
+
+    // A superseded scan must not clear it: the one that replaced it is still
+    // running, and reporting "not scanning" there is what would let the
+    // keypress through to the blocking parent listing.
+    QTemporaryDir other;
+    QVERIFY(other.isValid());
+    QImage img(8, 8, QImage::Format_RGB32);
+    img.fill(Qt::green);
+    QVERIFY(img.save(other.filePath(QStringLiteral("only.png")), "png"));
+
+    QVERIFY(dm.setDirectory(dir.path()));
+    QVERIFY(dm.setDirectory(other.path()));
+    QVERIFY(dm.isScanning());
+    QTRY_VERIFY_WITH_TIMEOUT(!dm.isScanning(), 10000);
+    QCOMPARE(dm.directoryPath(), other.path());
+
+    // The synchronous entry points never leave it set.
+    DirectoryManager blocking;
+    QVERIFY(blocking.setDirectoryBlocking(dir.path()));
+    QVERIFY(!blocking.isScanning());
+    QVERIFY(blocking.setDirectoryRecursive(dir.path()));
+    QVERIFY(!blocking.isScanning());
 }
 
 QTEST_MAIN(Test_DirectoryManager)

@@ -1409,7 +1409,18 @@ void Core::prevDirectory() {
 }
 
 void Core::nextImage() {
-    if(mw->currentViewMode() == MODE_FOLDERVIEW || (model->isEmpty() && folderEndAction != FOLDER_END_GOTO_ADJACENT))
+    if(mw->currentViewMode() == MODE_FOLDERVIEW)
+        return;
+    // The listing runs on a worker, so a folder can be legitimately empty for
+    // several seconds on a slow share. Say why the keypress did nothing rather
+    // than ignoring it -- and, more importantly, do not fall through to the
+    // FOLDER_END_GOTO_ADJACENT branch below, which lists the parent directory
+    // synchronously and would freeze the window the worker exists to keep free.
+    if(model->isScanning()) {
+        mw->showMessageLoadingFolder();
+        return;
+    }
+    if(model->isEmpty() && folderEndAction != FOLDER_END_GOTO_ADJACENT)
         return;
     stopSlideshow();
     if(shuffle) {
@@ -1433,7 +1444,18 @@ void Core::nextImage() {
 }
 
 void Core::prevImage() {
-    if(mw->currentViewMode() == MODE_FOLDERVIEW || (model->isEmpty() && folderEndAction != FOLDER_END_GOTO_ADJACENT))
+    if(mw->currentViewMode() == MODE_FOLDERVIEW)
+        return;
+    // The listing runs on a worker, so a folder can be legitimately empty for
+    // several seconds on a slow share. Say why the keypress did nothing rather
+    // than ignoring it -- and, more importantly, do not fall through to the
+    // FOLDER_END_GOTO_ADJACENT branch below, which lists the parent directory
+    // synchronously and would freeze the window the worker exists to keep free.
+    if(model->isScanning()) {
+        mw->showMessageLoadingFolder();
+        return;
+    }
+    if(model->isEmpty() && folderEndAction != FOLDER_END_GOTO_ADJACENT)
         return;
     stopSlideshow();
     if(shuffle) {

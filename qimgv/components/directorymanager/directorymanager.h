@@ -64,6 +64,7 @@ public:
     unsigned long dirCount() const;
     inline bool isSupportedFile(QString filePath) const;
     bool isEmpty() const;
+    bool isScanning() const;
     bool containsFile(QString filePath) const;
     QString fileNameAt(int index) const;
     QString prevOfFile(QString filePath) const;
@@ -149,6 +150,7 @@ private:
     // and is dropped. Without this, switching folders while a slow share is
     // being listed installs the wrong listing.
     quint64 scanGeneration = 0;
+    bool scanPending = false;
     // One thread: scans are I/O bound, and running two at once would only make
     // both slower while adding an ordering problem to reason about.
     QThreadPool scanPool;

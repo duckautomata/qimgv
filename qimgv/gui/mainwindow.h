@@ -205,6 +205,7 @@ public slots:
     void showSettings();
     void triggerFullScreen();
     void showMessageDirectory(QString dirName);
+    void showMessageLoadingFolder();
     void showMessageDirectoryEnd();
     void showMessageDirectoryStart();
     void showMessageFitWindow();
