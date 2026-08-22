@@ -15,7 +15,7 @@
 class ScriptManager : public QObject {
     Q_OBJECT
 public:
-    static ScriptManager* getInstance();
+    static ScriptManager *getInstance();
     ~ScriptManager();
     void runScript(const QString &scriptName, std::shared_ptr<Image> img);
     static QString runCommand(QString cmd);
@@ -37,7 +37,6 @@ private:
     explicit ScriptManager(QObject *parent = nullptr);
     QMap<QString, Script> scripts; // <name, script>
     void processArguments(QStringList &cmd, std::shared_ptr<Image> img);
-
 };
 
 extern ScriptManager *scriptManager;

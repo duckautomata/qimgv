@@ -2,10 +2,9 @@
 
 #include <QObject>
 
-class LinuxFsEvent : public QObject
-{
+class LinuxFsEvent : public QObject {
 public:
-    LinuxFsEvent(char* data, uint dataSize);
+    LinuxFsEvent(char *data, uint dataSize);
     ~LinuxFsEvent();
 
     uint dataSize() const;
@@ -15,7 +14,6 @@ public:
     void setData(char *data);
 
 private:
-    char* mData;
+    char *mData;
     uint mDataSize;
-
 };

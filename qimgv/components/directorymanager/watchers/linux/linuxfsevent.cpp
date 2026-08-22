@@ -2,11 +2,7 @@
 
 #include "linuxfsevent.h"
 
-LinuxFsEvent::LinuxFsEvent(char *data, uint dataSize) :
-    mData(data),
-    mDataSize(dataSize)
-{
-}
+LinuxFsEvent::LinuxFsEvent(char *data, uint dataSize) : mData(data), mDataSize(dataSize) {}
 
 LinuxFsEvent::~LinuxFsEvent() {
     delete[] mData;

@@ -3,7 +3,7 @@
 ;
 ;  Build it from an already-packaged tree:
 ;      ./scripts/package-windows.sh
-;      ISCC /DAppVersion=2.0.0 scripts/qimgv.iss
+;      ISCC /DAppVersion=2.0.1 scripts/qimgv.iss
 ;
 ;  Output: build/qimgv-<version>-win64-setup.exe
 ;

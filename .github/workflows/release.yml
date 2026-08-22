@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to build (e.g. v1.1.0). Publishes as a prerelease.'
+        description: 'Tag to build (e.g. v2.0.1). Publishes as a prerelease.'
         required: true
 
 # Least privilege by default; the publish job opts up to write.
@@ -116,8 +116,8 @@ jobs:
 
       # --- minimal build: no video, no exiv2, no OpenCV --------------------
       # Roughly half the size of the full package. Zip only: the installer is
-      # the "just give me the app" path and shipping two of them would double
-      # the winget manifests and the testing for very little.
+      # the "just give me the app" path, and a second one to test and keep in
+      # step would buy little for people who are already happy to unzip.
       - name: Build (minimal)
         run: |
           cmake --preset minimal

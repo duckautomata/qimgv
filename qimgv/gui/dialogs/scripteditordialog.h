@@ -12,8 +12,7 @@ namespace Ui {
 class ScriptEditorDialog;
 }
 
-class ScriptEditorDialog : public QDialog
-{
+class ScriptEditorDialog : public QDialog {
     Q_OBJECT
 
 public:
@@ -27,6 +26,7 @@ private slots:
     void onNameChanged(QString name);
 
     void selectScriptPath();
+
 private:
     Ui::ScriptEditorDialog *ui;
     bool editMode;

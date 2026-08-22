@@ -26,7 +26,7 @@ public slots:
     bool save(QString destPath);
 
 signals:
-    void frameChanged(QPixmap*);
+    void frameChanged(QPixmap *);
 
 private:
     void load();

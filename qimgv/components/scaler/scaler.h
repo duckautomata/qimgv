@@ -14,7 +14,7 @@ public:
     explicit Scaler(Cache *_cache, QObject *parent = nullptr);
 
 signals:
-    void scalingFinished(QPixmap* result, ScalerRequest request);
+    void scalingFinished(QPixmap *result, ScalerRequest request);
     void acceptScalingResult(QImage *image, ScalerRequest req);
     void startBufferedRequest();
 
@@ -23,7 +23,7 @@ public slots:
 
 private slots:
     void onTaskStart(ScalerRequest req);
-    void onTaskFinish(QImage* scaled, ScalerRequest req);
+    void onTaskFinish(QImage *scaled, ScalerRequest req);
     void slotStartBufferedRequest();
     void slotForwardScaledResult(QImage *image, ScalerRequest req);
 

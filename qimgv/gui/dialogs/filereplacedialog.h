@@ -10,20 +10,11 @@ struct DialogResult {
     DIALOG_NO,
     DIALOG_NOTOALL,
     DIALOG_CANCEL*/
-    bool operator==(bool const &cmp) const {
-        return yes == cmp;
-    }
-    operator bool() {
-        return yes;
-    }
+    bool operator==(bool const &cmp) const { return yes == cmp; }
+    operator bool() { return yes; }
 };
 
-enum FileReplaceMode {
-    FILE_TO_FILE,
-    DIR_TO_DIR,
-    FILE_TO_DIR,
-    DIR_TO_FILE
-};
+enum FileReplaceMode { FILE_TO_FILE, DIR_TO_DIR, FILE_TO_DIR, DIR_TO_FILE };
 
 namespace Ui {
 class FileReplaceDialog;

@@ -12,33 +12,31 @@
 #include <QDebug>
 #include <QColor>
 #include <QPainter>
+#include <QPixmap>
 #include <ctime>
 #include <QSurfaceFormat>
 #include <QTimer>
 
-class MpvWidget Q_DECL_FINAL: public QOpenGLWidget {
+class MpvWidget Q_DECL_FINAL : public QOpenGLWidget {
     Q_OBJECT
 public:
     MpvWidget(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::Widget);
     ~MpvWidget() override;
 
-    void command(const QVariant& params);
+    void command(const QVariant &params);
     void setOption(const QString &name, const QVariant &value);
-    void setProperty(const QString& name, const QVariant& value);
-    QVariant getProperty(const QString& name) const;
+    void setProperty(const QString &name, const QVariant &value);
+    QVariant getProperty(const QString &name) const;
     // Related to this:
     // https://github.com/gnome-mpv/gnome-mpv/issues/245
     // Let's hope this wont break more than it fixes
-    int width() const {
-        return static_cast<int>(QOpenGLWidget::width() * this->devicePixelRatioF());
-    }
-    int height() const {
-        return static_cast<int>(QOpenGLWidget::height() * this->devicePixelRatioF());
-    }
+    int width() const { return static_cast<int>(QOpenGLWidget::width() * this->devicePixelRatioF()); }
+    int height() const { return static_cast<int>(QOpenGLWidget::height() * this->devicePixelRatioF()); }
     void setMuted(bool mode);
     void setRepeat(bool mode);
     // Colour transparent video is composited onto. See paintGL().
     void setBackgroundColor(QColor color);
+    void setTransparencyGrid(QPixmap const &tile);
 
     // Returns the QSurfaceFormat qimgv must install before the first
     // QOpenGLWidget is created, so that video with an alpha channel
@@ -62,6 +60,7 @@ protected:
 private:
     void renderMpv();
     QColor mBackgroundColor = Qt::black;
+    QPixmap mTransparencyGrid;
 
 private slots:
     void on_mpv_events();

@@ -15,8 +15,8 @@ public:
     void unlock();
 
     int lockStatus();
+
 private:
     std::shared_ptr<Image> contents;
     QSemaphore *sem;
 };
-

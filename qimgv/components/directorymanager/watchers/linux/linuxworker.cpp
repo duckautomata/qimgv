@@ -7,13 +7,10 @@
 
 #include "linuxworker.h"
 
-#define TAG         "[LinuxWatcherWorker]"
-#define TIMEOUT     300 // ms
+#define TAG "[LinuxWatcherWorker]"
+#define TIMEOUT 300 // ms
 
-LinuxWorker::LinuxWorker() :
-    fd(-1)
-{
-}
+LinuxWorker::LinuxWorker() : fd(-1) {}
 
 void LinuxWorker::setDescriptor(int desc) {
     fd = desc;
@@ -23,18 +20,18 @@ void LinuxWorker::run() {
     emit started();
     isRunning.storeRelaxed(true);
 
-    if (fd == -1) {
+    if(fd == -1) {
         qDebug() << TAG << "File descriptor isn't set! Stopping";
         emit finished();
         return;
     }
 
-    while (isRunning) {
+    while(isRunning) {
         int errorCode = 0;
         uint bytesAvailable = 0;
 
         // File descriptor event struct for polling service
-        pollfd pollDescriptor = { fd, POLLIN, 0 };
+        pollfd pollDescriptor = {fd, POLLIN, 0};
 
         // Freeze thread till next event
         errorCode = poll(&pollDescriptor, 1, TIMEOUT);
@@ -44,11 +41,11 @@ void LinuxWorker::run() {
         errorCode = ioctl(fd, FIONREAD, &bytesAvailable);
         handleErrorCode(errorCode);
 
-        if (bytesAvailable == 0) {
+        if(bytesAvailable == 0) {
             continue;
         }
 
-        char* eventData = new char[bytesAvailable];
+        char *eventData = new char[bytesAvailable];
         errorCode = read(fd, eventData, bytesAvailable);
         handleErrorCode(errorCode);
 
@@ -59,7 +56,7 @@ void LinuxWorker::run() {
 }
 
 void LinuxWorker::handleErrorCode(int code) {
-    if (code == -1) {
+    if(code == -1) {
         qDebug() << TAG << strerror(errno);
         emit error(strerror(errno));
     }

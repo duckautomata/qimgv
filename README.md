@@ -182,6 +182,10 @@ Values below `1.0` are not supported. qimgv otherwise follows the desktop's glob
 See [CONTRIBUTING.md](CONTRIBUTING.md). Bug reports and pull requests are welcome at
 [github.com/duckautomata/qimgv/issues](https://github.com/duckautomata/qimgv/issues).
 
+[docs/WINDOWS-NOTES.md](docs/WINDOWS-NOTES.md) covers the Windows-specific
+workarounds, the performance measurements behind the current design, and what
+has been verified by hand rather than by CI.
+
 ## License
 
 [GPL-3.0-or-later](LICENSE). Originally written by [easymodo](https://github.com/easymodo);

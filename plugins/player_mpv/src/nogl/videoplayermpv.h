@@ -4,9 +4,9 @@
 #include <QKeyEvent>
 
 #if defined QIMGV_PLAYER_MPV_LIBRARY
- #define TEST_COMMON_DLLSPEC Q_DECL_EXPORT
+#define TEST_COMMON_DLLSPEC Q_DECL_EXPORT
 #else
- #define TEST_COMMON_DLLSPEC Q_DECL_IMPORT
+#define TEST_COMMON_DLLSPEC Q_DECL_IMPORT
 #endif
 
 class MpvWidget;
@@ -51,7 +51,6 @@ private slots:
 
 private:
     MpvWidget *m_mpv;
-
 };
 
 extern "C" TEST_COMMON_DLLSPEC VideoPlayer *CreatePlayerWidget();

@@ -10,22 +10,11 @@
 #include <QPropertyAnimation>
 #include <QDebug>
 
-enum FloatingWidgetPosition {
-    LEFT,
-    RIGHT,
-    BOTTOM,
-    TOP,
-    TOPLEFT,
-    TOPRIGHT,
-    BOTTOMLEFT,
-    BOTTOMRIGHT,
-    CENTER
-};
+enum FloatingWidgetPosition { LEFT, RIGHT, BOTTOM, TOP, TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTOMRIGHT, CENTER };
 
-class OverlayWidget : public FloatingWidget
-{
+class OverlayWidget : public FloatingWidget {
     Q_OBJECT
-    Q_PROPERTY (qreal opacity READ opacity WRITE setOpacity)
+    Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity)
 public:
     OverlayWidget(FloatingWidgetContainer *parent);
     ~OverlayWidget();

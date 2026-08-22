@@ -3,24 +3,19 @@
 
 // TODO: this class is kinda useless now. redesign?
 
-ImageAnimated::ImageAnimated(QString _path)
-    : Image(_path)
-{
+ImageAnimated::ImageAnimated(QString _path) : Image(_path) {
     mSize.setWidth(0);
     mSize.setHeight(0);
     load();
 }
 
-ImageAnimated::ImageAnimated(std::unique_ptr<DocumentInfo> _info)
-    : Image(std::move(_info))
-{
+ImageAnimated::ImageAnimated(std::unique_ptr<DocumentInfo> _info) : Image(std::move(_info)) {
     mSize.setWidth(0);
     mSize.setHeight(0);
     load();
 }
 
-ImageAnimated::~ImageAnimated() {
-}
+ImageAnimated::~ImageAnimated() {}
 
 void ImageAnimated::load() {
     if(isLoaded())
@@ -63,7 +58,7 @@ bool ImageAnimated::save(QString destPath) {
 }
 
 bool ImageAnimated::save() {
-    //TODO
+    // TODO
     return false;
 }
 

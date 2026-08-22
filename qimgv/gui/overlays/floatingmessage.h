@@ -20,7 +20,7 @@ enum FloatingMessageIcon {
 };
 
 class FloatingMessage : public OverlayWidget {
-    Q_OBJECT 
+    Q_OBJECT
 public:
     FloatingMessage(FloatingWidgetContainer *parent);
     ~FloatingMessage();

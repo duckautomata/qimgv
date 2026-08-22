@@ -29,14 +29,12 @@ void FloatingWidget::paintEvent(QPaintEvent *event) {
 
 bool FloatingWidget::acceptKeyboardFocus() const {
     return mAcceptKeyboardFocus;
-
 }
 void FloatingWidget::setAcceptKeyboardFocus(bool mode) {
     mAcceptKeyboardFocus = mode;
 }
 
-void FloatingWidget::recalculateGeometry() {
-}
+void FloatingWidget::recalculateGeometry() {}
 
 void FloatingWidget::mousePressEvent(QMouseEvent *event) {
     event->accept();

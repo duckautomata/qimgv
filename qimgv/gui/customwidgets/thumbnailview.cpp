@@ -1,5 +1,7 @@
 #include "thumbnailview.h"
 
+#include <QSet>
+
 ThumbnailView::ThumbnailView(Qt::Orientation _orientation, QWidget *parent)
     : QGraphicsView(parent), blockThumbnailLoading(false), mDrawScrollbarIndicator(true), lastScrollFrameTime(0),
       mCropThumbnails(false), mouseReleaseSelect(false), selectMode(ACTIVATE_BY_PRESS), scrollTimeLine(nullptr),
@@ -33,14 +35,10 @@ ThumbnailView::ThumbnailView(Qt::Orientation _orientation, QWidget *parent)
 
     horizontalScrollBar()->setContextMenuPolicy(Qt::NoContextMenu);
     horizontalScrollBar()->installEventFilter(this);
-    connect(horizontalScrollBar(), &QScrollBar::valueChanged, [this]() {
-        loadVisibleThumbnails();
-    });
+    connect(horizontalScrollBar(), &QScrollBar::valueChanged, [this]() { loadVisibleThumbnails(); });
     verticalScrollBar()->setContextMenuPolicy(Qt::NoContextMenu);
     verticalScrollBar()->installEventFilter(this);
-    connect(verticalScrollBar(), &QScrollBar::valueChanged, [this]() {
-        loadVisibleThumbnails();
-    });
+    connect(verticalScrollBar(), &QScrollBar::valueChanged, [this]() { loadVisibleThumbnails(); });
     if(qApp->platformName() == "wayland")
         wayland = true;
 }
@@ -55,16 +53,12 @@ void ThumbnailView::setOrientation(Qt::Orientation _orientation) {
         this->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         scrollBar = this->horizontalScrollBar();
-        centerOn = [this](int value) {
-            QGraphicsView::centerOn(value + 1, viewportCenter.y());
-        };
+        centerOn = [this](int value) { QGraphicsView::centerOn(value + 1, viewportCenter.y()); };
     } else {
         this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         this->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         scrollBar = this->verticalScrollBar();
-        centerOn = [this](int value) {
-            QGraphicsView::centerOn(viewportCenter.x(), value + 1);
-        };
+        centerOn = [this](int value) { QGraphicsView::centerOn(viewportCenter.x(), value + 1); };
     }
     // todo: layout
 }
@@ -104,9 +98,9 @@ void ThumbnailView::createScrollTimeLine() {
 }
 
 bool ThumbnailView::eventFilter(QObject *o, QEvent *ev) {
-    if (o == horizontalScrollBar() || o == verticalScrollBar()) {
+    if(o == horizontalScrollBar() || o == verticalScrollBar()) {
         if(ev->type() == QEvent::Wheel) {
-            this->wheelEvent(dynamic_cast<QWheelEvent*>(ev));
+            this->wheelEvent(dynamic_cast<QWheelEvent *>(ev));
             return true;
         } else if(ev->type() == QEvent::Paint && mDrawScrollbarIndicator) {
             QPainter p(scrollBar);
@@ -115,7 +109,6 @@ bool ThumbnailView::eventFilter(QObject *o, QEvent *ev) {
             p.setOpacity(1.0f);
             return false;
         }
-
     }
     return QObject::eventFilter(o, ev);
 }
@@ -150,7 +143,7 @@ void ThumbnailView::select(int index) {
 
 void ThumbnailView::deselect(int index) {
     if(!checkRange(index))
-            return;
+        return;
     if(mSelection.count() > 1) {
         mSelection.removeAll(index);
         thumbnails.at(index)->setHighlighted(false);
@@ -207,14 +200,33 @@ void ThumbnailView::show() {
 void ThumbnailView::showEvent(QShowEvent *event) {
     QGraphicsView::showEvent(event);
     // ensure we are properly resized
-    qApp->processEvents();
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
     updateScrollbarIndicator();
     loadVisibleThumbnails();
 }
 
+// Rebuilds the item list for a directory of newCount files.
+//
+// This drains the event queue twice, to let queued layout work settle before it
+// deletes items and again before it repaints. Draining means anything queued can
+// run here, including another populate() -- and removeAll() is scene.clear(),
+// which deletes every widget the outer call is working with. Re-entering was
+// easiest to hit exactly where it hurt most: a slow directory, a user who keeps
+// clicking because it is slow, and a rebuild in progress.
+//
+// Two things stop that. Only non-user events are drained, so a click or a
+// keypress can no longer start a second rebuild from inside this one. And if a
+// re-entrant call arrives anyway -- a queued signal, a file watcher event -- it
+// is recorded rather than run, and applied once the outer call has unwound.
 void ThumbnailView::populate(int newCount) {
+    if(populating) {
+        pendingPopulateCount = newCount;
+        return;
+    }
+    populating = true;
+
     // wait for possible queued layout events before removing items
-    qApp->processEvents();
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 
     clearSelection();
     // reset
@@ -254,8 +266,8 @@ void ThumbnailView::populate(int newCount) {
         */
 
         if(newCount == thumbnails.count()) {
-            QList<ThumbnailWidget*>::iterator i;
-            for (i = thumbnails.begin(); i != thumbnails.end(); ++i) {
+            QList<ThumbnailWidget *>::iterator i;
+            for(i = thumbnails.begin(); i != thumbnails.end(); ++i) {
                 (*i)->reset();
             }
         } else {
@@ -263,6 +275,7 @@ void ThumbnailView::populate(int newCount) {
             for(int i = 0; i < newCount; i++) {
                 ThumbnailWidget *widget = createThumbnailWidget();
                 widget->setThumbnailSize(mThumbnailSize);
+                widget->index = i;
                 thumbnails.append(widget);
                 addItemToLayout(widget, i);
             }
@@ -271,11 +284,18 @@ void ThumbnailView::populate(int newCount) {
     updateLayout();
     fitSceneToContents();
     resetViewport();
-    //qDebug() << "_______POPULATE" << this << t.elapsed();
-    // wait for layout before updating
-    qApp->processEvents();
+    // qDebug() << "_______POPULATE" << this << t.elapsed();
+    //  wait for layout before updating
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
     this->setUpdatesEnabled(true);
     loadVisibleThumbnails();
+
+    populating = false;
+    if(pendingPopulateCount >= 0) {
+        int const pending = pendingPopulateCount;
+        pendingPopulateCount = -1;
+        populate(pending);
+    }
 }
 
 void ThumbnailView::addItem() {
@@ -286,12 +306,13 @@ void ThumbnailView::addItem() {
 void ThumbnailView::insertItem(int index) {
     ThumbnailWidget *widget = createThumbnailWidget();
     thumbnails.insert(index, widget);
+    reindexFrom(index);
     addItemToLayout(widget, index);
     updateLayout();
     fitSceneToContents();
 
     auto newSelection = mSelection;
-    for(int i=0; i < newSelection.count(); i++) {
+    for(int i = 0; i < newSelection.count(); i++) {
         if(index <= newSelection[i])
             newSelection[i]++;
     }
@@ -301,15 +322,24 @@ void ThumbnailView::insertItem(int index) {
     loadVisibleThumbnails();
 }
 
+// Rewrites ThumbnailWidget::index for everything from start onwards, after an
+// insertion or removal has shifted the list. Linear, but so is the QList shift
+// that made it necessary.
+void ThumbnailView::reindexFrom(int start) {
+    for(int i = qMax(start, 0); i < thumbnails.count(); i++)
+        thumbnails.at(i)->index = i;
+}
+
 void ThumbnailView::removeItem(int index) {
     if(checkRange(index)) {
         auto newSelection = mSelection;
         clearSelection();
         removeItemFromLayout(index);
         delete thumbnails.takeAt(index);
+        reindexFrom(index);
         fitSceneToContents();
         newSelection.removeAll(index);
-        for(int i=0; i < newSelection.count(); i++) {
+        for(int i = 0; i < newSelection.count(); i++) {
             if(newSelection[i] >= index)
                 newSelection[i]--;
         }
@@ -327,7 +357,8 @@ void ThumbnailView::reloadItem(int index) {
     auto thumb = thumbnails.at(index);
     if(thumb->isLoaded)
         thumb->unsetThumbnail();
-    emit thumbnailsRequested(QList<int>() << index, static_cast<int>(qApp->devicePixelRatio() * mThumbnailSize), mCropThumbnails, true);
+    emit thumbnailsRequested(QList<int>() << index, static_cast<int>(qApp->devicePixelRatio() * mThumbnailSize),
+                             mCropThumbnails, true);
 }
 
 void ThumbnailView::setDragHover(int /*index*/) {}
@@ -363,40 +394,46 @@ void ThumbnailView::loadVisibleThumbnails() {
         QRectF offRectBack;
         QRectF offRectFront;
         if(mOrientation == Qt::Horizontal) {
-            offRectBack  = QRectF(visRect.left() - offscreenPreloadArea, visRect.top(),
-                                  offscreenPreloadArea, visRect.height());
-            offRectFront = QRectF(visRect.right(), visRect.top(),
-                                  offscreenPreloadArea, visRect.height());
+            offRectBack =
+                QRectF(visRect.left() - offscreenPreloadArea, visRect.top(), offscreenPreloadArea, visRect.height());
+            offRectFront = QRectF(visRect.right(), visRect.top(), offscreenPreloadArea, visRect.height());
         } else {
-            offRectBack  = QRectF(visRect.left(), visRect.top() - offscreenPreloadArea,
-                                  visRect.width(), offscreenPreloadArea);
-            offRectFront = QRectF(visRect.left(), visRect.bottom(),
-                                  visRect.width(), offscreenPreloadArea);
+            offRectBack =
+                QRectF(visRect.left(), visRect.top() - offscreenPreloadArea, visRect.width(), offscreenPreloadArea);
+            offRectFront = QRectF(visRect.left(), visRect.bottom(), visRect.width(), offscreenPreloadArea);
         }
-        QList<QGraphicsItem *>visibleItems;
+        QList<QGraphicsItem *> visibleItems;
         if(lastScrollDirection == SCROLL_FORWARDS)
             visibleItems = scene.items(visRect, Qt::IntersectsItemBoundingRect, Qt::AscendingOrder);
         else
             visibleItems = scene.items(visRect, Qt::IntersectsItemBoundingRect, Qt::DescendingOrder);
-        visibleItems.append(scene.items(offRectBack,  Qt::IntersectsItemBoundingRect, Qt::DescendingOrder));
+        visibleItems.append(scene.items(offRectBack, Qt::IntersectsItemBoundingRect, Qt::DescendingOrder));
         visibleItems.append(scene.items(offRectFront, Qt::IntersectsItemBoundingRect, Qt::AscendingOrder));
-        // select
+        // The same widget can come back from more than one of the three queries
+        // above where the rects meet, so track what has been seen. This used to
+        // be a linear scan of thumbnails for the index and a second one of
+        // loadList for the duplicate check, on every scroll event.
+        QSet<QGraphicsItem *> visibleSet;
+        visibleSet.reserve(visibleItems.count());
         QList<int> loadList;
         for(int i = 0; i < visibleItems.count(); i++) {
-            ThumbnailWidget* widget = qgraphicsitem_cast<ThumbnailWidget*>(visibleItems.at(i));
-            if(widget && !widget->isLoaded) {
-                int idx = thumbnails.indexOf(widget);
-                if(!loadList.contains(idx))
-                    loadList.append(idx);
+            ThumbnailWidget *widget = qgraphicsitem_cast<ThumbnailWidget *>(visibleItems.at(i));
+            if(!widget)
+                continue;
+            if(!visibleSet.contains(widget)) {
+                visibleSet.insert(widget);
+                if(!widget->isLoaded)
+                    loadList.append(widget->index);
             }
         }
         // load
         if(loadList.count())
-            emit thumbnailsRequested(loadList, static_cast<int>(qApp->devicePixelRatio() * mThumbnailSize), mCropThumbnails, false);
+            emit thumbnailsRequested(loadList, static_cast<int>(qApp->devicePixelRatio() * mThumbnailSize),
+                                     mCropThumbnails, false);
         // unload offscreen
         if(settings->unloadThumbs()) {
             for(int i = 0; i < thumbnails.count(); i++)
-                if(!visibleItems.contains(thumbnails.at(i)))
+                if(!visibleSet.contains(thumbnails.at(i)))
                     thumbnails.at(i)->unsetThumbnail();
         }
     }
@@ -443,27 +480,25 @@ bool ThumbnailView::checkRange(int pos) {
     return pos >= 0 && pos < thumbnails.count();
 }
 
-void ThumbnailView::updateLayout() {
-
-}
+void ThumbnailView::updateLayout() {}
 
 // fit scene to it's contents size
 void ThumbnailView::fitSceneToContents() {
     QPointF center;
     if(this->mOrientation == Qt::Vertical) {
         int height = qMax((int)scene.itemsBoundingRect().height(), this->height());
-        scene.setSceneRect(QRectF(0,0, this->width(), height));
+        scene.setSceneRect(QRectF(0, 0, this->width(), height));
         center = mapToScene(viewport()->rect().center());
         QGraphicsView::centerOn(0, center.y() + 1);
     } else {
         int width = qMax((int)scene.itemsBoundingRect().width(), this->width());
-        scene.setSceneRect(QRectF(0,0, width, this->height()));
+        scene.setSceneRect(QRectF(0, 0, width, this->height()));
         center = mapToScene(viewport()->rect().center());
         QGraphicsView::centerOn(center.x() + 1, 0);
     }
 }
 
-//################### scrolling ######################
+// ################### scrolling ######################
 void ThumbnailView::wheelEvent(QWheelEvent *event) {
     event->accept();
 
@@ -474,9 +509,11 @@ void ThumbnailView::wheelEvent(QWheelEvent *event) {
         if(wayland) // we should have scroll phase support
             isWheel = (event->phase() == Qt::NoScrollPhase);
         else // fallback to guesswork
-            isWheel = angleDelta && (abs(angleDelta)>=120 && !(angleDelta % 60)) && lastTouchpadScroll.elapsed() > 250;
+            isWheel =
+                angleDelta && (abs(angleDelta) >= 120 && !(angleDelta % 60)) && lastTouchpadScroll.elapsed() > 250;
     }
-    //qDebug() << "isWheel:" << isWheel << " angle / pixel delta:" << angleDelta << pixelDelta << lastTouchpadScroll.elapsed() << event->phase() << " wayland:" << wayland;
+    // qDebug() << "isWheel:" << isWheel << " angle / pixel delta:" << angleDelta << pixelDelta <<
+    // lastTouchpadScroll.elapsed() << event->phase() << " wayland:" << wayland;
 
     if(isWheel) {
         angleDelta *= settings->mouseScrollingSpeed();
@@ -511,7 +548,7 @@ void ThumbnailView::scrollPrecise(int delta) {
         blockThumbnailLoading = false;
     }
     // ignore if we reached boundaries
-    if( (delta > 0 && atSceneStart()) || (delta < 0 && atSceneEnd()) )
+    if((delta > 0 && atSceneStart()) || (delta < 0 && atSceneEnd()))
         return;
     // pixel scrolling (precise)
     if(mOrientation == Qt::Horizontal)
@@ -526,7 +563,8 @@ void ThumbnailView::scrollByItem(int delta) {
     // do not scroll less than a certain value in px, to avoid feeling unresponsive
     int minScroll = qMin(thumbnailSize() / 2, 100);
     // grab fully visible thumbs
-    QRectF visRect = mapToScene(viewport()->geometry()).boundingRect().adjusted(-minScroll,-minScroll,minScroll,minScroll);
+    QRectF visRect =
+        mapToScene(viewport()->geometry()).boundingRect().adjusted(-minScroll, -minScroll, minScroll, minScroll);
     QList<QGraphicsItem *> visibleItems;
     visibleItems = scene.items(visRect, Qt::ContainsItemBoundingRect, Qt::AscendingOrder);
     if(thumbnails.isEmpty() || visibleItems.isEmpty())
@@ -534,15 +572,15 @@ void ThumbnailView::scrollByItem(int delta) {
     int target = 0;
     // select scroll target
     if(delta > 0) { // up / left
-        ThumbnailWidget* widget = qgraphicsitem_cast<ThumbnailWidget*>(visibleItems.first());
+        ThumbnailWidget *widget = qgraphicsitem_cast<ThumbnailWidget *>(visibleItems.first());
         if(!widget)
             return;
-        target = thumbnails.indexOf(widget) - 1;
+        target = widget->index - 1;
     } else { // down / right
-        ThumbnailWidget* widget = qgraphicsitem_cast<ThumbnailWidget*>(visibleItems.last());
+        ThumbnailWidget *widget = qgraphicsitem_cast<ThumbnailWidget *>(visibleItems.last());
         if(!widget)
             return;
-        target = thumbnails.indexOf(widget) + 1;
+        target = widget->index + 1;
     }
     scrollToItem(target);
 }
@@ -581,7 +619,7 @@ void ThumbnailView::scrollSmooth(int delta, qreal multiplier, qreal acceleration
         lastScrollDirection = SCROLL_BACKWARDS;
     viewportCenter = mapToScene(viewport()->rect().center());
     // ignore if we reached boundaries
-    if( (delta > 0 && atSceneStart()) || (delta < 0 && atSceneEnd()) ) {
+    if((delta > 0 && atSceneStart()) || (delta < 0 && atSceneEnd())) {
         return;
     }
     int center;
@@ -591,12 +629,11 @@ void ThumbnailView::scrollSmooth(int delta, qreal multiplier, qreal acceleration
         center = static_cast<int>(viewportCenter.y());
     bool redirect = false, accelerate = false;
     int newEndFrame = center - static_cast<int>(delta * multiplier);
-    if( (newEndFrame < center && center < scrollTimeLine->endFrame()) ||
-        (newEndFrame > center && center > scrollTimeLine->endFrame()) )
-    {
+    if((newEndFrame < center && center < scrollTimeLine->endFrame()) ||
+       (newEndFrame > center && center > scrollTimeLine->endFrame())) {
         redirect = true;
     }
-    if(scrollTimeLine->state() == QTimeLine::Running || scrollTimeLine->state() == QTimeLine::Paused) {      
+    if(scrollTimeLine->state() == QTimeLine::Running || scrollTimeLine->state() == QTimeLine::Paused) {
         int oldEndFrame = scrollTimeLine->endFrame();
         if(scrollTimeLine->currentTime() < SCROLL_ACCELERATION_THRESHOLD)
             accelerate = true;
@@ -630,10 +667,10 @@ void ThumbnailView::scrollSmooth(int angleDelta) {
 
 void ThumbnailView::mousePressEvent(QMouseEvent *event) {
     mouseReleaseSelect = false;
-    dragStartPos = QPoint(0,0);
-    ThumbnailWidget *item = dynamic_cast<ThumbnailWidget*>(itemAt(event->pos()));
+    dragStartPos = QPoint(0, 0);
+    ThumbnailWidget *item = dynamic_cast<ThumbnailWidget *>(itemAt(event->pos()));
     if(item) {
-        int index = thumbnails.indexOf(item);
+        int index = item->index;
         if(event->button() == Qt::LeftButton) {
             if(event->modifiers() & Qt::ControlModifier) {
                 if(!selection().contains(index))
@@ -642,7 +679,7 @@ void ThumbnailView::mousePressEvent(QMouseEvent *event) {
                     deselect(index);
             } else if(event->modifiers() & Qt::ShiftModifier) {
                 addSelectionRange(index);
-            } else if (selection().count() <= 1) {
+            } else if(selection().count() <= 1) {
                 if(selectMode == ACTIVATE_BY_PRESS) {
                     emit itemActivated(index);
                     return;
@@ -666,8 +703,8 @@ void ThumbnailView::mouseMoveEvent(QMouseEvent *event) {
     if(event->buttons() != Qt::LeftButton || !selection().count())
         return;
     if(QLineF(dragStartPos, event->pos()).length() >= 40) {
-        auto *item = dynamic_cast<ThumbnailWidget*>(itemAt(dragStartPos));
-        if(item && selection().contains(thumbnails.indexOf(item)))
+        auto *item = dynamic_cast<ThumbnailWidget *>(itemAt(dragStartPos));
+        if(item && selection().contains(item->index))
             emit draggedOut();
     }
 }
@@ -675,19 +712,18 @@ void ThumbnailView::mouseMoveEvent(QMouseEvent *event) {
 void ThumbnailView::mouseReleaseEvent(QMouseEvent *event) {
     QGraphicsView::mouseReleaseEvent(event);
     if(mouseReleaseSelect && QLineF(dragStartPos, event->pos()).length() < 40) {
-        ThumbnailWidget *item = dynamic_cast<ThumbnailWidget*>(itemAt(event->pos()));
+        ThumbnailWidget *item = dynamic_cast<ThumbnailWidget *>(itemAt(event->pos()));
         if(item) {
-            int index = thumbnails.indexOf(item);
-            select(index);
+            select(item->index);
         }
     }
 }
 
 void ThumbnailView::mouseDoubleClickEvent(QMouseEvent *event) {
     if(event->button() == Qt::LeftButton) {
-        ThumbnailWidget *item = dynamic_cast<ThumbnailWidget*>(itemAt(event->pos()));
+        ThumbnailWidget *item = dynamic_cast<ThumbnailWidget *>(itemAt(event->pos()));
         if(item) {
-            emit itemActivated(thumbnails.indexOf(item));
+            emit itemActivated(item->index);
             return;
         }
     }

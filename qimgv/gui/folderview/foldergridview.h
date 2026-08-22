@@ -14,7 +14,7 @@ public:
     explicit FolderGridView(QWidget *parent = nullptr);
 
     const int THUMBNAIL_SIZE_MIN = 80;  // px
-    const int THUMBNAIL_SIZE_MAX = 400;  // these should be divisible by ZOOM_STEP
+    const int THUMBNAIL_SIZE_MAX = 400; // these should be divisible by ZOOM_STEP
     const int ZOOM_STEP = 20;
     void selectAll();
 
@@ -61,7 +61,7 @@ protected:
     virtual void fitSceneToContents() override;
 
     void keyPressEvent(QKeyEvent *event) override;
-    void wheelEvent(QWheelEvent *event) override;    
+    void wheelEvent(QWheelEvent *event) override;
     void dropEvent(QDropEvent *event) override;
 
     void dragEnterEvent(QDragEnterEvent *event) override;

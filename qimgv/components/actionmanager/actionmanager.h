@@ -12,18 +12,14 @@
 #include "components/scriptmanager/scriptmanager.h"
 #include "settings.h"
 
-enum ActionType {
-    ACTION_INVALID,
-    ACTION_NORMAL,
-    ACTION_SCRIPT
-};
+enum ActionType { ACTION_INVALID, ACTION_NORMAL, ACTION_SCRIPT };
 
 class ActionManager : public QObject {
     Q_OBJECT
 public:
-    static ActionManager* getInstance();
+    static ActionManager *getInstance();
     ~ActionManager();
-    bool processEvent(QInputEvent*);
+    bool processEvent(QInputEvent *);
     void addShortcut(const QString &keys, const QString &action);
     void resetDefaults();
     void resetDefaults(QString action);
@@ -31,7 +27,7 @@ public:
     const QString shortcutForAction(QString action);
     const QList<QString> shortcutsForAction(QString action);
     QStringList actionList();
-    const QMap<QString,QString>& allShortcuts();
+    const QMap<QString, QString> &allShortcuts();
     void removeShortcut(const QString &keys);
     void removeAllShortcuts();
     void removeAllShortcuts(QString actionName);
@@ -40,6 +36,7 @@ public:
     void saveShortcuts();
 public slots:
     bool invokeAction(const QString &actionName);
+
 private:
     explicit ActionManager(QObject *parent = nullptr);
     QMap<QString, QString> defaults, shortcuts; // <shortcut, action>
@@ -90,7 +87,7 @@ signals:
     void jumpToLast();
     void folderView();
     void documentView();
-    void runScript(const QString&);
+    void runScript(const QString &);
     void pauseVideo();
     void seekVideoForward();
     void seekVideoBackward();

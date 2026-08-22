@@ -2,10 +2,7 @@
 
 ScriptManager *scriptManager = nullptr;
 
-ScriptManager::ScriptManager(QObject *parent)
-    : QObject(parent)
-{
-}
+ScriptManager::ScriptManager(QObject *parent) : QObject(parent) {}
 
 ScriptManager::~ScriptManager() {
     scriptManager->saveScripts();
@@ -42,7 +39,7 @@ void ScriptManager::runScript(const QString &scriptName, std::shared_ptr<Image> 
                 QFileInfo fi(program);
                 QString errorString;
                 if(fi.isFile() && !fi.isExecutable())
-                     errorString = "Error:  " + program + "  is not an executable.";
+                    errorString = "Error:  " + program + "  is not an executable.";
                 else
                     errorString = "Error: unable run application/script. See README for working examples.";
                 emit error(errorString);
@@ -69,7 +66,7 @@ void ScriptManager::runCommandDetached(QString cmd) {
 
 // TODO: what if filename contains one of the tags?
 void ScriptManager::processArguments(QStringList &cmd, std::shared_ptr<Image> img) {
-    for (auto& i : cmd) {
+    for(auto &i : cmd) {
         if(i.contains("%file%"))
             i.replace("%file%", img.get()->filePath());
 #ifdef __WIN32
@@ -86,16 +83,16 @@ QStringList ScriptManager::splitCommandLine(const QString &cmdLine) {
     QString arg;
     bool escape = false;
     enum { Idle, Arg, QuotedArg } state = Idle;
-    foreach (QChar const c, cmdLine) {
-        //if(!escape && c == '\\') {
-        //    escape = true;
-        //    continue;
-        //}
-        switch (state) {
+    foreach(QChar const c, cmdLine) {
+        // if(!escape && c == '\\') {
+        //     escape = true;
+        //     continue;
+        // }
+        switch(state) {
         case Idle:
             if(!escape && c == '"')
                 state = QuotedArg;
-            else if (escape || !c.isSpace()) {
+            else if(escape || !c.isSpace()) {
                 arg += c;
                 state = Arg;
             }
@@ -124,7 +121,6 @@ QStringList ScriptManager::splitCommandLine(const QString &cmdLine) {
         list << arg;
     return list;
 }
-
 
 bool ScriptManager::scriptExists(QString scriptName) {
     return scripts.contains(scriptName);

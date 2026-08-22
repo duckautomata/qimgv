@@ -12,7 +12,7 @@ VideoPlayerMpv::VideoPlayerMpv(QWidget *parent) : VideoPlayer(parent) {
 
     m_mpv = new MpvWidget(this);
     QVBoxLayout *vl = new QVBoxLayout();
-    vl->setContentsMargins(0,0,0,0);
+    vl->setContentsMargins(0, 0, 0, 0);
     vl->addWidget(m_mpv);
     setLayout(vl);
 
@@ -20,7 +20,7 @@ VideoPlayerMpv::VideoPlayerMpv(QWidget *parent) : VideoPlayer(parent) {
     m_mpv->setFocusPolicy(Qt::NoFocus);
 
     readSettings();
-    //connect(settings, SIGNAL(settingsChanged()), this, SLOT(readSettings()));
+    // connect(settings, SIGNAL(settingsChanged()), this, SLOT(readSettings()));
     connect(m_mpv, SIGNAL(durationChanged(int)), this, SIGNAL(durationChanged(int)));
     connect(m_mpv, SIGNAL(positionChanged(int)), this, SIGNAL(positionChanged(int)));
     connect(m_mpv, SIGNAL(videoPaused(bool)), this, SIGNAL(videoPaused(bool)));
@@ -29,6 +29,10 @@ VideoPlayerMpv::VideoPlayerMpv(QWidget *parent) : VideoPlayer(parent) {
 
 void VideoPlayerMpv::setBackgroundColor(QColor color) {
     m_mpv->setBackgroundColor(color);
+}
+
+void VideoPlayerMpv::setTransparencyGrid(QPixmap const &tile) {
+    m_mpv->setTransparencyGrid(tile);
 }
 
 bool VideoPlayerMpv::showVideo(QString file) {
@@ -41,12 +45,12 @@ bool VideoPlayerMpv::showVideo(QString file) {
 
 void VideoPlayerMpv::seek(int pos) {
     m_mpv->command(QVariantList() << "seek" << pos << "absolute");
-    //qDebug() << "seek(): " << pos << " sec";
+    // qDebug() << "seek(): " << pos << " sec";
 }
 
 void VideoPlayerMpv::seekRelative(int pos) {
     m_mpv->command(QVariantList() << "seek" << pos << "relative");
-    //qDebug() << "seekRelative(): " << pos << " sec";
+    // qDebug() << "seekRelative(): " << pos << " sec";
 }
 
 void VideoPlayerMpv::pauseResume() {
@@ -106,8 +110,8 @@ void VideoPlayerMpv::paintEvent(QPaintEvent *event) {
 }
 
 void VideoPlayerMpv::readSettings() {
-    //setMuted(!settings->playVideoSounds());
-    //setVideoUnscaled(!settings->expandImage());
+    // setMuted(!settings->playVideoSounds());
+    // setVideoUnscaled(!settings->expandImage());
 }
 
 void VideoPlayerMpv::mousePressEvent(QMouseEvent *event) {

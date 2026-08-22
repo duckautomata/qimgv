@@ -33,7 +33,7 @@ body:
     attributes:
       label: qimgv version
       description: Output of `qimgv --version`
-      placeholder: qimgv 1.1.0
+      placeholder: qimgv 2.0.1
     validations:
       required: true
 

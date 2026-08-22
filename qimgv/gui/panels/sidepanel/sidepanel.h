@@ -11,8 +11,7 @@ namespace Ui {
 class SidePanel;
 }
 
-class SidePanel : public QWidget
-{
+class SidePanel : public QWidget {
     Q_OBJECT
 
 public:
@@ -20,7 +19,7 @@ public:
     ~SidePanel();
 
     void setWidget(SidePanelWidget *w);
-    SidePanelWidget* widget();
+    SidePanelWidget *widget();
 
 public slots:
     void show();
@@ -28,6 +27,7 @@ public slots:
 
 protected:
     void paintEvent(QPaintEvent *);
+
 private:
     Ui::SidePanel *ui;
     SidePanelWidget *mWidget;

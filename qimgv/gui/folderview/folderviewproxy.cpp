@@ -1,15 +1,14 @@
 #include "folderviewproxy.h"
 
-FolderViewProxy::FolderViewProxy(QWidget *parent)
-    : QWidget(parent),
-      folderView(nullptr)
-{
+FolderViewProxy::FolderViewProxy(QWidget *parent) : QWidget(parent), folderView(nullptr) {
     stateBuf.sortingMode = settings->sortingMode();
-    layout.setContentsMargins(0,0,0,0);
+    layout.setContentsMargins(0, 0, 0, 0);
 }
 
 void FolderViewProxy::init() {
-    qApp->processEvents(); // chew through events in case we have something that alters stateBuf in queue
+    // Non-user events only: this runs before the lock below, so letting a click
+    // or a keypress through here could start a second init of the same widget.
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents); // drain anything queued that alters stateBuf
     QMutexLocker ml(&m);
     if(folderView)
         return;
@@ -41,7 +40,7 @@ void FolderViewProxy::init() {
     folderView->select(stateBuf.selection);
     // wait till layout stuff happens
     // before calling focusOn()
-    qApp->processEvents();
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
     folderView->focusOnSelection();
     folderView->onSortingChanged(stateBuf.sortingMode);
 }
@@ -122,7 +121,7 @@ void FolderViewProxy::removeItem(int index) {
     } else {
         stateBuf.itemCount--;
         stateBuf.selection.removeAll(index);
-        for(int i=0; i < stateBuf.selection.count(); i++) {
+        for(int i = 0; i < stateBuf.selection.count(); i++) {
             if(stateBuf.selection[i] > index)
                 stateBuf.selection[i]--;
         }

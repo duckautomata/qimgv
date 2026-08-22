@@ -64,8 +64,7 @@ struct GridInfo {
     qreal height;
 };
 
-class FlowLayout : public QGraphicsLayout
-{
+class FlowLayout : public QGraphicsLayout {
 public:
     FlowLayout();
     void insertItem(int index, QGraphicsLayoutItem *item);
@@ -98,7 +97,7 @@ private:
     QSizeF prefSize() const;
     QSizeF maxSize() const;
 
-    QList<QGraphicsLayoutItem*> m_items;
+    QList<QGraphicsLayoutItem *> m_items;
     qreal m_spacing[2];
     int m_rows, m_columns;
 };

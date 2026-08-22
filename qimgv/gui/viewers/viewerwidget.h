@@ -9,14 +9,9 @@
 #include "gui/overlays/clickzoneoverlay.h"
 #include "gui/contextmenu.h"
 
-enum CurrentWidget {
-    IMAGEVIEWER,
-    VIDEOPLAYER,
-    UNSET
-};
+enum CurrentWidget { IMAGEVIEWER, VIDEOPLAYER, UNSET };
 
-class ViewerWidget : public FloatingWidgetContainer
-{
+class ViewerWidget : public FloatingWidgetContainer {
     Q_OBJECT
 public:
     explicit ViewerWidget(QWidget *parent = nullptr);

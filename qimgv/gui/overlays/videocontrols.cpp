@@ -1,10 +1,7 @@
 #include "videocontrols.h"
 #include "ui_videocontrols.h"
 
-VideoControls::VideoControls(FloatingWidgetContainer *parent) :
-    OverlayWidget(parent),
-    ui(new Ui::VideoControls)
-{
+VideoControls::VideoControls(FloatingWidgetContainer *parent) : OverlayWidget(parent), ui(new Ui::VideoControls) {
     ui->setupUi(this);
     this->setAttribute(Qt::WA_NoMousePropagation, true);
     hide();
@@ -41,7 +38,7 @@ VideoControls::~VideoControls() {
 
 void VideoControls::setMode(PlaybackMode _mode) {
     mode = _mode;
-    ui->muteButton->setVisible( (mode == PLAYBACK_VIDEO) );
+    ui->muteButton->setVisible((mode == PLAYBACK_VIDEO));
 }
 
 void VideoControls::setPlaybackDuration(int duration) {
@@ -52,8 +49,8 @@ void VideoControls::setPlaybackDuration(int duration) {
         _time -= hours * 3600;
         int minutes = _time / 60;
         int seconds = _time - minutes * 60;
-        durationStr = QString("%1").arg(minutes, 2, 10, QChar('0')) + ":" +
-                      QString("%1").arg(seconds, 2, 10, QChar('0'));
+        durationStr =
+            QString("%1").arg(minutes, 2, 10, QChar('0')) + ":" + QString("%1").arg(seconds, 2, 10, QChar('0'));
         if(hours)
             durationStr.prepend(QString("%1").arg(hours, 2, 10, QChar('0')) + ":");
     } else {
@@ -76,8 +73,8 @@ void VideoControls::setPlaybackPosition(int position) {
         _time -= hours * 3600;
         int minutes = _time / 60;
         int seconds = _time - minutes * 60;
-        positionStr = QString("%1").arg(minutes, 2, 10, QChar('0')) + ":" +
-                      QString("%1").arg(seconds, 2, 10, QChar('0'));
+        positionStr =
+            QString("%1").arg(minutes, 2, 10, QChar('0')) + ":" + QString("%1").arg(seconds, 2, 10, QChar('0'));
         if(hours)
             positionStr.prepend(QString("%1").arg(hours, 2, 10, QChar('0')) + ":");
     } else {

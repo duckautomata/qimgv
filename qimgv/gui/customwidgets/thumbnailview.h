@@ -22,15 +22,9 @@
 #include "gui/idirectoryview.h"
 #include "shortcutbuilder.h"
 
-enum ThumbnailSelectMode {
-    ACTIVATE_BY_PRESS,
-    ACTIVATE_BY_DOUBLECLICK
-};
+enum ThumbnailSelectMode { ACTIVATE_BY_PRESS, ACTIVATE_BY_DOUBLECLICK };
 
-enum ScrollDirection {
-    SCROLL_FORWARDS,
-    SCROLL_BACKWARDS
-};
+enum ScrollDirection { SCROLL_FORWARDS, SCROLL_BACKWARDS };
 
 class ThumbnailView : public QGraphicsView, public IDirectoryView {
     Q_OBJECT
@@ -72,11 +66,16 @@ signals:
     void draggedOut() override;
     void draggedToBookmarks(QList<int>) override;
     void draggedOver(int) override;
-    void droppedInto(const QMimeData*, QObject*, int) override;
+    void droppedInto(const QMimeData *, QObject *, int) override;
 
 private:
     QTimer loadTimer;
     bool blockThumbnailLoading;
+
+    // populate() drains the event queue while it rebuilds, so it can be
+    // re-entered. See the comment on its definition.
+    bool populating = false;
+    int pendingPopulateCount = -1;
 
     int mDrawScrollbarIndicator, lastScrollFrameTime;
     QList<int> mSelection;
@@ -84,7 +83,7 @@ private:
     bool mCropThumbnails, mouseReleaseSelect;
     ThumbnailSelectMode selectMode;
     QPoint dragStartPos;
-    ThumbnailWidget* dragTarget;
+    ThumbnailWidget *dragTarget;
 
     void createScrollTimeLine();
     QElapsedTimer scrollFrameTimer;
@@ -94,7 +93,7 @@ private:
 
 protected:
     QGraphicsScene scene;
-    QList<ThumbnailWidget*> thumbnails;
+    QList<ThumbnailWidget *> thumbnails;
     QScrollBar *scrollBar;
     QTimeLine *scrollTimeLine;
     QPointF viewportCenter;
@@ -122,8 +121,9 @@ protected:
 
     bool checkRange(int pos);
 
+    void reindexFrom(int start);
     virtual ThumbnailWidget *createThumbnailWidget() = 0;
-    virtual void addItemToLayout(ThumbnailWidget* widget, int pos) = 0;
+    virtual void addItemToLayout(ThumbnailWidget *widget, int pos) = 0;
     virtual void removeItemFromLayout(int pos) = 0;
     virtual void removeAll() = 0;
     virtual void updateLayout();

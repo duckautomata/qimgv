@@ -7,8 +7,7 @@
 #include "gui/customwidgets/floatingwidget.h"
 #include "gui/customwidgets/actionbutton.h"
 
-class ControlsOverlay : public FloatingWidget
-{
+class ControlsOverlay : public FloatingWidget {
     Q_OBJECT
 public:
     explicit ControlsOverlay(FloatingWidgetContainer *parent);

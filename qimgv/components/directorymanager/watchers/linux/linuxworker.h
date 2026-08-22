@@ -3,8 +3,7 @@
 #include "linuxfsevent.h"
 #include "../watcherworker.h"
 
-class LinuxWorker : public WatcherWorker
-{
+class LinuxWorker : public WatcherWorker {
     Q_OBJECT
 public:
     LinuxWorker();
@@ -15,7 +14,7 @@ public:
     virtual void run() override;
 
 signals:
-    void fileEvent(LinuxFsEvent* event);
+    void fileEvent(LinuxFsEvent *event);
 
 private:
     int fd;

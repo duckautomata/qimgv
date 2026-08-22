@@ -1,10 +1,7 @@
 #include "contextmenu.h"
 #include "ui_contextmenu.h"
 
-ContextMenu::ContextMenu(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::ContextMenu)
-{
+ContextMenu::ContextMenu(QWidget *parent) : QWidget(parent), ui(new Ui::ContextMenu) {
     ui->setupUi(this);
     setWindowFlags(Qt::Popup);
     setAttribute(Qt::WA_TranslucentBackground, true);
@@ -116,10 +113,10 @@ ContextMenu::~ContextMenu() {
 void ContextMenu::fillOpenWithMenu() {
     auto scripts = scriptManager->allScripts();
     QMap<QString, Script>::iterator i;
-    for (i = scripts.begin(); i != scripts.end(); ++i) {
+    for(i = scripts.begin(); i != scripts.end(); ++i) {
         if(!i.value().command.isEmpty()) {
             auto btn = new ContextMenuItem();
-            btn->setAction("s:"+i.key());
+            btn->setAction("s:" + i.key());
             btn->setIconPath(":/res/icons/common/menuitem/open16.png");
             btn->setText(i.key());
             ui->scriptsLayout->addWidget(btn);
@@ -193,7 +190,7 @@ void ContextMenu::keyPressEvent(QKeyEvent *event) {
     if(key == "Down") {}
     if(key == "Esc")
         hide();
-    if(key == "Enter") {}
-    else
+    if(key == "Enter") {
+    } else
         actionManager->processEvent(event);
 }

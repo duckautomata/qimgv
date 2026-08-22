@@ -10,7 +10,7 @@ class WindowsWatcher : public DirectoryWatcher {
 public:
     explicit WindowsWatcher();
     explicit WindowsWatcher(const QString &path);
-    virtual void setWatchPath(const QString& path);
+    virtual void setWatchPath(const QString &path);
 
 private:
     Q_DECLARE_PRIVATE(WindowsWatcher)

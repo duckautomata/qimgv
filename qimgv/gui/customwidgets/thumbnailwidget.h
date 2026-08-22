@@ -13,11 +13,7 @@
 #include "settings.h"
 #include "sharedresources.h"
 
-enum ThumbnailStyle {
-    THUMB_SIMPLE,
-    THUMB_NORMAL,
-    THUMB_NORMAL_CENTERED
-};
+enum ThumbnailStyle { THUMB_SIMPLE, THUMB_NORMAL, THUMB_NORMAL_CENTERED };
 
 class ThumbnailWidget : public QGraphicsWidget {
     Q_OBJECT
@@ -29,6 +25,10 @@ public:
     int type() const override { return Type; }
 
     bool isLoaded;
+    // Position in the owning ThumbnailView's list. The view keeps this in sync
+    // so that a widget can be turned back into an index without searching for
+    // it; see ThumbnailView::reindexFrom().
+    int index;
     void setThumbnail(std::shared_ptr<Thumbnail> _thumbnail);
 
     void setHighlighted(bool mode);
@@ -56,7 +56,7 @@ public:
 
 protected:
     void setupTextLayout();
-    void drawThumbnail(QPainter* painter, const QPixmap *pixmap);
+    void drawThumbnail(QPainter *painter, const QPixmap *pixmap);
     void drawIcon(QPainter *painter, const QPixmap *pixmap);
     void drawHighlight(QPainter *painter);
     void drawHoverBg(QPainter *painter);

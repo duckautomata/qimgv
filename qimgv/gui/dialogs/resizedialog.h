@@ -14,11 +14,10 @@
 #include <QVBoxLayout>
 
 namespace Ui {
-    class ResizeDialog;
+class ResizeDialog;
 }
 
-class ResizeDialog : public QDialog
-{
+class ResizeDialog : public QDialog {
     Q_OBJECT
 public:
     explicit ResizeDialog(QSize initialSize, QWidget *parent = nullptr);

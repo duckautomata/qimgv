@@ -1,24 +1,27 @@
 #include "thumbnailwidget.h"
 
-ThumbnailWidget::ThumbnailWidget(QGraphicsItem *parent) :
-    QGraphicsWidget(parent),
-    isLoaded(false),
-    thumbnail(nullptr),
-    highlighted(false),
-    hovered(false),
-    dropHovered(false),
-    mThumbnailSize(100),
-    padding(5),
-    marginX(2),
-    marginY(2),
-    labelSpacing(9),
-    textHeight(5),
-    thumbStyle(THUMB_SIMPLE)
-{
+// DeviceCoordinateCache renders an item into a pixmap measured in whole device
+// pixels and then blits it, so at a fractional scale factor the copy lands on a
+// slightly different grid than a direct paint would: outlines and glyphs get
+// resampled. Rendering a folder grid at QT_SCALE_FACTOR=1.5 both ways, 13.5% of
+// the pixels differ, by up to 231 of 255 -- every tile border and every label
+// shifted. Still true on Qt 6.11, so the 2021 workaround stays.
+//
+// It has to be re-evaluated rather than only ever switched on: the constructor
+// can only ask the primary screen, and a window dragged onto a 150%-scaled
+// second monitor repaints there. Turning the cache on and never off left those
+// widgets caching at exactly the scale factor it is wrong for.
+static QGraphicsItem::CacheMode cacheModeForDpr(qreal dpr) {
+    return trunc(dpr) == dpr ? QGraphicsItem::DeviceCoordinateCache : QGraphicsItem::NoCache;
+}
+
+ThumbnailWidget::ThumbnailWidget(QGraphicsItem *parent)
+    : QGraphicsWidget(parent), isLoaded(false), index(-1), thumbnail(nullptr), highlighted(false), hovered(false),
+      dropHovered(false), mThumbnailSize(100), padding(5), marginX(2), marginY(2), labelSpacing(9), textHeight(5),
+      thumbStyle(THUMB_SIMPLE) {
     setAttribute(Qt::WA_OpaquePaintEvent, true);
     dpr = qApp->devicePixelRatio();
-    if(trunc(dpr) == dpr) // don't enable for fractional scaling
-        setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+    setCacheMode(cacheModeForDpr(dpr));
     setAcceptHoverEvents(true);
     font.setBold(false);
     QFontMetrics fm(font);
@@ -28,8 +31,7 @@ ThumbnailWidget::ThumbnailWidget(QGraphicsItem *parent) :
 void ThumbnailWidget::updateDpr(qreal newDpr) {
     if(dpr != newDpr) {
         dpr = newDpr;
-        if(trunc(dpr) == dpr) // don't enable for fractional scaling
-            setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+        setCacheMode(cacheModeForDpr(dpr));
         updateThumbnailDrawPosition();
         updateBackgroundRect();
     }
@@ -119,9 +121,8 @@ void ThumbnailWidget::unsetThumbnail() {
 
 void ThumbnailWidget::setupTextLayout() {
     if(thumbStyle != THUMB_SIMPLE) {
-        nameRect = QRect(padding + marginX,
-                          padding + marginY + mThumbnailSize + labelSpacing,
-                          mThumbnailSize, textHeight);
+        nameRect =
+            QRect(padding + marginX, padding + marginY + mThumbnailSize + labelSpacing, mThumbnailSize, textHeight);
         infoRect = nameRect.adjusted(0, textHeight + 2, 0, textHeight + 2);
     }
 }
@@ -168,9 +169,7 @@ QRectF ThumbnailWidget::boundingRect() const {
 }
 
 void ThumbnailWidget::updateBoundingRect() {
-    mBoundingRect = QRectF(0, 0,
-                           mThumbnailSize + (padding + marginX) * 2,
-                           mThumbnailSize + (padding + marginY) * 2);
+    mBoundingRect = QRectF(0, 0, mThumbnailSize + (padding + marginX) * 2, mThumbnailSize + (padding + marginY) * 2);
     if(thumbStyle != THUMB_SIMPLE)
         mBoundingRect.adjust(0, 0, 0, labelSpacing + textHeight * 2);
 }
@@ -235,8 +234,8 @@ void ThumbnailWidget::drawHighlight(QPainter *painter) {
         painter->setOpacity(0.70f * op);
         QPen pen(settings->colorScheme().accent, 2);
         painter->setPen(pen);
-        painter->drawRect(bgRect.adjusted(1,1,-1,-1)); // 2px pen
-        //painter->drawRect(highlightRect.adjusted(0.5,0.5,-0.5,-0.5)); // 1px pen
+        painter->drawRect(bgRect.adjusted(1, 1, -1, -1)); // 2px pen
+        // painter->drawRect(highlightRect.adjusted(0.5,0.5,-0.5,-0.5)); // 1px pen
         painter->setOpacity(op);
         painter->setRenderHints(hints);
     }
@@ -290,7 +289,7 @@ void ThumbnailWidget::drawSingleLineText(QPainter *painter, QRect rect, QString 
         textPainter.setPen(color);
         QRect textRect = QRect(0, 0, rect.width(), rect.height());
         textPainter.drawText(textRect, flags, text);
-        QRectF fadeRect = textRect.adjusted(textRect.width() - 6,0,0,0);
+        QRectF fadeRect = textRect.adjusted(textRect.width() - 6, 0, 0, 0);
         // fade effect
         QLinearGradient gradient(fadeRect.topLeft(), fadeRect.topRight());
         gradient.setColorAt(0, Qt::transparent);
@@ -309,26 +308,26 @@ void ThumbnailWidget::drawDropHover(QPainter *painter) {
     auto op = painter->opacity();
 
     painter->setRenderHint(QPainter::Antialiasing);
-    QColor clr(190,60,25);
+    QColor clr(190, 60, 25);
     painter->setOpacity(0.1f * op);
     painter->fillRect(bgRect, clr);
     painter->setOpacity(op);
     QPen pen(clr, 2);
     painter->setPen(pen);
-    painter->drawRect(bgRect.adjusted(1,1,-1,-1));
+    painter->drawRect(bgRect.adjusted(1, 1, -1, -1));
     painter->setRenderHints(hints);
 }
 
-void ThumbnailWidget::drawThumbnail(QPainter* painter, const QPixmap *pixmap) {
+void ThumbnailWidget::drawThumbnail(QPainter *painter, const QPixmap *pixmap) {
     if(!thumbnail->hasAlphaChannel())
-        painter->fillRect(drawRectCentered.adjusted(3,3,3,3), QColor(0,0,0, 60));
+        painter->fillRect(drawRectCentered.adjusted(3, 3, 3, 3), QColor(0, 0, 0, 60));
     painter->drawPixmap(drawRectCentered, *pixmap);
 }
 
-void ThumbnailWidget::drawIcon(QPainter* painter, const QPixmap *pixmap) {
-    QPointF drawPosCentered(width()  / 2 - pixmap->width()  / (2 * pixmap->devicePixelRatioF()),
+void ThumbnailWidget::drawIcon(QPainter *painter, const QPixmap *pixmap) {
+    QPointF drawPosCentered(width() / 2 - pixmap->width() / (2 * pixmap->devicePixelRatioF()),
                             height() / 2 - pixmap->height() / (2 * pixmap->devicePixelRatioF()));
-    painter->drawPixmap(drawPosCentered, *pixmap, QRectF(QPoint(0,0), pixmap->size()));
+    painter->drawPixmap(drawPosCentered, *pixmap, QRectF(QPoint(0, 0), pixmap->size()));
 }
 
 QSizeF ThumbnailWidget::sizeHint(Qt::SizeHint which, const QSizeF &constraint) const {
@@ -368,7 +367,7 @@ void ThumbnailWidget::updateThumbnailDrawPosition() {
         else
             pixmapSize = thumbnail->pixmap()->size().scaled(mThumbnailSize, mThumbnailSize, Qt::KeepAspectRatio);
         bool verticalFit = (pixmapSize.height() >= pixmapSize.width());
-        topLeft.setX((width()  - pixmapSize.width())  / 2.0);
+        topLeft.setX((width() - pixmapSize.width()) / 2.0);
         if(thumbStyle == THUMB_SIMPLE)
             topLeft.setY((height() - pixmapSize.height()) / 2.0);
         else if(thumbStyle == THUMB_NORMAL_CENTERED && !verticalFit)

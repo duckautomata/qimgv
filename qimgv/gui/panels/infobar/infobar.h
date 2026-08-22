@@ -11,8 +11,7 @@ namespace Ui {
 class InfoBar;
 }
 
-class InfoBar : public QWidget
-{
+class InfoBar : public QWidget {
     Q_OBJECT
 
 public:
@@ -21,9 +20,11 @@ public:
 
 public slots:
     void setInfo(QString position, QString fileName, QString info);
+
 protected:
     void paintEvent(QPaintEvent *event);
     void wheelEvent(QWheelEvent *event);
+
 private:
     Ui::InfoBar *ui;
 };

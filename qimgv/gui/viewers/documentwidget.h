@@ -11,7 +11,8 @@
 
 class DocumentWidget : public FloatingWidgetContainer {
 public:
-    DocumentWidget(std::shared_ptr<ViewerWidget> viewWidget, std::shared_ptr<InfoBarProxy> infoBar, QWidget* parent = nullptr);
+    DocumentWidget(std::shared_ptr<ViewerWidget> viewWidget, std::shared_ptr<InfoBarProxy> infoBar,
+                   QWidget *parent = nullptr);
     std::shared_ptr<ViewerWidget> viewWidget();
     std::shared_ptr<ThumbnailStripProxy> thumbPanel();
     void setFocus();
@@ -41,5 +42,6 @@ private:
     std::shared_ptr<ViewerWidget> mViewWidget;
     std::shared_ptr<InfoBarProxy> mInfoBar;
     std::shared_ptr<MainPanel> mainPanel;
-    bool avoidPanelFlag, mPanelEnabled, mPanelFullscreenOnly, mIsFullscreen, mPanelPinned, mInteractionEnabled, mAllowPanelInit;
+    bool avoidPanelFlag, mPanelEnabled, mPanelFullscreenOnly, mIsFullscreen, mPanelPinned, mInteractionEnabled,
+        mAllowPanelInit;
 };

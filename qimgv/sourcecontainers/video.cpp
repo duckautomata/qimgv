@@ -58,13 +58,13 @@ bool Video::save() {
 
 std::unique_ptr<QPixmap> Video::getPixmap() {
     qDebug() << "[Video] getPixmap() is not implemented.";
-    //TODO: find out some easy way to get frames from video source
+    // TODO: find out some easy way to get frames from video source
     return nullptr;
 }
 
 std::shared_ptr<const QImage> Video::getImage() {
     qDebug() << "[Video] getImage() is not implemented.";
-    //TODO: find out some easy way to get frames from video source
+    // TODO: find out some easy way to get frames from video source
     return nullptr;
 }
 

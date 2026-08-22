@@ -8,8 +8,7 @@
 #include <QDebug>
 #include "utils/stuff.h"
 
-class WallpaperSetter
-{
+class WallpaperSetter {
 public:
     WallpaperSetter();
 

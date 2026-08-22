@@ -2,6 +2,9 @@
 
 #include <QObject>
 #include <QCollator>
+#include <QHash>
+#include <QThreadPool>
+#include <memory>
 #include <QElapsedTimer>
 #include <QString>
 #include <QSize>
@@ -17,6 +20,7 @@
 
 #include "settings.h"
 #include "watchers/directorywatcher.h"
+#include "directoryscanner.h"
 #include "utils/stuff.h"
 #include "sourcecontainers/fsentry.h"
 
@@ -34,12 +38,21 @@ class DirectoryManager;
 
 typedef bool (DirectoryManager::*CompareFunction)(const FSEntry &e1, const FSEntry &e2) const;
 
-//TODO: rename? EntrySomething?
+// TODO: rename? EntrySomething?
 
 class DirectoryManager : public QObject {
     Q_OBJECT
 public:
     DirectoryManager();
+    ~DirectoryManager() override;
+
+    // Lists the directory on this thread and returns with the entries in place.
+    //
+    // For the throwaway managers used to answer "what is the next folder along"
+    // -- the caller builds one, asks one question and drops it, so waiting is
+    // both simpler and what it wants. setDirectory() is the asynchronous one and
+    // is what the application uses for the directory it is showing.
+    bool setDirectoryBlocking(QString dirPath);
     // ignored if the same dir is already opened
     bool setDirectory(QString);
     bool setDirectoryRecursive(QString);
@@ -51,6 +64,7 @@ public:
     unsigned long dirCount() const;
     inline bool isSupportedFile(QString filePath) const;
     bool isEmpty() const;
+    bool isScanning() const;
     bool containsFile(QString filePath) const;
     QString fileNameAt(int index) const;
     QString prevOfFile(QString filePath) const;
@@ -81,9 +95,9 @@ public:
     void renameFileEntry(const QString &oldFilePath, const QString &newName);
 
     bool insertDirEntry(const QString &dirPath);
-    //bool forceInsertDirEntry(const QString &dirPath);
+    // bool forceInsertDirEntry(const QString &dirPath);
     void removeDirEntry(const QString &dirPath);
-    //void updateDirEntry(const QString &dirPath);
+    // void updateDirEntry(const QString &dirPath);
     void renameDirEntry(const QString &oldDirPath, const QString &newName);
 
     FileListSource source() const;
@@ -94,10 +108,23 @@ private:
     QRegularExpression regex;
     QCollator collator;
     std::vector<FSEntry> fileEntryVec, dirEntryVec;
+
+    // Path -> index, so indexOfFile() is not a linear walk. It was, and
+    // DirectoryPresenter::onThumbnailReady() calls it once per delivered
+    // thumbnail, which made opening a folder quadratic in the file count.
+    //
+    // Rebuilt lazily rather than patched at every insert and erase: indices
+    // shift under both, and getting that wrong returns a confidently incorrect
+    // answer. Invalidation only has to be pessimistic, so a missed call costs a
+    // rebuild rather than correctness.
+    mutable QHash<QString, int> fileIndexCache, dirIndexCache;
+    mutable bool fileIndexCacheValid = false, dirIndexCacheValid = false;
+    void invalidateFileIndexCache() const { fileIndexCacheValid = false; }
+    void invalidateDirIndexCache() const { dirIndexCacheValid = false; }
     const FSEntry defaultEntry;
     QString mDirectoryPath;
 
-    DirectoryWatcher* watcher;
+    DirectoryWatcher *watcher;
     void readSettings();
     SortingMode mSortingMode;
     FileListSource mListSource;
@@ -115,12 +142,23 @@ private:
     void startFileWatcher(QString directoryPath);
     void stopFileWatcher();
 
-    void addEntriesFromDirectory(std::vector<FSEntry> &entryVec, QString directoryPath);
-    void addEntriesFromDirectoryRecursive(std::vector<FSEntry> &entryVec, QString directoryPath);
+    void startScan(QString const &directoryPath, bool recursive);
+
+    // A scan runs on a worker, so its result can arrive after the user has
+    // already moved on. Every request carries a generation; a result whose
+    // generation is stale belongs to a directory nobody is looking at any more
+    // and is dropped. Without this, switching folders while a slow share is
+    // being listed installs the wrong listing.
+    quint64 scanGeneration = 0;
+    bool scanPending = false;
+    // One thread: scans are I/O bound, and running two at once would only make
+    // both slower while adding an ordering problem to reason about.
+    QThreadPool scanPool;
     bool checkFileRange(int index) const;
     bool checkDirRange(int index) const;
 
 private slots:
+    void onScanFinished(std::shared_ptr<DirectoryScanResult> result);
     void onFileAddedExternal(QString fileName);
     void onFileRemovedExternal(QString fileName);
     void onFileModifiedExternal(QString fileName);

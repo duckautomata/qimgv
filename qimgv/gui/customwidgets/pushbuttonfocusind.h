@@ -22,4 +22,3 @@ protected:
     void paintEvent(QPaintEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
 };
-

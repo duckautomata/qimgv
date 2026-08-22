@@ -21,7 +21,6 @@ public slots:
     bool save();
     bool save(QString destPath);
 
-
 private:
     void load();
 

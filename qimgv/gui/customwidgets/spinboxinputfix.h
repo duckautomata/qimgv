@@ -7,8 +7,7 @@
 #include <QDebug>
 #include "components/actionmanager/actionmanager.h"
 
-class SpinBoxInputFix : public QSpinBox
-{
+class SpinBoxInputFix : public QSpinBox {
     Q_OBJECT
 public:
     SpinBoxInputFix(QWidget *parent = nullptr);

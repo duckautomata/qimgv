@@ -1,9 +1,7 @@
 #include "watcherworker.h"
 #include <QDebug>
 
-WatcherWorker::WatcherWorker()
-{
-}
+WatcherWorker::WatcherWorker() {}
 
 void WatcherWorker::setRunning(bool running) {
     isRunning.fetchAndStoreRelaxed(running);

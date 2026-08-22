@@ -1,10 +1,8 @@
 #include "centralwidget.h"
 
-CentralWidget::CentralWidget(std::shared_ptr<DocumentWidget> _docWidget, std::shared_ptr<FolderViewProxy> _folderView, QWidget *parent)
-    : QStackedWidget(parent),
-      documentView(_docWidget),
-      folderView(_folderView)
-{
+CentralWidget::CentralWidget(std::shared_ptr<DocumentWidget> _docWidget, std::shared_ptr<FolderViewProxy> _folderView,
+                             QWidget *parent)
+    : QStackedWidget(parent), documentView(_docWidget), folderView(_folderView) {
     setMouseTracking(true);
     if(!documentView || !folderView)
         qDebug() << "[CentralWidget] Error: child widget is null. We will crash now.  Bye.";

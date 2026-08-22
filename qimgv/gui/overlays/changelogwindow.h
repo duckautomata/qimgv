@@ -11,7 +11,7 @@
 #include "components/actionmanager/actionmanager.h"
 
 namespace Ui {
-    class ChangelogWindow;
+class ChangelogWindow;
 }
 
 class ChangelogWindow : public OverlayWidget {

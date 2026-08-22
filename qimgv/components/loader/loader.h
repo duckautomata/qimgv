@@ -15,9 +15,10 @@ public:
     void clearTasks();
     bool isBusy() const;
     bool isLoading(QString path);
+
 private:
-    QHash<QString, LoaderRunnable*> tasks;
-    QThreadPool *pool;    
+    QHash<QString, LoaderRunnable *> tasks;
+    QThreadPool *pool;
     void clearPool();
     void doLoadAsync(QString path, int priority);
 
@@ -26,5 +27,5 @@ signals:
     void loadFailed(const QString &path);
 
 private slots:
-    void onLoadFinished(std::shared_ptr<Image>, const QString&);
+    void onLoadFinished(std::shared_ptr<Image>, const QString &);
 };

@@ -15,26 +15,14 @@
 #include <cmath>
 #include "settings.h"
 
-enum MouseInteractionState {
-    MOUSE_NONE,
-    MOUSE_DRAG_BEGIN,
-    MOUSE_DRAG,
-    MOUSE_PAN,
-    MOUSE_ZOOM,
-    MOUSE_WHEEL_ZOOM
-};
+enum MouseInteractionState { MOUSE_NONE, MOUSE_DRAG_BEGIN, MOUSE_DRAG, MOUSE_PAN, MOUSE_ZOOM, MOUSE_WHEEL_ZOOM };
 
-enum ViewLockMode {
-    LOCK_NONE,
-    LOCK_ZOOM,
-    LOCK_ALL
-};
+enum ViewLockMode { LOCK_NONE, LOCK_ZOOM, LOCK_ALL };
 
-class ImageViewerV2 : public QGraphicsView
-{
+class ImageViewerV2 : public QGraphicsView {
     Q_OBJECT
 public:
-    ImageViewerV2(QWidget* parent = nullptr);
+    ImageViewerV2(QWidget *parent = nullptr);
     ~ImageViewerV2();
     virtual ImageFitMode fitMode() const;
     virtual QRect scaledRectR() const;
@@ -107,9 +95,9 @@ public slots:
 
 protected:
     virtual void mousePressEvent(QMouseEvent *event);
-    virtual void mouseMoveEvent(QMouseEvent* event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void mouseReleaseEvent(QMouseEvent *event);
-    virtual void resizeEvent(QResizeEvent* event);
+    virtual void resizeEvent(QResizeEvent *event);
     void wheelEvent(QWheelEvent *event);
     void showEvent(QShowEvent *event);
     void drawBackground(QPainter *painter, const QRectF &rect);
@@ -126,6 +114,7 @@ private slots:
     void onScrollTimelineFinished();
 
     void onDPRChanged();
+
 private:
     QGraphicsScene *scene;
     std::shared_ptr<QPixmap> pixmap;
@@ -135,10 +124,8 @@ private:
     QTimer *animationTimer, *scaleTimer;
     QScrollBar *hs, *vs;
     QPoint mouseMoveStartPos, mousePressPos, drawPos;
-    bool transparencyGrid, expandImage,    smoothAnimatedImages,
-         smoothUpscaling,  forceFastScale, keepFitMode,
-         loopPlayback,     mIsFullscreen,  scrollBarWorkaround,
-         useFixedZoomLevels, trackpadDetection;
+    bool transparencyGrid, expandImage, smoothAnimatedImages, smoothUpscaling, forceFastScale, keepFitMode,
+        loopPlayback, mIsFullscreen, scrollBarWorkaround, useFixedZoomLevels, trackpadDetection;
     QList<float> zoomLevels;
     MouseInteractionState mouseInteraction;
     const int SCROLL_UPDATE_RATE = 7;

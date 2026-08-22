@@ -4,14 +4,7 @@
 #include <QColor>
 #include <QPalette>
 
-enum ColorSchemes {
-    COLORS_SYSTEM,
-    COLORS_LIGHT,
-    COLORS_BLACK,
-    COLORS_DARK,
-    COLORS_DARKBLUE,
-    COLORS_CUSTOMIZED
-};
+enum ColorSchemes { COLORS_SYSTEM, COLORS_LIGHT, COLORS_BLACK, COLORS_DARK, COLORS_DARKBLUE, COLORS_CUSTOMIZED };
 
 struct BaseColorScheme {
     int tid;
@@ -66,7 +59,6 @@ public:
     QColor folderview_button_hover;
     QColor folderview_button_pressed;
     QColor input_field_focus;
-
 
 private:
     void createColorVariants();

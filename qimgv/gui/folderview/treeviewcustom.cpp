@@ -11,9 +11,8 @@ TreeViewCustom::TreeViewCustom(QWidget *parent) : QTreeView(parent) {
     overlayScrollbar.setStyleSheet("background-color: transparent;");
     connect(verticalScrollBar(), &QScrollBar::rangeChanged, &overlayScrollbar, &QScrollBar::setRange);
     connect(verticalScrollBar(), &QScrollBar::valueChanged, &overlayScrollbar, &QScrollBar::setValue);
-    connect(&overlayScrollbar, &QScrollBar::valueChanged, [this]() {
-        this->verticalScrollBar()->setValue(overlayScrollbar.value());
-    });
+    connect(&overlayScrollbar, &QScrollBar::valueChanged,
+            [this]() { this->verticalScrollBar()->setValue(overlayScrollbar.value()); });
 }
 
 void TreeViewCustom::dropEvent(QDropEvent *event) {
@@ -63,14 +62,16 @@ void TreeViewCustom::updateScrollbarStyle() {
     else
         handle = settings->colorScheme().folderview_hc.name();
     overlayScrollbar.setGeometry(width() - SCROLLBAR_WIDTH, 0, SCROLLBAR_WIDTH, height());
-    overlayScrollbar.setStyleSheet( "QScrollBar { background-color: transparent; } QScrollBar::handle:vertical { background-color: "+ handle +" } QScrollBar::handle:vertical:hover { background-color: " + hover + " }" );
+    overlayScrollbar.setStyleSheet(
+        "QScrollBar { background-color: transparent; } QScrollBar::handle:vertical { background-color: " + handle +
+        " } QScrollBar::handle:vertical:hover { background-color: " + hover + " }");
 
-    overlayScrollbar.setVisible( (this->verticalScrollBar()->maximum()) );
+    overlayScrollbar.setVisible((this->verticalScrollBar()->maximum()));
 }
 
-void TreeViewCustom::keyPressEvent(QKeyEvent* event) {
+void TreeViewCustom::keyPressEvent(QKeyEvent *event) {
     QModelIndex currentIndex = this->currentIndex();
-    if( (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return ) && currentIndex.isValid() ) {
+    if((event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) && currentIndex.isValid()) {
         emit clicked(currentIndex);
     } else {
         QTreeView::keyPressEvent(event);

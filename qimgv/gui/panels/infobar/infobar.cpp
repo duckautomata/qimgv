@@ -1,10 +1,7 @@
 #include "infobar.h"
 #include "ui_infobar.h"
 
-InfoBar::InfoBar(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::InfoBar)
-{
+InfoBar::InfoBar(QWidget *parent) : QWidget(parent), ui(new Ui::InfoBar) {
     ui->setupUi(this);
     ui->path->setText("No file opened.");
 }

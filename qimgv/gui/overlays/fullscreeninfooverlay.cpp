@@ -1,10 +1,8 @@
 #include "fullscreeninfooverlay.h"
 #include "ui_fullscreeninfooverlay.h"
 
-FullscreenInfoOverlay::FullscreenInfoOverlay(FloatingWidgetContainer *parent) :
-    OverlayWidget(parent),
-    ui(new Ui::FullscreenInfoOverlay)
-{
+FullscreenInfoOverlay::FullscreenInfoOverlay(FloatingWidgetContainer *parent)
+    : OverlayWidget(parent), ui(new Ui::FullscreenInfoOverlay) {
     ui->setupUi(this);
     setPosition(FloatingWidgetPosition::TOPLEFT);
     this->setHorizontalMargin(0);

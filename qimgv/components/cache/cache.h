@@ -24,5 +24,5 @@ public:
     const QList<QString> keys() const;
 
 private:
-    QMap<QString, CacheItem*> items;
+    QMap<QString, CacheItem *> items;
 };

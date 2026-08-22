@@ -9,7 +9,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(qimgv
-    VERSION 2.0.0
+    VERSION 2.0.1
     DESCRIPTION "Fast and configurable image viewer with optional video support"
     HOMEPAGE_URL "https://github.com/duckautomata/qimgv"
     LANGUAGES CXX)

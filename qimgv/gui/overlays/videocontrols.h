@@ -8,13 +8,9 @@ namespace Ui {
 class VideoControls;
 }
 
-enum PlaybackMode {
-    PLAYBACK_ANIMATION,
-    PLAYBACK_VIDEO
-};
+enum PlaybackMode { PLAYBACK_ANIMATION, PLAYBACK_VIDEO };
 
-class VideoControls : public OverlayWidget
-{
+class VideoControls : public OverlayWidget {
     Q_OBJECT
 
 public:

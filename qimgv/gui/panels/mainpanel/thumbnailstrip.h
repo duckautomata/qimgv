@@ -15,8 +15,7 @@
 #include "gui/customwidgets/thumbnailwidget.h"
 #include "sourcecontainers/thumbnail.h"
 
-class ThumbnailStrip : public ThumbnailView
-{
+class ThumbnailStrip : public ThumbnailView {
     Q_OBJECT
 public:
     explicit ThumbnailStrip(QWidget *parent = nullptr);

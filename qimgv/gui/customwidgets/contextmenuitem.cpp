@@ -1,13 +1,8 @@
 #include "contextmenuitem.h"
 
-ContextMenuItem::ContextMenuItem(QWidget *parent)
-    : MenuItem(parent),
-      mAction("")
-{
-}
+ContextMenuItem::ContextMenuItem(QWidget *parent) : MenuItem(parent), mAction("") {}
 
-ContextMenuItem::~ContextMenuItem() {
-}
+ContextMenuItem::~ContextMenuItem() {}
 
 void ContextMenuItem::setAction(QString text) {
     this->mAction = text;

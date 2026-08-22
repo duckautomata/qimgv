@@ -1,15 +1,15 @@
 #include "thumbnailstripproxy.h"
 
-ThumbnailStripProxy::ThumbnailStripProxy(QWidget *parent)
-    : QWidget(parent)
-{
-    layout.setContentsMargins(0,0,0,0);
+ThumbnailStripProxy::ThumbnailStripProxy(QWidget *parent) : QWidget(parent) {
+    layout.setContentsMargins(0, 0, 0, 0);
 }
 
 void ThumbnailStripProxy::init() {
     if(thumbnailStrip)
         return;
-    qApp->processEvents(); // chew through events in case we have something that alters stateBuf in queue
+    // Non-user events only: this runs before the lock below, so letting a click
+    // or a keypress through here could start a second init of the same widget.
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents); // drain anything queued that alters stateBuf
     QMutexLocker ml(&m);
     thumbnailStrip.reset(new ThumbnailStrip());
     thumbnailStrip->setParent(this);
@@ -19,7 +19,8 @@ void ThumbnailStripProxy::init() {
     this->setLayout(&layout);
 
     connect(thumbnailStrip.get(), &ThumbnailStrip::itemActivated, this, &ThumbnailStripProxy::itemActivated);
-    connect(thumbnailStrip.get(), &ThumbnailStrip::thumbnailsRequested, this, &ThumbnailStripProxy::thumbnailsRequested);
+    connect(thumbnailStrip.get(), &ThumbnailStrip::thumbnailsRequested, this,
+            &ThumbnailStripProxy::thumbnailsRequested);
 
     thumbnailStrip->show();
 
@@ -28,7 +29,7 @@ void ThumbnailStripProxy::init() {
     thumbnailStrip->select(stateBuf.selection);
     // wait till layout stuff happens
     // before calling focusOn()
-    qApp->processEvents();
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
     thumbnailStrip->focusOnSelection();
 }
 
@@ -104,7 +105,7 @@ void ThumbnailStripProxy::removeItem(int index) {
     } else {
         stateBuf.itemCount--;
         stateBuf.selection.removeAll(index);
-        for(int i=0; i < stateBuf.selection.count(); i++) {
+        for(int i = 0; i < stateBuf.selection.count(); i++) {
             if(stateBuf.selection[i] > index)
                 stateBuf.selection[i]--;
         }

@@ -1,11 +1,8 @@
 #include "scripteditordialog.h"
 #include "ui_scripteditordialog.h"
 
-ScriptEditorDialog::ScriptEditorDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::ScriptEditorDialog),
-    editMode(false)
-{
+ScriptEditorDialog::ScriptEditorDialog(QWidget *parent)
+    : QDialog(parent), ui(new Ui::ScriptEditorDialog), editMode(false) {
     ui->setupUi(this);
     this->setWindowTitle(tr("New application/script"));
     ui->keywordsLabel->setText(tr("Keywords:") + " %file%");
@@ -14,10 +11,7 @@ ScriptEditorDialog::ScriptEditorDialog(QWidget *parent) :
 }
 
 ScriptEditorDialog::ScriptEditorDialog(QString name, Script script, QWidget *parent)
-    : QDialog(parent),
-      ui(new Ui::ScriptEditorDialog),
-      editMode(true)
-{
+    : QDialog(parent), ui(new Ui::ScriptEditorDialog), editMode(true) {
     ui->setupUi(this);
     this->setWindowTitle(tr("Edit"));
     this->onNameChanged(ui->nameLineEdit->text());

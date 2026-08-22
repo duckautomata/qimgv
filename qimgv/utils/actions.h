@@ -4,8 +4,7 @@
 #include <QString>
 #include <QVersionNumber>
 
-class Actions
-{
+class Actions {
 public:
     Actions();
     static Actions *getInstance();
@@ -15,7 +14,6 @@ public:
 private:
     void init();
     QMap<QString, QVersionNumber> mActions;
-
 };
 
 extern Actions *appActions;

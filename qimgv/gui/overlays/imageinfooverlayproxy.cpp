@@ -1,10 +1,6 @@
 #include "imageinfooverlayproxy.h"
 
-ImageInfoOverlayProxy::ImageInfoOverlayProxy(FloatingWidgetContainer *parent)
-    : container(parent),
-      overlay(nullptr)
-{
-}
+ImageInfoOverlayProxy::ImageInfoOverlayProxy(FloatingWidgetContainer *parent) : container(parent), overlay(nullptr) {}
 
 ImageInfoOverlayProxy::~ImageInfoOverlayProxy() {
     if(overlay)

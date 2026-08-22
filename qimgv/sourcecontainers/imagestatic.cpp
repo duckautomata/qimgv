@@ -1,22 +1,17 @@
 #include "imagestatic.h"
 #include <time.h>
 
-ImageStatic::ImageStatic(QString _path)
-    : Image(_path)
-{
+ImageStatic::ImageStatic(QString _path) : Image(_path) {
     load();
 }
 
-ImageStatic::ImageStatic(std::unique_ptr<DocumentInfo> _info)
-    : Image(std::move(_info))
-{
+ImageStatic::ImageStatic(std::unique_ptr<DocumentInfo> _info) : Image(std::move(_info)) {
     load();
 }
 
-ImageStatic::~ImageStatic() {
-}
+ImageStatic::~ImageStatic() {}
 
-//load image data from disk
+// load image data from disk
 void ImageStatic::load() {
     if(isLoaded()) {
         return;
@@ -26,7 +21,6 @@ void ImageStatic::load() {
     else
         loadGeneric();
 }
-
 
 void ImageStatic::loadGeneric() {
     /* QImageReader::read() seems more reliable than just reading via QImage.
@@ -134,7 +128,7 @@ bool ImageStatic::save() {
 
 std::unique_ptr<QPixmap> ImageStatic::getPixmap() {
     std::unique_ptr<QPixmap> pix(new QPixmap());
-    isEdited()?pix->convertFromImage(*imageEdited):pix->convertFromImage(*image, Qt::NoFormatConversion);
+    isEdited() ? pix->convertFromImage(*imageEdited) : pix->convertFromImage(*image, Qt::NoFormatConversion);
     return pix;
 }
 
@@ -143,19 +137,19 @@ std::shared_ptr<const QImage> ImageStatic::getSourceImage() {
 }
 
 std::shared_ptr<const QImage> ImageStatic::getImage() {
-    return isEdited()?imageEdited:image;
+    return isEdited() ? imageEdited : image;
 }
 
 int ImageStatic::height() {
-    return isEdited()?imageEdited->height():image->height();
+    return isEdited() ? imageEdited->height() : image->height();
 }
 
 int ImageStatic::width() {
-    return isEdited()?imageEdited->width():image->width();
+    return isEdited() ? imageEdited->width() : image->width();
 }
 
 QSize ImageStatic::size() {
-    return isEdited()?imageEdited->size():image->size();
+    return isEdited() ? imageEdited->size() : image->size();
 }
 
 bool ImageStatic::setEditedImage(std::unique_ptr<const QImage> imageEditedNew) {

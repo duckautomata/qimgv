@@ -1,23 +1,13 @@
 #include <QDebug>
 #include "watcherevent.h"
 
-WatcherEvent::WatcherEvent(const QString &name, int timerId, WatcherEvent::Type type) :
-    mName(name),
-    mTimerId(timerId),
-    mType(type)
-{
-}
+WatcherEvent::WatcherEvent(const QString &name, int timerId, WatcherEvent::Type type)
+    : mName(name), mTimerId(timerId), mType(type) {}
 
-WatcherEvent::WatcherEvent(const QString& name, uint cookie, int timerId, Type type) :
-    mName(name),
-    mCookie(cookie),
-    mTimerId(timerId),
-    mType(type)
-{
-}
+WatcherEvent::WatcherEvent(const QString &name, uint cookie, int timerId, Type type)
+    : mName(name), mCookie(cookie), mTimerId(timerId), mType(type) {}
 
-WatcherEvent::~WatcherEvent() {
-}
+WatcherEvent::~WatcherEvent() {}
 
 QString WatcherEvent::name() const {
     return mName;

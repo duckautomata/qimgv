@@ -1,21 +1,21 @@
 #include "videoplayerinitproxy.h"
 
 #ifdef _QIMGV_PLAYER_PLUGIN
-    #define QIMGV_PLAYER_PLUGIN _QIMGV_PLAYER_PLUGIN
+#define QIMGV_PLAYER_PLUGIN _QIMGV_PLAYER_PLUGIN
 #else
-    #define QIMGV_PLAYER_PLUGIN ""
+#define QIMGV_PLAYER_PLUGIN ""
 #endif
 
-VideoPlayerInitProxy::VideoPlayerInitProxy(QWidget *parent)
-    : VideoPlayer(parent),
-      player(nullptr)
-{
+VideoPlayerInitProxy::VideoPlayerInitProxy(QWidget *parent) : VideoPlayer(parent), player(nullptr) {
     setAccessibleName("VideoPlayerInitProxy");
     setMouseTracking(true);
-    layout.setContentsMargins(0,0,0,0);
+    layout.setContentsMargins(0, 0, 0, 0);
     setLayout(&layout);
     connect(settings, &Settings::settingsChanged, this, &VideoPlayerInitProxy::onSettingsChanged);
     updateBackgroundColor();
+    // initPlayer() reads this when the plugin is eventually loaded, which is
+    // long before the first settingsChanged.
+    mTransparencyGrid = settings->transparencyGrid();
 
 #ifdef USE_MPV
     // Adding the first QOpenGLWidget to a window that is already on screen makes
@@ -38,12 +38,13 @@ VideoPlayerInitProxy::VideoPlayerInitProxy(QWidget *parent)
 #endif
 }
 
-VideoPlayerInitProxy::~VideoPlayerInitProxy() {
-}
+VideoPlayerInitProxy::~VideoPlayerInitProxy() {}
 
 void VideoPlayerInitProxy::onSettingsChanged() {
     // Background first: it must track the theme even before a video is loaded.
     updateBackgroundColor();
+    mTransparencyGrid = settings->transparencyGrid();
+    updateTransparencyGrid();
     if(!player)
         return;
     player->setMuted(!settings->playVideoSounds());
@@ -69,6 +70,21 @@ void VideoPlayerInitProxy::updateBackgroundColor() {
     if(player)
         player->setBackgroundColor(bgColor);
     update();
+}
+
+// Mirrors ImageViewerV2::toggleTransparencyGrid(): a temporary override that is
+// deliberately not written back to settings.
+void VideoPlayerInitProxy::toggleTransparencyGrid() {
+    mTransparencyGrid = !mTransparencyGrid;
+    updateTransparencyGrid();
+}
+
+void VideoPlayerInitProxy::updateTransparencyGrid() {
+    if(!player)
+        return;
+    if(mTransparencyGrid && checkboard.isNull())
+        checkboard.load(QStringLiteral(":res/icons/common/other/checkerboard.png"));
+    player->setTransparencyGrid(mTransparencyGrid ? checkboard : QPixmap());
 }
 
 std::shared_ptr<VideoPlayer> VideoPlayerInitProxy::getPlayer() {
@@ -99,11 +115,11 @@ inline bool VideoPlayerInitProxy::initPlayer() {
         return false;
     }
 
-// load lib
-    typedef VideoPlayer* (*createPlayerWidgetFn)();
-    createPlayerWidgetFn fn = (createPlayerWidgetFn) playerLib.resolve("CreatePlayerWidget");
+    // load lib
+    typedef VideoPlayer *(*createPlayerWidgetFn)();
+    createPlayerWidgetFn fn = (createPlayerWidgetFn)playerLib.resolve("CreatePlayerWidget");
     if(fn) {
-        VideoPlayer* pl = fn();
+        VideoPlayer *pl = fn();
         player.reset(pl);
     }
     if(!player) {
@@ -115,6 +131,7 @@ inline bool VideoPlayerInitProxy::initPlayer() {
     player->setVideoUnscaled(!settings->expandImage());
     player->setVolume(settings->volume());
     player->setBackgroundColor(bgColor);
+    updateTransparencyGrid();
 
     player->setParent(this);
     layout.addWidget(player.get());
@@ -122,8 +139,8 @@ inline bool VideoPlayerInitProxy::initPlayer() {
     setFocusProxy(player.get());
     connect(player.get(), SIGNAL(durationChanged(int)), this, SIGNAL(durationChanged(int)));
     connect(player.get(), SIGNAL(positionChanged(int)), this, SIGNAL(positionChanged(int)));
-    connect(player.get(), SIGNAL(videoPaused(bool)),    this, SIGNAL(videoPaused(bool)));
-    connect(player.get(), SIGNAL(playbackFinished()),   this, SIGNAL(playbackFinished()));
+    connect(player.get(), SIGNAL(videoPaused(bool)), this, SIGNAL(videoPaused(bool)));
+    connect(player.get(), SIGNAL(playbackFinished()), this, SIGNAL(playbackFinished()));
 
     if(eventFilterObj)
         player.get()->installEventFilter(eventFilterObj);
@@ -237,7 +254,7 @@ void VideoPlayerInitProxy::show() {
         errorLabel = new QLabel(this);
         errorLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
         errorLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        //errorLabel->setAlignment(Qt::AlignVCenter);
+        // errorLabel->setAlignment(Qt::AlignVCenter);
         QString errString = "Could not load " + libFile + " from:";
         for(auto path : libDirs)
             errString.append("\n" + path + "/");

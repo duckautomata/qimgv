@@ -8,8 +8,7 @@
 #include <QPainter>
 #include <QDebug>
 
-class EntryInfoItem : public QWidget
-{
+class EntryInfoItem : public QWidget {
     Q_OBJECT
 public:
     explicit EntryInfoItem(QWidget *parent = nullptr);

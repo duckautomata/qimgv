@@ -2,8 +2,7 @@
 
 #include <QObject>
 
-class WatcherWorker : public QObject
-{
+class WatcherWorker : public QObject {
     Q_OBJECT
 public:
     WatcherWorker();
@@ -13,7 +12,7 @@ public Q_SLOTS:
     void setRunning(bool running);
 
 Q_SIGNALS:
-    void error(const QString& errorMessage);
+    void error(const QString &errorMessage);
     void started();
     void finished();
 

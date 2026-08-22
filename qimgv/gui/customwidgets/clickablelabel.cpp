@@ -1,10 +1,8 @@
 #include "clickablelabel.h"
 
-ClickableLabel::ClickableLabel() {
-}
+ClickableLabel::ClickableLabel() {}
 
-ClickableLabel::ClickableLabel(QWidget *parent) : QLabel(parent) {
-}
+ClickableLabel::ClickableLabel(QWidget *parent) : QLabel(parent) {}
 
 ClickableLabel::ClickableLabel(const QString &text) {
     this->setText(text);

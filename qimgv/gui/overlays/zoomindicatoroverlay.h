@@ -14,6 +14,7 @@ public:
     void setScale(qreal scale);
     void show();
     void show(int duration);
+
 protected:
     virtual void recalculateGeometry();
 
@@ -24,4 +25,3 @@ private:
     QTimer visibilityTimer;
     int hideDelay;
 };
-

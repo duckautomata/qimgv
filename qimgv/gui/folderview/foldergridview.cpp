@@ -2,10 +2,7 @@
 
 // TODO: create a base class for this and the one on panel
 
-FolderGridView::FolderGridView(QWidget *parent)
-    : ThumbnailView(Qt::Vertical, parent),
-      shiftedCol(-1)
-{
+FolderGridView::FolderGridView(QWidget *parent) : ThumbnailView(Qt::Vertical, parent), shiftedCol(-1) {
     offscreenPreloadArea = 2300;
 
     this->setAcceptDrops(true);
@@ -18,13 +15,11 @@ FolderGridView::FolderGridView(QWidget *parent)
     setDrawScrollbarIndicator(false);
     setSelectMode(ACTIVATE_BY_DOUBLECLICK);
 
-    connect(settings, &Settings::settingsChanged, [this]() {
-        this->scene.setBackgroundBrush(settings->colorScheme().folderview);
-    });
+    connect(settings, &Settings::settingsChanged,
+            [this]() { this->scene.setBackgroundBrush(settings->colorScheme().folderview); });
 
     setupLayout();
-    connect(this, &ThumbnailView::itemActivated,
-            this, &FolderGridView::onitemSelected);
+    connect(this, &ThumbnailView::itemActivated, this, &FolderGridView::onitemSelected);
 }
 
 void FolderGridView::dropEvent(QDropEvent *event) {
@@ -272,14 +267,14 @@ void FolderGridView::setupLayout() {
     this->setAlignment(Qt::AlignHCenter);
 
     flowLayout = new FlowLayout();
-    flowLayout->setContentsMargins(9,6,9,0);
+    flowLayout->setContentsMargins(9, 6, 9, 0);
     setFrameShape(QFrame::NoFrame);
     scene.addItem(&holderWidget);
     holderWidget.setLayout(flowLayout);
-    holderWidget.setContentsMargins(0,0,0,0);
+    holderWidget.setContentsMargins(0, 0, 0, 0);
 }
 
-ThumbnailWidget* FolderGridView::createThumbnailWidget() {
+ThumbnailWidget *FolderGridView::createThumbnailWidget() {
     ThumbnailWidget *widget = new ThumbnailWidget();
     widget->setPadding(8);
     ThumbnailStyle style = (settings->folderViewMode() == FV_SIMPLE) ? THUMB_SIMPLE : THUMB_NORMAL;
@@ -288,7 +283,7 @@ ThumbnailWidget* FolderGridView::createThumbnailWidget() {
     return widget;
 }
 
-void FolderGridView::addItemToLayout(ThumbnailWidget* widget, int pos) {
+void FolderGridView::addItemToLayout(ThumbnailWidget *widget, int pos) {
     scene.addItem(widget);
     flowLayout->insertItem(pos, widget);
 }
@@ -338,7 +333,7 @@ void FolderGridView::keyPressEvent(QKeyEvent *event) {
     }
 
     // handle selection
-    switch (event->key()) {
+    switch(event->key()) {
     case Qt::Key_Left:
         selectPrev();
         break;
@@ -403,9 +398,9 @@ void FolderGridView::setThumbnailSize(int newSize) {
 
 void FolderGridView::fitSceneToContents() {
     if(scrollBar->isVisible())
-        holderWidget.setGeometry(0,0, width() - scrollBar->width(), height());
+        holderWidget.setGeometry(0, 0, width() - scrollBar->width(), height());
     else
-        holderWidget.setGeometry(0,0, width(), height());
+        holderWidget.setGeometry(0, 0, width(), height());
     ThumbnailView::fitSceneToContents();
 }
 
@@ -413,7 +408,7 @@ void FolderGridView::resizeEvent(QResizeEvent *event) {
     if(this->isVisible()) {
         ThumbnailView::resizeEvent(event);
         fitSceneToContents();
-        //focusOn(selectedIndex());
+        // focusOn(selectedIndex());
         loadVisibleThumbnailsDelayed();
     }
 }

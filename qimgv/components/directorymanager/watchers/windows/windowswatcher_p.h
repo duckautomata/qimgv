@@ -11,8 +11,8 @@
 class WindowsWatcherPrivate : public DirectoryWatcherPrivate {
     Q_OBJECT
 public:
-    explicit WindowsWatcherPrivate(WindowsWatcher* qq = 0);
-    HANDLE requestDirectoryHandle(const QString& path);
+    explicit WindowsWatcherPrivate(WindowsWatcher *qq = 0);
+    HANDLE requestDirectoryHandle(const QString &path);
     QString oldFileName;
 
 public slots:
