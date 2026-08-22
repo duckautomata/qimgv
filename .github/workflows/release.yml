@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to build (e.g. v1.1.0). Publishes as a prerelease.'
+        description: 'Tag to build (e.g. v2.0.1). Publishes as a prerelease.'
         required: true
 
 # Least privilege by default; the publish job opts up to write.

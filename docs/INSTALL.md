@@ -97,7 +97,7 @@ For the portable build, delete the folder.
 Every release publishes `SHA256SUMS.txt`. To check a file in PowerShell:
 
 ```powershell
-Get-FileHash .\qimgv-2.0.0-win64-setup.exe -Algorithm SHA256
+Get-FileHash .\qimgv-2.0.1-win64-setup.exe -Algorithm SHA256
 ```
 
 Compare the result against the matching line in `SHA256SUMS.txt`.

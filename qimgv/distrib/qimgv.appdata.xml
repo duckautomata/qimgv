@@ -65,6 +65,14 @@
   <url type="vcs-browser">https://github.com/duckautomata/qimgv</url>
 
   <releases>
+    <release version="2.0.1" date="2026-08-21">
+      <description>
+        <p>Reading a folder moved off the UI thread, so the window stays
+           responsive while a folder is read; this is what made qimgv unusable
+           on slow network shares. Large folders open and scroll faster, and the
+           transparency grid now applies to video with an alpha channel.</p>
+      </description>
+    </release>
     <release version="2.0.0" date="2026-08-21">
       <description>
         <p>First release of the duckautomata fork. Qt 6 only, rebuilt CMake
