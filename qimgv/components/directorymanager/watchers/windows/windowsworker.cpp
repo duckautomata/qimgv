@@ -9,8 +9,13 @@ void WindowsWorker::setDirectoryHandle(HANDLE hDir) {
 }
 
 void WindowsWorker::freeHandle() {
-    CancelIoEx(this->hDir, NULL);
-    CloseHandle(this->hDir);
+    // setDirectoryHandle() calls this before storing the new handle, including
+    // the very first time, when there is nothing to close yet.
+    if(hDir == INVALID_HANDLE_VALUE || hDir == nullptr)
+        return;
+    CancelIoEx(hDir, nullptr);
+    CloseHandle(hDir);
+    hDir = INVALID_HANDLE_VALUE;
 }
 
 void WindowsWorker::run() {
