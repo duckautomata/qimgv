@@ -16,7 +16,7 @@
 #include "components/directorymanager/directoryscanner.h"
 
 #ifdef USE_EXIV2
-    #include <exiv2/exiv2.hpp>
+#include <exiv2/exiv2.hpp>
 #endif
 
 #ifdef __APPLE__

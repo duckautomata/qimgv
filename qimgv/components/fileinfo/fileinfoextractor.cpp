@@ -255,7 +255,10 @@ FileInfoResult extractFileInfo(QString const &path) {
 #else
         auto img = Exiv2::ImageFactory::open(path.toStdString());
 #endif
-        if(img) {
+        // .get(), not a bool test: exiv2 0.27 returns std::auto_ptr here, which
+        // has no operator bool. 0.28 returns unique_ptr, which does. Linux CI
+        // builds against 0.27.
+        if(img.get()) {
             img->readMetadata();
             // Deliberately not gated on exifData being non-empty: the old code
             // returned early there and so never looked at IPTC or XMP at all,
