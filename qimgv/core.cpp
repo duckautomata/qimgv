@@ -196,6 +196,8 @@ void Core::initActions() {
     connect(actionManager, &ActionManager::sortByTime, this, &Core::sortByTime);
     connect(actionManager, &ActionManager::sortBySize, this, &Core::sortBySize);
     connect(actionManager, &ActionManager::toggleImageInfo, mw, &MW::toggleImageInfoOverlay);
+    connect(mw, &MW::requestFileInfo, this, &Core::requestFileInfo);
+    connect(&fileInfoExtractor, &FileInfoExtractor::ready, this, &Core::onFileInfoReady);
     connect(actionManager, &ActionManager::toggleShuffle, this, &Core::toggleShuffle);
     connect(actionManager, &ActionManager::toggleScalingFilter, mw, &MW::toggleScalingFilter);
     connect(actionManager, &ActionManager::showInDirectory, this, &Core::showInDirectory);
@@ -343,6 +345,24 @@ void Core::syncRandomizer() {
         randomizer.shuffle();
         randomizer.setCurrent(model->indexOfFile(state.currentFilePath));
     }
+}
+
+// Asked for when the panel opens, and again whenever the image changes while it
+// is open. Anything already running is discarded by the extractor's generation
+// counter, so paging quickly through a folder cannot land stale metadata.
+void Core::requestFileInfo() {
+    if(!mw->imageInfoVisible() || state.currentFilePath.isEmpty())
+        return;
+    mw->setFileInfoLoading();
+    fileInfoExtractor.request(state.currentFilePath);
+}
+
+void Core::onFileInfoReady(QString path, QVector<FileInfoSection> sections) {
+    // Belt and braces on top of the generation counter: the panel must never
+    // show one file's metadata under another file's name.
+    if(path != state.currentFilePath)
+        return;
+    mw->setFileInfo(sections);
 }
 
 void Core::onModelLoaded() {
@@ -1595,7 +1615,9 @@ void Core::guiSetImage(std::shared_ptr<Image> img) {
         mw->showVideo(video->filePath());
     }
     img->isEdited() ? mw->showSaveOverlay() : mw->hideSaveOverlay();
-    mw->setExifInfo(img->getExifTags());
+    // Only if someone is looking. This used to run exiv2 synchronously here,
+    // on every image, open panel or not.
+    requestFileInfo();
 }
 
 void Core::updateInfoString() {

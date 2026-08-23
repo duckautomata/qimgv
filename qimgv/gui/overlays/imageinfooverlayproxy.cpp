@@ -21,16 +21,27 @@ void ImageInfoOverlayProxy::init() {
     if(overlay)
         return;
     overlay = new ImageInfoOverlay(container);
-    overlay->setExifInfo(stateBuf.info);
+    if(stateBuf.loading)
+        overlay->setLoading();
+    else
+        overlay->setInfo(stateBuf.sections);
 }
 
 bool ImageInfoOverlayProxy::isHidden() {
     return overlay ? overlay->isHidden() : true;
 }
 
-void ImageInfoOverlayProxy::setExifInfo(QMap<QString, QString> _info) {
+void ImageInfoOverlayProxy::setInfo(QVector<FileInfoSection> const &sections) {
+    stateBuf.loading = false;
     if(overlay)
-        overlay->setExifInfo(_info);
+        overlay->setInfo(sections);
     else
-        stateBuf.info = _info;
+        stateBuf.sections = sections;
+}
+
+void ImageInfoOverlayProxy::setLoading() {
+    stateBuf.loading = true;
+    stateBuf.sections.clear();
+    if(overlay)
+        overlay->setLoading();
 }

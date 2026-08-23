@@ -66,7 +66,9 @@ public:
 
     void setCurrentInfo(int fileIndex, int fileCount, QString filePath, QString fileName, QSize imageSize,
                         qint64 fileSize, bool slideshow, bool shuffle, bool edited);
-    void setExifInfo(QMap<QString, QString>);
+    void setFileInfo(QVector<FileInfoSection> const &sections);
+    void setFileInfoLoading();
+    bool imageInfoVisible();
     std::shared_ptr<FolderViewProxy> getFolderView();
     std::shared_ptr<ThumbnailStripProxy> getThumbnailPanel();
 
@@ -148,6 +150,8 @@ protected:
 
     // bool focusNextPrevChild(bool);
 signals:
+    // Emitted when the info panel opens, so Core can go and read metadata.
+    void requestFileInfo();
     void opened(QString);
     void fullscreenStateChanged(bool);
     void copyRequested(QString);

@@ -3,7 +3,8 @@
 #include "gui/overlays/imageinfooverlay.h"
 
 struct ImageInfoOverlayStateBuffer {
-    QMap<QString, QString> info;
+    QVector<FileInfoSection> sections;
+    bool loading = false;
 };
 
 class ImageInfoOverlayProxy {
@@ -14,7 +15,8 @@ public:
     void show();
     void hide();
 
-    void setExifInfo(QMap<QString, QString> info);
+    void setInfo(QVector<FileInfoSection> const &sections);
+    void setLoading();
     bool isHidden();
 
 private:
