@@ -733,8 +733,8 @@ void ImageViewerV2::updateFitWindowStretchScale() {
 
     float scaleFitY = (float)viewport()->height() * dpr / pixmap->height();
 
-    // For "Fit in window (stretch)", we always use height-based scaling
-    // This ensures the full image is always visible while stretching to fill the window height
+    // "Stretch to height": always height-based, so the whole image is visible
+    // top to bottom and the sides are free to overflow.
     fitWindowStretchScale = scaleFitY;
 
     if(expandImage && fitWindowStretchScale > expandLimit)

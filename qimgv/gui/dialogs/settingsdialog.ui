@@ -2013,16 +2013,16 @@
                      </widget>
                     </item>
                     <item>
-                     <widget class="QRadioButton" name="fitMode1to1">
+                     <widget class="QRadioButton" name="fitModeWindowStretch">
                       <property name="text">
-                       <string>1:1</string>
+                       <string>Stretch to height</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QRadioButton" name="fitModeWindowStretch">
+                     <widget class="QRadioButton" name="fitMode1to1">
                       <property name="text">
-                       <string>Fit in window (stretch)</string>
+                       <string>1:1</string>
                       </property>
                      </widget>
                     </item>
