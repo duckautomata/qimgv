@@ -132,7 +132,11 @@ void ImageViewerV2::readSettings() {
     onFullscreenModeChanged(mIsFullscreen);
     updateMinScale();
     setScalingFilter(settings->scalingFilter());
-    setFitMode(imageFitModeDefault);
+    setLockZoom(settings->lockZoom());
+    // Re-fitting here would undo the lock, which is the one thing it exists to
+    // prevent: any unrelated settings change would silently drop the zoom.
+    if(mViewLock == LOCK_NONE)
+        setFitMode(imageFitModeDefault);
 }
 
 void ImageViewerV2::onFullscreenModeChanged(bool mode) {
@@ -277,11 +281,21 @@ void ImageViewerV2::showAnimation(std::shared_ptr<QMovie> _movie) {
         if(!keepFitMode || imageFitMode == FIT_FREE)
             imageFitMode = imageFitModeDefault;
 
-        if(mViewLock == LOCK_NONE) {
+        if(mViewLock == LOCK_NONE || !lockedScaleValid) {
+            // Nothing to lock to yet: the lock came back from settings before
+            // any image was shown. Fit normally and let doZoom() capture the
+            // scale. Deliberately NOT lockZoom() here -- that would set
+            // FIT_FREE, and the first fit at startup runs against a window that
+            // has not been shown yet, so the resize which corrects it would no
+            // longer re-fit and the image would stay at that wrong size.
             applyFitMode();
         } else {
             imageFitMode = FIT_FREE;
+            float const wanted = lockedScale;
             fitFree(lockedScale);
+            // doZoom() clamps to this image's minimum scale, which must not
+            // become the new lock -- the next image may well allow it again.
+            lockedScale = wanted;
             if(mViewLock == LOCK_ALL)
                 applySavedViewportPos();
         }
@@ -307,11 +321,21 @@ void ImageViewerV2::showImage(std::unique_ptr<QPixmap> _pixmap) {
         if(!keepFitMode || imageFitMode == FIT_FREE)
             imageFitMode = imageFitModeDefault;
 
-        if(mViewLock == LOCK_NONE) {
+        if(mViewLock == LOCK_NONE || !lockedScaleValid) {
+            // Nothing to lock to yet: the lock came back from settings before
+            // any image was shown. Fit normally and let doZoom() capture the
+            // scale. Deliberately NOT lockZoom() here -- that would set
+            // FIT_FREE, and the first fit at startup runs against a window that
+            // has not been shown yet, so the resize which corrects it would no
+            // longer re-fit and the image would stay at that wrong size.
             applyFitMode();
         } else {
             imageFitMode = FIT_FREE;
+            float const wanted = lockedScale;
             fitFree(lockedScale);
+            // doZoom() clamps to this image's minimum scale, which must not
+            // become the new lock -- the next image may well allow it again.
+            lockedScale = wanted;
             if(mViewLock == LOCK_ALL)
                 applySavedViewportPos();
         }
@@ -1139,6 +1163,10 @@ void ImageViewerV2::toggleLockZoom() {
     } else {
         mViewLock = LOCK_NONE;
     }
+    // One state, not two: the hotkey and the settings checkbox agree, and the
+    // choice survives a restart. Settings setters do not notify on their own,
+    // so this cannot loop back into readSettings().
+    settings->setLockZoom(mViewLock == LOCK_ZOOM);
 }
 
 bool ImageViewerV2::lockZoomEnabled() {
@@ -1147,8 +1175,23 @@ bool ImageViewerV2::lockZoomEnabled() {
 
 void ImageViewerV2::lockZoom() {
     lockedScale = pixmapItem.scale();
+    lockedScaleValid = true;
     imageFitMode = FIT_FREE;
     saveViewportPos();
+}
+
+// Used to restore the lock from settings, where there is no image to capture a
+// scale from yet; showImage() does that on the first one it gets.
+void ImageViewerV2::setLockZoom(bool mode) {
+    if(mode == (mViewLock == LOCK_ZOOM))
+        return;
+    if(mode) {
+        mViewLock = LOCK_ZOOM;
+        if(isDisplaying())
+            lockZoom();
+    } else {
+        mViewLock = LOCK_NONE;
+    }
 }
 
 void ImageViewerV2::toggleLockView() {
@@ -1234,6 +1277,14 @@ void ImageViewerV2::doZoom(float newScale) {
 
     pixmapItem.setTransformationMode(selectTransformationMode());
     swapToOriginalPixmap();
+    // A live lock tracks the zoom you have now, not the one you had when you
+    // switched it on -- otherwise zooming while locked snaps back on the next
+    // image. Re-applying the lock itself restores `wanted` afterwards, so this
+    // cannot drift.
+    if(mViewLock != LOCK_NONE) {
+        lockedScale = newScale;
+        lockedScaleValid = true;
+    }
     emit scaleChanged(newScale);
 }
 

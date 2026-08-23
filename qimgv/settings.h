@@ -147,6 +147,8 @@ public:
     void setMaximizedWindow(bool mode);
 
     bool keepFitMode();
+    bool lockZoom();
+    void setLockZoom(bool mode);
     void setKeepFitMode(bool mode);
 
     int expandLimit();

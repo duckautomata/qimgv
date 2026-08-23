@@ -619,6 +619,17 @@ void Settings::setKeepFitMode(bool mode) {
     settings->settingsConf->setValue("keepFitMode", mode);
 }
 //------------------------------------------------------------------------------
+// Whether the zoom level carries over to the next image instead of being
+// re-fitted. Distinct from keepFitMode(), which carries the fit *rule* over and
+// explicitly excludes free zoom.
+bool Settings::lockZoom() {
+    return settings->settingsConf->value("lockZoom", false).toBool();
+}
+
+void Settings::setLockZoom(bool mode) {
+    settings->settingsConf->setValue("lockZoom", mode);
+}
+//------------------------------------------------------------------------------
 bool Settings::fullscreenMode() {
     return settings->settingsConf->value("openInFullscreen", false).toBool();
 }

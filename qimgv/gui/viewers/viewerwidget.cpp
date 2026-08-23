@@ -194,6 +194,11 @@ void ViewerWidget::setInteractionEnabled(bool mode) {
         connect(imageViewer.get(), &ImageViewerV2::draggedOut, this, &ViewerWidget::draggedOut);
         imageViewer->setAttribute(Qt::WA_TransparentForMouseEvents, false);
     } else {
+        // These two were connected above but never disconnected here, so every
+        // crop-panel open/close cycle added a duplicate: the toggle then fired
+        // twice, turning the lock on and straight back off.
+        disconnect(this, &ViewerWidget::toggleLockZoom, imageViewer.get(), &ImageViewerV2::toggleLockZoom);
+        disconnect(this, &ViewerWidget::toggleLockView, imageViewer.get(), &ImageViewerV2::toggleLockView);
         disconnect(this, &ViewerWidget::zoomIn, imageViewer.get(), &ImageViewerV2::zoomIn);
         disconnect(this, &ViewerWidget::zoomOut, imageViewer.get(), &ImageViewerV2::zoomOut);
         disconnect(this, &ViewerWidget::zoomInCursor, imageViewer.get(), &ImageViewerV2::zoomInCursor);

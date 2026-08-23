@@ -213,6 +213,7 @@ void SettingsDialog::readSettings() {
     ui->showExtendedInfoTitle->setChecked(settings->windowTitleExtendedInfo());
     ui->cursorAutohideCheckBox->setChecked(settings->cursorAutohide());
     ui->keepFitModeCheckBox->setChecked(settings->keepFitMode());
+    ui->lockZoomCheckBox->setChecked(settings->lockZoom());
     if(settings->focusPointIn1to1Mode() == FOCUS_TOP)
         ui->focus1to1Top->setChecked(true);
     else if(settings->focusPointIn1to1Mode() == FOCUS_CENTER)
@@ -360,6 +361,7 @@ void SettingsDialog::saveSettings() {
     settings->setWindowTitleExtendedInfo(ui->showExtendedInfoTitle->isChecked());
     settings->setCursorAutohide(ui->cursorAutohideCheckBox->isChecked());
     settings->setKeepFitMode(ui->keepFitModeCheckBox->isChecked());
+    settings->setLockZoom(ui->lockZoomCheckBox->isChecked());
     if(ui->focus1to1Top->isChecked())
         settings->setFocusPointIn1to1Mode(FOCUS_TOP);
     else if(ui->focus1to1Center->isChecked())

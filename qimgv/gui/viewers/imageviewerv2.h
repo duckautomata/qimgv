@@ -58,6 +58,7 @@ signals:
 
 public slots:
     virtual void setFitMode(ImageFitMode mode);
+    void setLockZoom(bool mode);
     virtual void setFitOriginal();
     virtual void setFitWidth();
     virtual void setFitWindow();
@@ -146,6 +147,9 @@ private:
     float minScale, maxScale, fitWindowScale, fitWindowStretchScale, expandLimit, lockedScale;
     QPointF savedViewportPos;
     ViewLockMode mViewLock;
+    // lockedScale means nothing until something has been displayed to capture
+    // it from. Restoring the lock from settings happens before that.
+    bool lockedScaleValid = false;
 
     QPair<QPointF, QPoint> zoomAnchor; // [pixmap coords, viewport coords]
 

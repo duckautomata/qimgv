@@ -79,6 +79,7 @@ void ActionManager::initDefaults() {
     actionManager->defaults.insert("RMB", "contextMenu");
     actionManager->defaults.insert("Menu", "contextMenu");
     actionManager->defaults.insert("I", "toggleImageInfo");
+    actionManager->defaults.insert("L", "lockZoom");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+`", "toggleShuffle");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+D", "showInDirectory");
     actionManager->defaults.insert("`", "toggleSlideshow");
