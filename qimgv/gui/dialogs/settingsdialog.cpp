@@ -98,6 +98,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) : QDialog(parent), ui(new Ui::Se
     fitModeGrp.addButton(ui->fitModeWidth);
     fitModeGrp.addButton(ui->fitMode1to1);
     fitModeGrp.addButton(ui->fitModeWindowStretch);
+    fitModeGrp.addButton(ui->fitModeZoomLock);
     folderEndGrp.addButton(ui->folderEndSwitchFolder);
     folderEndGrp.addButton(ui->folderEndNoAction);
     folderEndGrp.addButton(ui->folderEndLoop);
@@ -213,7 +214,6 @@ void SettingsDialog::readSettings() {
     ui->showExtendedInfoTitle->setChecked(settings->windowTitleExtendedInfo());
     ui->cursorAutohideCheckBox->setChecked(settings->cursorAutohide());
     ui->keepFitModeCheckBox->setChecked(settings->keepFitMode());
-    ui->lockZoomCheckBox->setChecked(settings->lockZoom());
     if(settings->focusPointIn1to1Mode() == FOCUS_TOP)
         ui->focus1to1Top->setChecked(true);
     else if(settings->focusPointIn1to1Mode() == FOCUS_CENTER)
@@ -283,6 +283,8 @@ void SettingsDialog::readSettings() {
         ui->fitModeWidth->setChecked(true);
     else if(settings->imageFitMode() == FIT_WINDOW_STRETCH)
         ui->fitModeWindowStretch->setChecked(true);
+    else if(settings->imageFitMode() == FIT_ZOOM_LOCK)
+        ui->fitModeZoomLock->setChecked(true);
     else
         ui->fitMode1to1->setChecked(true);
 
@@ -320,6 +322,8 @@ void SettingsDialog::saveSettings() {
         settings->setImageFitMode(FIT_WIDTH);
     else if(ui->fitModeWindowStretch->isChecked())
         settings->setImageFitMode(FIT_WINDOW_STRETCH);
+    else if(ui->fitModeZoomLock->isChecked())
+        settings->setImageFitMode(FIT_ZOOM_LOCK);
     else
         settings->setImageFitMode(FIT_ORIGINAL);
 
@@ -361,7 +365,6 @@ void SettingsDialog::saveSettings() {
     settings->setWindowTitleExtendedInfo(ui->showExtendedInfoTitle->isChecked());
     settings->setCursorAutohide(ui->cursorAutohideCheckBox->isChecked());
     settings->setKeepFitMode(ui->keepFitModeCheckBox->isChecked());
-    settings->setLockZoom(ui->lockZoomCheckBox->isChecked());
     if(ui->focus1to1Top->isChecked())
         settings->setFocusPointIn1to1Mode(FOCUS_TOP);
     else if(ui->focus1to1Center->isChecked())

@@ -191,6 +191,7 @@ void ViewerWidget::setInteractionEnabled(bool mode) {
         connect(this, &ViewerWidget::fitWidth, imageViewer.get(), &ImageViewerV2::setFitWidth);
         connect(this, &ViewerWidget::fitOriginal, imageViewer.get(), &ImageViewerV2::setFitOriginal);
         connect(this, &ViewerWidget::fitWindowStretch, imageViewer.get(), &ImageViewerV2::setFitWindowStretch);
+        connect(this, &ViewerWidget::zoomLock, imageViewer.get(), &ImageViewerV2::setZoomLock);
         connect(imageViewer.get(), &ImageViewerV2::draggedOut, this, &ViewerWidget::draggedOut);
         imageViewer->setAttribute(Qt::WA_TransparentForMouseEvents, false);
     } else {
@@ -211,6 +212,7 @@ void ViewerWidget::setInteractionEnabled(bool mode) {
         disconnect(this, &ViewerWidget::fitWidth, imageViewer.get(), &ImageViewerV2::setFitWidth);
         disconnect(this, &ViewerWidget::fitOriginal, imageViewer.get(), &ImageViewerV2::setFitOriginal);
         disconnect(this, &ViewerWidget::fitWindowStretch, imageViewer.get(), &ImageViewerV2::setFitWindowStretch);
+        disconnect(this, &ViewerWidget::zoomLock, imageViewer.get(), &ImageViewerV2::setZoomLock);
         disconnect(imageViewer.get(), &ImageViewerV2::draggedOut, this, &ViewerWidget::draggedOut);
         imageViewer->setAttribute(Qt::WA_TransparentForMouseEvents, true);
         hideContextMenu();
@@ -277,6 +279,10 @@ void ViewerWidget::setFitMode(ImageFitMode mode) {
         emit fitWidth();
     else if(mode == FIT_ORIGINAL)
         emit fitOriginal();
+    else if(mode == FIT_WINDOW_STRETCH)
+        emit fitWindowStretch();
+    else if(mode == FIT_ZOOM_LOCK)
+        emit zoomLock();
 }
 
 ImageFitMode ViewerWidget::fitMode() {

@@ -26,9 +26,12 @@ ContextMenu::ContextMenu(QWidget *parent) : QWidget(parent), ui(new Ui::ContextM
     ui->fitWindow->setAction("fitWindow");
     ui->fitWindow->setIconPath(":/res/icons/common/buttons/contextmenu/fit-window18.png");
     ui->fitWindow->setTriggerMode(TriggerMode::PressTrigger);
-    ui->fitWindowStretch->setAction("fitWindowStretch");
+    ui->fitWindowStretch->setAction("fitHeight");
     ui->fitWindowStretch->setIconPath(":/res/icons/common/buttons/contextmenu/fit-height-stretch18.png");
     ui->fitWindowStretch->setTriggerMode(TriggerMode::PressTrigger);
+    ui->zoomLock->setAction("zoomLock");
+    ui->zoomLock->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-lock18.png");
+    ui->zoomLock->setTriggerMode(TriggerMode::PressTrigger);
     // -------------------------------------------------------------------------
     // transform buttons
     ui->rotateLeft->setAction("rotateLeft");

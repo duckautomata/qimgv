@@ -1996,6 +1996,16 @@
                      </widget>
                     </item>
                     <item>
+                     <widget class="QRadioButton" name="fitModeZoomLock">
+                      <property name="toolTip">
+                       <string>Keeps the zoom level you are on instead of re-fitting the next image.</string>
+                      </property>
+                      <property name="text">
+                       <string>Lock zoom</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
                      <widget class="QRadioButton" name="fitModeWindow">
                       <property name="text">
                        <string>Fit in window</string>
@@ -2045,16 +2055,6 @@
                    <widget class="QCheckBox" name="keepFitModeCheckBox">
                     <property name="text">
                      <string>Keep fit mode when switching images</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="lockZoomCheckBox">
-                    <property name="toolTip">
-                     <string>Keeps the zoom level you are at instead of re-fitting the next image. Can also be toggled with L.</string>
-                    </property>
-                    <property name="text">
-                     <string>Lock zoom when switching images</string>
                     </property>
                    </widget>
                   </item>

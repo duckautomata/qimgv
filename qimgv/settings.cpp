@@ -618,17 +618,7 @@ bool Settings::keepFitMode() {
 void Settings::setKeepFitMode(bool mode) {
     settings->settingsConf->setValue("keepFitMode", mode);
 }
-//------------------------------------------------------------------------------
-// Whether the zoom level carries over to the next image instead of being
-// re-fitted. Distinct from keepFitMode(), which carries the fit *rule* over and
-// explicitly excludes free zoom.
-bool Settings::lockZoom() {
-    return settings->settingsConf->value("lockZoom", false).toBool();
-}
 
-void Settings::setLockZoom(bool mode) {
-    settings->settingsConf->setValue("lockZoom", mode);
-}
 //------------------------------------------------------------------------------
 bool Settings::fullscreenMode() {
     return settings->settingsConf->value("openInFullscreen", false).toBool();
@@ -718,7 +708,9 @@ void Settings::setPanelPinned(bool mode) {
  */
 ImageFitMode Settings::imageFitMode() {
     int mode = settings->settingsConf->value("defaultFitMode", 0).toInt();
-    if(mode < 0 || mode > 3) {
+    // FIT_ZOOM_LOCK is the last selectable mode; FIT_FREE above it is an
+    // internal state and is deliberately never persisted.
+    if(mode < 0 || mode > FIT_ZOOM_LOCK) {
         qDebug() << "Settings: Invalid fit mode ( " + QString::number(mode) + " ). Resetting to default.";
         mode = 0;
     }
@@ -727,7 +719,7 @@ ImageFitMode Settings::imageFitMode() {
 
 void Settings::setImageFitMode(ImageFitMode mode) {
     int modeInt = static_cast<ImageFitMode>(mode);
-    if(modeInt < 0 || modeInt > 3) {
+    if(modeInt < 0 || modeInt > FIT_ZOOM_LOCK) {
         qDebug() << "Settings: Invalid fit mode ( " + QString::number(modeInt) + " ). Resetting to default.";
         modeInt = 0;
     }

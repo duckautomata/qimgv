@@ -27,7 +27,7 @@ void Actions::init() {
     mActions.insert("fitWindow", QVersionNumber(0, 6, 2));
     mActions.insert("fitWidth", QVersionNumber(0, 6, 2));
     mActions.insert("fitNormal", QVersionNumber(0, 6, 2));
-    mActions.insert("fitWindowStretch", QVersionNumber(1, 0, 3));
+    mActions.insert("fitHeight", QVersionNumber(1, 0, 3));
     mActions.insert("toggleFitMode", QVersionNumber(0, 6, 2));
     mActions.insert("resize", QVersionNumber(0, 6, 2));
     mActions.insert("rotateRight", QVersionNumber(0, 6, 2));
@@ -86,7 +86,7 @@ void Actions::init() {
     mActions.insert("prevDirectory", QVersionNumber(0, 9, 2));
     mActions.insert("seekVideoForward", QVersionNumber(0, 9, 2));
     mActions.insert("seekVideoBackward", QVersionNumber(0, 9, 2));
-    mActions.insert("lockZoom", QVersionNumber(0, 9, 2));
+    mActions.insert("zoomLock", QVersionNumber(2, 0, 2)); // gets "0" on upgrade
     mActions.insert("lockView", QVersionNumber(0, 9, 2));
     mActions.insert("print", QVersionNumber(1, 0, 0));
     mActions.insert("toggleFullscreenInfoBar", QVersionNumber(1, 0, 0));

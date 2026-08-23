@@ -29,10 +29,11 @@ void ActionManager::initDefaults() {
     actionManager->defaults.insert("LMB_DoubleClick", "toggleFullscreen");
     actionManager->defaults.insert("MiddleButton", "exit");
     actionManager->defaults.insert("Space", "toggleFitMode");
+    actionManager->defaults.insert("0", "zoomLock");
     actionManager->defaults.insert("1", "fitWindow");
     actionManager->defaults.insert("2", "fitWidth");
-    actionManager->defaults.insert("3", "fitNormal");
-    actionManager->defaults.insert("4", "fitWindowStretch");
+    actionManager->defaults.insert("3", "fitHeight");
+    actionManager->defaults.insert("4", "fitNormal");
     actionManager->defaults.insert("R", "resize");
     actionManager->defaults.insert("H", "flipH");
     actionManager->defaults.insert("V", "flipV");
@@ -79,7 +80,6 @@ void ActionManager::initDefaults() {
     actionManager->defaults.insert("RMB", "contextMenu");
     actionManager->defaults.insert("Menu", "contextMenu");
     actionManager->defaults.insert("I", "toggleImageInfo");
-    actionManager->defaults.insert("L", "lockZoom");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+`", "toggleShuffle");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+D", "showInDirectory");
     actionManager->defaults.insert("`", "toggleSlideshow");
@@ -189,6 +189,15 @@ void ActionManager::adjustFromVersion(QVersionNumber lastVer) {
         }
         shortcuts = swapped;
     }
+    // 3 and 4 swapped meaning: 3 is now Stretch to height, 4 is 1:1. The
+    // generic loop below cannot do this -- it only fills keys that are still
+    // free, and both of these are already taken. Anyone who rebound them keeps
+    // their own choice, since removeAllShortcuts/insert only touches the two
+    // default keys.
+    if(lastVer < QVersionNumber(2, 0, 2)) {
+        actionManager->resetDefaults("fitHeight");
+        actionManager->resetDefaults("fitNormal");
+    }
     // add new default actions
     QMapIterator<QString, QString> i(defaults);
     while(i.hasNext()) {
@@ -267,8 +276,31 @@ inline ActionType ActionManager::validateAction(const QString &actionName) {
     return ActionType::ACTION_INVALID;
 }
 //------------------------------------------------------------------------------
+// Renamed action ids, old -> new. validateShortcuts() erases any binding whose
+// action it does not recognise, so without this a rename silently deletes the
+// user's key for it.
+//
+// This cannot live in adjustFromVersion(): ActionManager is constructed in
+// main() well before Core, so validation has already run -- and thrown the
+// bindings away -- by the time any version-migration hook is reached. It has to
+// happen between reading the map and validating it, which is here. It is
+// unconditional and idempotent rather than version-gated, for the same reason:
+// there is no reliable version to gate on this early.
+void ActionManager::migrateRenamedActions() {
+    static QMap<QString, QString> const renamed = {
+        {QStringLiteral("fitWindowStretch"), QStringLiteral("fitHeight")},
+        {QStringLiteral("lockZoom"), QStringLiteral("zoomLock")},
+    };
+    for(auto i = shortcuts.begin(); i != shortcuts.end(); ++i) {
+        auto const it = renamed.find(i.value());
+        if(it != renamed.end())
+            i.value() = it.value();
+    }
+}
+
 void ActionManager::readShortcuts() {
     settings->readShortcuts(shortcuts);
+    actionManager->migrateRenamedActions();
     actionManager->validateShortcuts();
 }
 //------------------------------------------------------------------------------

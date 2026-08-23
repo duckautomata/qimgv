@@ -132,10 +132,11 @@ void ImageViewerV2::readSettings() {
     onFullscreenModeChanged(mIsFullscreen);
     updateMinScale();
     setScalingFilter(settings->scalingFilter());
-    setLockZoom(settings->lockZoom());
-    // Re-fitting here would undo the lock, which is the one thing it exists to
-    // prevent: any unrelated settings change would silently drop the zoom.
-    if(mViewLock == LOCK_NONE)
+    // Re-fitting here would undo an active lock, which is the one thing it
+    // exists to prevent: any unrelated settings change would drop the zoom.
+    if(imageFitModeDefault == FIT_ZOOM_LOCK)
+        mViewLock = LOCK_ZOOM;
+    else if(mViewLock == LOCK_NONE)
         setFitMode(imageFitModeDefault);
 }
 
@@ -891,6 +892,10 @@ void ImageViewerV2::applyFitMode() {
     case FIT_WINDOW_STRETCH:
         fitWindowStretch();
         break;
+    case FIT_ZOOM_LOCK:
+        // Nothing to fit to: showImage() has already restored the locked scale,
+        // and a resize must not undo it.
+        break;
     default:
         break;
     }
@@ -901,6 +906,11 @@ void ImageViewerV2::setFitMode(ImageFitMode newMode) {
     if(scaleTimer->isActive())
         scaleTimer->stop();
     stopPosAnimation();
+    // Choosing any other fit mode releases the lock. FIT_FREE is excluded: it is
+    // what a manual zoom leaves behind, and zooming while locked must not drop
+    // the lock -- that is the whole point of it.
+    if(newMode != FIT_ZOOM_LOCK && newMode != FIT_FREE)
+        mViewLock = LOCK_NONE;
     imageFitMode = newMode;
     applyFitMode();
     requestScaling();
@@ -926,6 +936,18 @@ void ImageViewerV2::setFitWindow() {
 // public, sends scale request
 void ImageViewerV2::setFitWindowStretch() {
     setFitMode(FIT_WINDOW_STRETCH);
+    requestScaling();
+}
+
+// Selecting this mode captures the zoom you are on and keeps it for every image
+// after, until another fit mode is chosen. The scale is captured here rather
+// than left to the first image, so switching to it never changes what is on
+// screen right now.
+void ImageViewerV2::setZoomLock() {
+    if(isDisplaying())
+        lockZoom();
+    mViewLock = LOCK_ZOOM;
+    setFitMode(FIT_ZOOM_LOCK);
     requestScaling();
 }
 
@@ -1163,10 +1185,9 @@ void ImageViewerV2::toggleLockZoom() {
     } else {
         mViewLock = LOCK_NONE;
     }
-    // One state, not two: the hotkey and the settings checkbox agree, and the
-    // choice survives a restart. Settings setters do not notify on their own,
-    // so this cannot loop back into readSettings().
-    settings->setLockZoom(mViewLock == LOCK_ZOOM);
+    // Kept for the toggle-style action; the persisted state is the fit mode,
+    // set through setZoomLock().
+    imageFitMode = (mViewLock == LOCK_ZOOM) ? FIT_ZOOM_LOCK : imageFitModeDefault;
 }
 
 bool ImageViewerV2::lockZoomEnabled() {
@@ -1178,20 +1199,6 @@ void ImageViewerV2::lockZoom() {
     lockedScaleValid = true;
     imageFitMode = FIT_FREE;
     saveViewportPos();
-}
-
-// Used to restore the lock from settings, where there is no image to capture a
-// scale from yet; showImage() does that on the first one it gets.
-void ImageViewerV2::setLockZoom(bool mode) {
-    if(mode == (mViewLock == LOCK_ZOOM))
-        return;
-    if(mode) {
-        mViewLock = LOCK_ZOOM;
-        if(isDisplaying())
-            lockZoom();
-    } else {
-        mViewLock = LOCK_NONE;
-    }
 }
 
 void ImageViewerV2::toggleLockView() {

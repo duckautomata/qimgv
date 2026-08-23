@@ -113,6 +113,13 @@
             <number>0</number>
            </property>
            <item>
+            <widget class="ActionButton" name="zoomLock" native="true">
+             <property name="accessibleName">
+              <string notr="true">ContextMenuButton</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="ActionButton" name="fitWindow" native="true">
              <property name="accessibleName">
               <string notr="true">ContextMenuButton</string>

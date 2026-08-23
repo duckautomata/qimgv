@@ -145,10 +145,10 @@ void Core::initActions() {
     connect(actionManager, &ActionManager::fitWindow, mw, &MW::fitWindow);
     connect(actionManager, &ActionManager::fitWidth, mw, &MW::fitWidth);
     connect(actionManager, &ActionManager::fitNormal, mw, &MW::fitOriginal);
-    connect(actionManager, &ActionManager::fitWindowStretch, mw, &MW::fitWindowStretch);
+    connect(actionManager, &ActionManager::fitHeight, mw, &MW::fitHeight);
     connect(actionManager, &ActionManager::toggleFitMode, mw, &MW::switchFitMode);
     connect(actionManager, &ActionManager::toggleFullscreen, mw, &MW::triggerFullScreen);
-    connect(actionManager, &ActionManager::lockZoom, mw, &MW::toggleLockZoom);
+    connect(actionManager, &ActionManager::zoomLock, mw, &MW::zoomLock);
     connect(actionManager, &ActionManager::lockView, mw, &MW::toggleLockView);
     connect(actionManager, &ActionManager::zoomIn, mw, &MW::zoomIn);
     connect(actionManager, &ActionManager::zoomOut, mw, &MW::zoomOut);

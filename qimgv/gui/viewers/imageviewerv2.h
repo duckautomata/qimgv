@@ -58,11 +58,11 @@ signals:
 
 public slots:
     virtual void setFitMode(ImageFitMode mode);
-    void setLockZoom(bool mode);
     virtual void setFitOriginal();
     virtual void setFitWidth();
     virtual void setFitWindow();
     virtual void setFitWindowStretch();
+    virtual void setZoomLock();
     virtual void zoomIn();
     virtual void zoomOut();
     virtual void zoomInCursor();

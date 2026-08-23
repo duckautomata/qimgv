@@ -74,6 +74,7 @@ signals:
     void fitWidth();
     void fitOriginal();
     void fitWindowStretch();
+    void zoomLock();
     void toggleTransparencyGrid();
     void draggedOut();
     void setFilterNearest();
