@@ -93,7 +93,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>EXIF Tags</string>
+         <string>File info</string>
         </property>
        </widget>
       </item>

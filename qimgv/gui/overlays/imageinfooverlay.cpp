@@ -134,6 +134,9 @@ void ImageInfoOverlay::setInfo(QVector<FileInfoSection> const &sections) {
         }
     }
     scrollArea->verticalScrollBar()->setValue(0);
+    // Rows were just inserted; without this the hint above is computed against
+    // the previous contents.
+    contentLayout->activate();
     if(!isHidden())
         recalculateGeometry();
 }
@@ -148,14 +151,20 @@ void ImageInfoOverlay::setInfo(QVector<FileInfoSection> const &sections) {
 QSize ImageInfoOverlay::sizeHint() const {
     // setupUi() lays out, and laying out asks for sizeHint, so this runs once
     // before the scroll area exists.
-    if(!content || !ui->header)
+    if(!content || !contentLayout || !ui->header)
         return OverlayWidget::sizeHint();
     QSize const box = const_cast<ImageInfoOverlay *>(this)->containerSize();
-    int const wanted = ui->header->sizeHint().height() + content->sizeHint().height() + 8;
+    // The layout's own hint, not the widget's: QWidget::sizeHint() is cached and
+    // is still the pre-insert value immediately after rows are added, which
+    // sized the panel to a fraction of its content.
+    int const wanted = ui->header->sizeHint().height() + contentLayout->totalSizeHint().height() + 8;
     if(!box.isValid() || box.isEmpty())
         return {qMax(minimumWidth(), 360), qMax(80, wanted)};
     int const width = qMax(minimumWidth(), qMin(560, int(box.width() * 0.6)));
-    int const height = qBound(80, wanted, qMax(80, int(box.height() * 0.9)));
+    // Reads better with room to breathe: fill most of the viewer when there is
+    // enough to show, rather than sizing tightly to a handful of rows.
+    int const maxHeight = qMax(200, int(box.height() * 0.92));
+    int const height = qBound(qMin(200, maxHeight), wanted, maxHeight);
     return {width, height};
 }
 
