@@ -6,6 +6,34 @@ The heading for each version is what qimgv shows in its "what's new" window
 after an update, so keep them as `## <version>` and keep the prose readable by
 someone who is not following the commit log.
 
+## 2.0.2
+
+**File info**
+
+- The I key now opens a file info panel instead of a short list of EXIF tags.
+  It shows the file's name, size and location; the format worked out from the
+  file's contents rather than its extension, with its media type, resolution
+  and codec; and all of the Exif, IPTC and XMP metadata it carries. Previously
+  only nine EXIF tags were shown, and IPTC and XMP were never read at all.
+- Values are readable rather than raw -- "Flash: Yes, auto, red-eye reduction"
+  instead of "Flash: 89".
+- The panel scrolls, so a file with a lot of metadata is no longer cut off.
+- Reading metadata no longer holds up the interface, and no longer happens at
+  all unless the panel is open. Every image you opened used to have its
+  metadata read whether or not you were looking at it.
+
+**Image fit**
+
+- New **Lock zoom** fit mode: keeps the zoom level you are on rather than
+  re-fitting each image as you move through a folder. Choose it in Settings, in
+  the right-click menu, or with `0`.
+- "Fit in window (stretch)" is now **Stretch to height**, which is what it
+  actually does, and it sits next to "Stretch to width".
+- Choosing "Stretch to height" in Settings had no effect. Fixed.
+- The fit shortcuts are now `0` lock zoom, `1` fit window, `2` stretch to
+  width, `3` stretch to height, `4` 1:1. Note that `3` and `4` have swapped
+  meaning. Shortcuts you set yourself are kept as they are.
+
 ## 2.0.1
 
 Mostly about large folders and slow storage. Reading a folder no longer blocks
