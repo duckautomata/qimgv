@@ -46,6 +46,7 @@ private:
     static void initShortcuts();
     QString modifierKeys(QEvent *event);
     bool invokeActionForShortcut(const QString &action);
+    void migrateRenamedActions();
     void validateShortcuts();
     void readShortcuts();
     ActionType validateAction(const QString &actionName);
@@ -62,7 +63,7 @@ signals:
     void fitWindow();
     void fitWidth();
     void fitNormal();
-    void fitWindowStretch();
+    void fitHeight();
     void flipH();
     void flipV();
     void toggleFitMode();
@@ -116,7 +117,7 @@ signals:
     void goUp();
     void nextDirectory();
     void prevDirectory();
-    void lockZoom();
+    void zoomLock();
     void lockView();
     void print();
     void toggleFullscreenInfoBar();

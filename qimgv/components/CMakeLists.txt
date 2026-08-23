@@ -24,6 +24,8 @@ target_sources(qimgv PRIVATE
     directorymanager/directorymanager.cpp
     directorymanager/directoryscanner.cpp
 
+    fileinfo/fileinfoextractor.cpp
+
     directorymanager/watchers/directorywatcher.cpp
     directorymanager/watchers/dummywatcher.cpp
     directorymanager/watchers/watcherevent.cpp

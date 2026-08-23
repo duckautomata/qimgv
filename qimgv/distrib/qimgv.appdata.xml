@@ -65,6 +65,15 @@
   <url type="vcs-browser">https://github.com/duckautomata/qimgv</url>
 
   <releases>
+    <release version="2.0.2" date="2026-08-23">
+      <description>
+        <p>The I key now opens a file info panel showing the file's real format,
+           codec and resolution alongside all of its Exif, IPTC and XMP
+           metadata, read without holding up the interface. Adds a Lock zoom
+           fit mode, and renames "Fit in window (stretch)" to "Stretch to
+           height".</p>
+      </description>
+    </release>
     <release version="2.0.1" date="2026-08-21">
       <description>
         <p>Reading a folder moved off the UI thread, so the window stays

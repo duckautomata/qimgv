@@ -15,7 +15,8 @@ ctest --preset dev
 
 Dependencies and per-platform notes: **[docs/BUILDING.md](docs/BUILDING.md)**.
 Windows workarounds and the measurements behind the current design:
-**[docs/WINDOWS-NOTES.md](docs/WINDOWS-NOTES.md)**.
+**[docs/WINDOWS-NOTES.md](docs/WINDOWS-NOTES.md)**. Cutting a release:
+**[docs/RELEASING.md](docs/RELEASING.md)**.
 
 `compile_commands.json` is generated automatically, so clangd works out of the box. Install `ccache`
 and `mold` if you can — the build picks them up and iteration gets noticeably faster.

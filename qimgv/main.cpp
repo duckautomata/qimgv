@@ -15,6 +15,10 @@
 #include "core.h"
 #include "components/directorymanager/directoryscanner.h"
 
+#ifdef USE_EXIV2
+#include <exiv2/exiv2.hpp>
+#endif
+
 #ifdef __APPLE__
 #include "macosapplication.h"
 #endif
@@ -22,6 +26,11 @@
 //------------------------------------------------------------------------------
 void saveSettings() {
     delete settings;
+#ifdef USE_EXIV2
+    // Pairs with the initialize() in main(). Registered through atexit, so this
+    // runs after the pools have been torn down and nothing can still be decoding.
+    Exiv2::XmpParser::terminate();
+#endif
 }
 //------------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
@@ -39,6 +48,22 @@ int main(int argc, char *argv[]) {
     // setlocale mutates process-global state. LC_CTYPE only, so LC_NUMERIC
     // keeps the C locale and number parsing is unaffected.
     std::setlocale(LC_CTYPE, ".UTF8");
+#endif
+
+#ifdef USE_EXIV2
+    // Exiv2::XmpParser guards its own initialisation with a plain bool and no
+    // lock, and its header says outright that initialize() "is not thread-safe
+    // and needs to be called in a thread-safe manner (e.g., on program
+    // startup)". Metadata extraction runs on a worker, and DocumentInfo is
+    // already built on the loader and thumbnailer pools, so two threads can
+    // reach the first XMP decode at once. Doing it here, before any thread
+    // exists, is the whole fix.
+    //
+    // Not theoretical: with four threads racing the first decode, a stress
+    // harness saw 6 failures in 30 runs -- one segfault and five hangs, the
+    // hangs being the worse outcome since the pool thread never comes back.
+    // With this call first, 30/30 clean.
+    Exiv2::XmpParser::initialize();
 #endif
 
     // for hidpi testing

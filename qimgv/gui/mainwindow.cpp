@@ -186,7 +186,14 @@ void MW::fitOriginal() {
     }
 }
 
-void MW::fitWindowStretch() {
+void MW::zoomLock() {
+    if(viewerWidget->interactionEnabled()) {
+        viewerWidget->setFitMode(FIT_ZOOM_LOCK);
+    } else {
+        showMessage("Zoom temporary disabled");
+    }
+}
+void MW::fitHeight() {
     if(viewerWidget->interactionEnabled()) {
         viewerWidget->fitWindowStretch();
     } else {
@@ -326,10 +333,15 @@ void MW::toggleFullscreenInfoBar() {
 void MW::toggleImageInfoOverlay() {
     if(centralWidget->currentViewMode() == MODE_FOLDERVIEW)
         return;
-    if(imageInfoOverlay->isHidden())
+    if(imageInfoOverlay->isHidden()) {
         imageInfoOverlay->show();
-    else
+        // Nothing is read until the panel is actually open. Metadata extraction
+        // is file I/O, and doing it for every image whether or not anyone is
+        // looking is what the old code did.
+        emit requestFileInfo();
+    } else {
         imageInfoOverlay->hide();
+    }
 }
 
 void MW::toggleRenameOverlay(QString currentName) {
@@ -861,10 +873,18 @@ void MW::onInfoUpdated() {
     setWindowTitle(windowTitle);
 }
 
-// TODO!!! buffer this in mw
-void MW::setExifInfo(QMap<QString, QString> info) {
+void MW::setFileInfo(QVector<FileInfoSection> const &sections) {
     if(imageInfoOverlay)
-        imageInfoOverlay->setExifInfo(info);
+        imageInfoOverlay->setInfo(sections);
+}
+
+void MW::setFileInfoLoading() {
+    if(imageInfoOverlay)
+        imageInfoOverlay->setLoading();
+}
+
+bool MW::imageInfoVisible() {
+    return imageInfoOverlay && !imageInfoOverlay->isHidden();
 }
 
 std::shared_ptr<FolderViewProxy> MW::getFolderView() {

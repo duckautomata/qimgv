@@ -11,6 +11,7 @@
 #include "appversion.h"
 #include "settings.h"
 #include "components/directorymodel.h"
+#include "components/fileinfo/fileinfoextractor.h"
 #include "components/directorypresenter.h"
 #include "components/scriptmanager/scriptmanager.h"
 #include "components/updatechecker.h"
@@ -62,6 +63,7 @@ private:
 
     // See Core::modelDelayLoad().
     bool reattachCurrentImageOnLoad = false;
+    FileInfoExtractor fileInfoExtractor;
 
     // See Core::nextDirectory(). Listing a directory is asynchronous, so the
     // entry those want to open does not exist yet when they ask for it.
@@ -169,6 +171,8 @@ private slots:
     void onDropIn(const QMimeData *mimeData, QObject *source);
     void toggleShuffle();
     void onModelLoaded();
+    void onFileInfoReady(QString path, QVector<FileInfoSection> sections);
+    void requestFileInfo();
     void outputError(const FileOpResult &error) const;
     void showOpenDialog();
     void showInDirectory();
