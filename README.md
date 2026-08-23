@@ -185,6 +185,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Bug reports and pull requests are welcom
 [docs/WINDOWS-NOTES.md](docs/WINDOWS-NOTES.md) covers the Windows-specific
 workarounds, the performance measurements behind the current design, and what
 has been verified by hand rather than by CI.
+[docs/RELEASING.md](docs/RELEASING.md) covers cutting a release.
 
 ## License
 
