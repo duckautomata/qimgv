@@ -6,6 +6,24 @@ The heading for each version is what qimgv shows in its "what's new" window
 after an update, so keep them as `## <version>` and keep the prose readable by
 someone who is not following the commit log.
 
+## 2.0.3
+
+**Video**
+
+- Videos can now be zoomed and panned. Zoom with `+` and `-`, with Ctrl+wheel
+  (at the pointer), or by dragging up and down with the right mouse button;
+  the wheel with the right button held works too. Once a video is larger than
+  the window, drag it around with the left mouse button, or scroll it with the
+  Up and Down keys.
+- Every video opens fitted to the window, and the zoom resets when you move to
+  the next one. The fit shortcuts and Lock zoom only apply to images.
+- Clicking a video zoomed larger than the window still pauses it, but on
+  release rather than on press, so that dragging it does not.
+- Moving from one video to the next used to show the previous video's last
+  frame while the new one loaded. It now shows the background until the new
+  video is ready, and a video that fails to open no longer leaves the previous
+  one on screen.
+
 ## 2.0.2
 
 **File info**

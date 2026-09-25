@@ -25,6 +25,8 @@ VideoPlayerMpv::VideoPlayerMpv(QWidget *parent) : VideoPlayer(parent) {
     connect(m_mpv, SIGNAL(positionChanged(int)), this, SIGNAL(positionChanged(int)));
     connect(m_mpv, SIGNAL(videoPaused(bool)), this, SIGNAL(videoPaused(bool)));
     connect(m_mpv, SIGNAL(playbackFinished()), this, SIGNAL(playbackFinished()));
+    connect(m_mpv, SIGNAL(videoSizeChanged(QSize)), this, SIGNAL(videoSizeChanged(QSize)));
+    connect(m_mpv, SIGNAL(viewportResized(QSize)), this, SIGNAL(viewportResized(QSize)));
 }
 
 void VideoPlayerMpv::setBackgroundColor(QColor color) {
@@ -35,10 +37,14 @@ void VideoPlayerMpv::setTransparencyGrid(QPixmap const &tile) {
     m_mpv->setTransparencyGrid(tile);
 }
 
+void VideoPlayerMpv::setPlacement(Placement mode, double scale, double alignX, double alignY) {
+    m_mpv->setVideoPlacement(mpvOptionsFor(mode, scale, alignX, alignY));
+}
+
 bool VideoPlayerMpv::showVideo(QString file) {
     if(file.isEmpty())
         return false;
-    m_mpv->command(QStringList() << "loadfile" << file);
+    m_mpv->loadFile(file);
     setPaused(false);
     return true;
 }
@@ -67,7 +73,7 @@ void VideoPlayerMpv::frameStepBack() {
 }
 
 void VideoPlayerMpv::stop() {
-    m_mpv->command(QVariantList() << "stop");
+    m_mpv->stop();
 }
 
 void VideoPlayerMpv::setPaused(bool mode) {
@@ -98,11 +104,9 @@ int VideoPlayerMpv::volume() {
     return m_mpv->volume();
 }
 
+// Kept for the vtable. Goes through setPlacement() so there is one writer for these options.
 void VideoPlayerMpv::setVideoUnscaled(bool mode) {
-    if(mode)
-        m_mpv->setOption("video-unscaled", "downscale-big");
-    else
-        m_mpv->setOption("video-unscaled", "no");
+    setPlacement(mode ? PLACEMENT_FIT_SHRINK : PLACEMENT_FIT_GROW, 1, 0, 0);
 }
 
 void VideoPlayerMpv::paintEvent(QPaintEvent *event) {

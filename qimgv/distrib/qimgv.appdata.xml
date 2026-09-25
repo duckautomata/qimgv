@@ -65,6 +65,13 @@
   <url type="vcs-browser">https://github.com/duckautomata/qimgv</url>
 
   <releases>
+    <release version="2.0.3" date="2026-09-24">
+      <description>
+        <p>Videos can be zoomed and panned like images. Switching from one video
+           to the next no longer briefly shows the previous video's last
+           frame.</p>
+      </description>
+    </release>
     <release version="2.0.2" date="2026-08-23">
       <description>
         <p>The I key now opens a file info panel showing the file's real format,

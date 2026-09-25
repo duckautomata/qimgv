@@ -13,6 +13,8 @@
 #include <QDebug>
 #include <QOpenGLWidget>
 
+class VideoZoom;
+
 class VideoPlayerInitProxy : public VideoPlayer {
 public:
     VideoPlayerInitProxy(QWidget *parent = nullptr);
@@ -33,6 +35,7 @@ public:
     int volume();
     void setVideoUnscaled(bool mode);
     void setLoopPlayback(bool mode);
+    void setPlacement(Placement mode, double scale, double alignX, double alignY);
     std::shared_ptr<VideoPlayer> getPlayer();
     bool isInitialized();
 
@@ -43,6 +46,7 @@ public:
     void onFullscreenModeChanged(bool mode);
     // The same temporary, unsaved override the image viewer applies.
     void toggleTransparencyGrid();
+    VideoZoom *zoom() const;
 
 public slots:
     void show();
@@ -73,6 +77,8 @@ private:
     // See the constructor: keeps the window's backing store texture-composited
     // from startup so loading the player later does not recreate the window.
     QOpenGLWidget *glBackingStorePin = nullptr;
+
+    VideoZoom *mZoom = nullptr;
 
 private slots:
     void onSettingsChanged();

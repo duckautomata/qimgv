@@ -312,6 +312,9 @@ void MW::toggleLockZoom() {
 }
 
 void MW::toggleLockView() {
+    // Like the fit modes, locks do nothing on a video -- and the image lock's state is not this one's.
+    if(viewerWidget->isShowingVideo())
+        return;
     viewerWidget->toggleLockView();
     if(viewerWidget->lockViewEnabled())
         showMessage("View lock: ON");

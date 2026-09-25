@@ -3,6 +3,7 @@
 #include <QWidget>
 #include <QColor>
 #include <QPixmap>
+#include <QSize>
 
 class VideoPlayer : public QWidget {
     Q_OBJECT
@@ -38,8 +39,28 @@ signals:
     void positionChanged(int value);
     void videoPaused(bool);
     void playbackFinished();
+    // The picture's size at 100%, in video pixels: aspect ratio applied, and swapped for 90/270 degree
+    // rotation because the player rotates when it draws. Empty when there is no picture. Sent for every
+    // new file just before its first frame shows -- even if unchanged -- and on changes after that.
+    void videoSizeChanged(QSize size);
+    // What the player renders into changed size, in the device pixels it renders at.
+    void viewportResized(QSize devicePixels);
 
 public slots:
     virtual void show();
     virtual void hide();
+
+public:
+    // Declared after show()/hide() so the existing vtable entries keep their slots. That does not make
+    // an older plugin usable: the app calls this for every video, so the app and the plugin must be
+    // built from this same header (see plugins/player_mpv/CMakeLists.txt).
+    enum Placement {
+        PLACEMENT_FIT_SHRINK, // fit the widget, never above 100% (the default)
+        PLACEMENT_FIT_GROW,   // fit the widget, enlarging small video too
+        PLACEMENT_SCALED      // `scale` device pixels per video pixel, positioned by the aligns
+    };
+    // An align is per axis in [-1, 1] and only matters on an axis the video overflows: -1 shows its
+    // left/top edge, 1 its right/bottom edge. An axis the video fits is centred. Not pure: a backend
+    // without zoom support simply keeps fitting.
+    virtual void setPlacement(Placement /*mode*/, double /*scale*/, double /*alignX*/, double /*alignY*/) {}
 };

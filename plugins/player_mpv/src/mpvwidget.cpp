@@ -1,4 +1,5 @@
 #include "mpvwidget.h"
+#include <QResizeEvent>
 #include <stdexcept>
 
 // Qt does not pull in a GL header that guarantees this constant on every
@@ -27,6 +28,22 @@ static bool setMpvProperty(mpv_handle *mpv, const char *name, const QString &val
     }
     return true;
 }
+
+// Same again for numbers, without waiting for mpv's core; the replies come back as
+// MPV_EVENT_SET_PROPERTY_REPLY. A float QVariant would reach mpv as MPV_FORMAT_NONE and fail, so these
+// always go over as a double.
+static bool setMpvDoubleAsync(mpv_handle *mpv, uint64_t reply, const char *name, double value) {
+    const int rc = mpv_set_property_async(mpv, reply, name, MPV_FORMAT_DOUBLE, &value);
+    if(rc < 0) {
+        qDebug() << "[mpv] property" << name << "=" << value << "rejected:" << mpv_error_string(rc);
+        return false;
+    }
+    return true;
+}
+
+// reply_userdata of the asynchronous video-out-params query, and of placement sets.
+static constexpr uint64_t kVideoSizeReply = 1;
+static constexpr uint64_t kPlacementReply = 2;
 
 static void wakeup(void *ctx) {
     QMetaObject::invokeMethod((MpvWidget *)ctx, "on_mpv_events", Qt::QueuedConnection);
@@ -77,6 +94,11 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f) : QOpenGLWidget(parent,
     if(!setMpvOption(mpv, "background", "none"))
         setMpvOption(mpv, "alpha", "yes");
 
+    // Centres an axis the video fits whatever its align, which keeps a zoomed video centred when a
+    // resize makes it fit before the app has re-placed it. The app sends align 0 for such an axis
+    // anyway, because libmpv only has this from 0.40. Changes nothing at the default align of 0.
+    setMpvOption(mpv, "video-recenter", "yes");
+
     if(mpv_initialize(mpv) < 0)
         throw std::runtime_error("could not initialize mpv context");
 
@@ -85,8 +107,6 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f) : QOpenGLWidget(parent,
     // matters for H.265 / AV1 where a broken driver path is worse than CPU
     // decoding.
     mpv::qt::set_property(mpv, "hwdec", "auto-safe");
-
-    // mpv::qt::set_property(mpv, "video-unscaled", "downscale-big");
 
     // Loop video
     setRepeat(true);
@@ -111,16 +131,75 @@ void MpvWidget::command(const QVariant &params) {
     mpv::qt::command(mpv, params);
 }
 
+void MpvWidget::loadFile(const QString &file) {
+    // Armed before the command, and events only reach us through the queued on_mpv_events(), so no
+    // event for the new file can slip in first. update() repaints the retained framebuffer now rather
+    // than on mpv's next frame.
+    mCover.arm();
+    mHoldCover = false;
+    update();
+    const QVariant result = mpv::qt::command(mpv, QStringList() << "loadfile" << file);
+    // On failure stay covered: there is nothing of this file to show, and mpv does not ask for a
+    // repaint when it drops the old frame.
+    if(!mpv::qt::is_error(result)) {
+        const QVariant anyEntry = QVariant::fromValue(qlonglong(StaleFrameCover::kAnyEntry));
+        mCover.setEntryId(result.toMap().value("playlist_entry_id", anyEntry).toLongLong());
+    }
+}
+
+void MpvWidget::stop() {
+    // mpv drops its frame on stop without asking for a repaint, so the widget would keep showing it.
+    mCover.arm();
+    mHoldCover = false;
+    update();
+    command(QVariantList() << "stop");
+}
+
+void MpvWidget::setVideoPlacement(MpvPlacementOptions const &placement) {
+    // A drag sends dozens of these a second, and every set is a round trip to mpv's core.
+    if(mPlacementApplied && placement == mPlacement)
+        return;
+    mPlacement = placement;
+    mPlacementApplied = true;
+    // Asynchronous: a synchronous set waits for mpv's core, and after every file start, loop and seek
+    // the core waits in turn for us to render its first frame -- the two stall each other until mpv's
+    // 200 ms render timeout. The render after the last reply applies them; see paintGL().
+    const char *unscaled = mpvUnscaledName(placement.unscaled);
+    const int rc = mpv_set_property_async(mpv, kPlacementReply, "video-unscaled", MPV_FORMAT_STRING, &unscaled);
+    if(rc < 0)
+        qDebug() << "[mpv] property video-unscaled =" << unscaled << "rejected:" << mpv_error_string(rc);
+    const bool sent[] = {rc >= 0, setMpvDoubleAsync(mpv, kPlacementReply, "video-zoom", placement.zoom),
+                         setMpvDoubleAsync(mpv, kPlacementReply, "video-align-x", placement.alignX),
+                         setMpvDoubleAsync(mpv, kPlacementReply, "video-align-y", placement.alignY)};
+    for(bool s : sent) {
+        if(s)
+            ++mPlacementReplies;
+        else
+            mPlacementApplied = false;
+    }
+}
+
+// The app needs the size mpv renders at to zoom around a point and to tell when the video overflows.
+void MpvWidget::resizeEvent(QResizeEvent *event) {
+    emit viewportResized(QSize(width(), height()));
+    QOpenGLWidget::resizeEvent(event);
+}
+
+bool MpvWidget::event(QEvent *event) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+    // The size in device pixels changes with no resize event.
+    if(event->type() == QEvent::DevicePixelRatioChange)
+        emit viewportResized(QSize(width(), height()));
+#endif
+    return QOpenGLWidget::event(event);
+}
+
 void MpvWidget::setProperty(const QString &name, const QVariant &value) {
     mpv::qt::set_property(mpv, name, value);
 }
 
 QVariant MpvWidget::getProperty(const QString &name) const {
     return mpv::qt::get_property(mpv, name);
-}
-
-void MpvWidget::setOption(const QString &name, const QVariant &value) {
-    mpv::qt::set_property(mpv, name, value);
 }
 
 void MpvWidget::initializeGL() {
@@ -154,10 +233,10 @@ void MpvWidget::setBackgroundColor(QColor color) {
 
 // Draws the current frame. Split out of paintGL() because the minimized-window
 // path in maybeUpdate() drives it directly, with no QPainter in scope.
-void MpvWidget::renderMpv() {
+void MpvWidget::renderMpv(QSize target) {
     // Tell mpv the target has 8 bits of alpha so it emits transparent pixels
     // rather than compositing onto black itself.
-    mpv_opengl_fbo mpfbo{static_cast<int>(defaultFramebufferObject()), width(), height(), GL_RGBA8};
+    mpv_opengl_fbo mpfbo{static_cast<int>(defaultFramebufferObject()), target.width(), target.height(), GL_RGBA8};
     int flip_y{1};
 
     mpv_render_param params[] = {
@@ -170,9 +249,29 @@ void MpvWidget::renderMpv() {
 void MpvWidget::paintGL() {
     QPainter painter(this);
 
+    // mpv has to render even while we cover it: it waits (up to 200 ms) for each
+    // frame it hands over to be consumed, so skipping the render would hold back
+    // the new file's first frame by that much.
     painter.beginNativePainting();
-    renderMpv();
+    if(mRelayout && height() > 1) {
+        // mpv re-reads its placement options when the target size changes, or once its VO thread has
+        // seen the change -- which that thread cannot do while a frame waits for this render. After a
+        // placement lands, and before the first uncovered frame (the new file was placed while
+        // covered), a throwaway render at another size makes sure this one uses it. The real render
+        // below overwrites all of it.
+        renderMpv(QSize(width(), height() - 1));
+    }
+    mRelayout = false;
+    renderMpv(QSize(width(), height()));
     painter.endNativePainting();
+
+    if(mCover.covered() || mHoldCover) {
+        // Source, not SourceOver: the background may be translucent, and the old
+        // frame must not show through it.
+        painter.setCompositionMode(QPainter::CompositionMode_Source);
+        painter.fillRect(rect(), mBackgroundColor);
+        return;
+    }
 
     // With "background=none" mpv leaves genuinely transparent pixels wherever
     // the video carries alpha (ProRes 4444, VP9/AV1 alpha, transparent WebM).
@@ -225,9 +324,87 @@ void MpvWidget::handle_mpv_event(mpv_event *event) {
         }
         break;
     }
+    case MPV_EVENT_START_FILE: {
+        // No payload before libmpv 0.33; that is also when loadfile reports no entry id (kAnyEntry).
+        auto startFile = reinterpret_cast<mpv_event_start_file *>(event->data);
+        mCover.onStartFile(startFile ? startFile->playlist_entry_id : StaleFrameCover::kAnyEntry);
+        break;
+    }
+    case MPV_EVENT_VIDEO_RECONFIG:
+        requestVideoSize();
+        break;
+    case MPV_EVENT_GET_PROPERTY_REPLY:
+        if(event->reply_userdata == kVideoSizeReply) {
+            onVideoSizeReply(event);
+            if(mCover.onSizeReply())
+                onVideoSettled();
+        }
+        break;
+    case MPV_EVENT_SET_PROPERTY_REPLY:
+        if(event->reply_userdata == kPlacementReply) {
+            if(event->error < 0) {
+                qDebug() << "[mpv] placement rejected:" << mpv_error_string(event->error);
+                // Send all four again next time.
+                mPlacementApplied = false;
+            }
+            if(mPlacementReplies > 0 && --mPlacementReplies == 0) {
+                mHoldCover = false;
+                mRelayout = true;
+                update();
+            }
+        }
+        break;
+    case MPV_EVENT_PLAYBACK_RESTART:
+        // Only reached once mpv has queued the new file's first frame (or has
+        // no video to show). Earlier signals are too early: FILE_LOADED comes
+        // before any decoding, and VIDEO_RECONFIG fires while tearing down the
+        // old file -- and not at all when both files share their parameters.
+        // Loops and seeks also restart playback, but by then the cover is off.
+        if(mCover.onPlaybackRestart())
+            onVideoSettled();
+        break;
     default:;
         // Ignore uninteresting or unknown events.
     }
+}
+
+// The cover is down: the new file's first frame is about to show, and its size is known.
+void MpvWidget::onVideoSettled() {
+    // Every file announces its size here, once, even when it matches the last one: the app forgets
+    // the size on a new file so that nothing can be zoomed against the previous file's while this one
+    // loads. Sent before the render below, which is the first one anyone sees.
+    emit videoSizeChanged(mVideoSize);
+    // The app placed this file when it was loaded (back to the fit), and the sets are asynchronous: if
+    // they are still in flight, a render now would show the previous file's zoom. Stay covered until
+    // the replies are in; the last one lifts this.
+    if(mPlacementReplies > 0)
+        mHoldCover = true;
+    mRelayout = true;
+    update();
+}
+
+void MpvWidget::requestVideoSize() {
+    // Asynchronous on purpose. For a new file's first frame mpv emits VIDEO_RECONFIG and then waits
+    // until we have rendered that frame, on this thread; a synchronous read waits for mpv's core in
+    // turn, and neither side moves until mpv's 200 ms render timeout.
+    if(mpv_get_property_async(mpv, kVideoSizeReply, "video-out-params", MPV_FORMAT_NODE) >= 0)
+        mCover.onSizeRequested();
+}
+
+void MpvWidget::onVideoSizeReply(mpv_event *event) {
+    // Unavailable means there is no video output, so no picture.
+    QSize size;
+    auto property = reinterpret_cast<mpv_event_property *>(event->data);
+    if(event->error >= 0 && property->format == MPV_FORMAT_NODE) {
+        const QVariantMap params = mpv::qt::node_to_variant(reinterpret_cast<mpv_node *>(property->data)).toMap();
+        size = mpvDisplaySize(params.value("dw").toInt(), params.value("dh").toInt(), params.value("rotate").toInt());
+    }
+    if(size == mVideoSize)
+        return;
+    mVideoSize = size;
+    // While covered, onVideoSettled() sends it: a reply now may still describe the previous file.
+    if(!mCover.covered())
+        emit videoSizeChanged(size);
 }
 
 // Make Qt invoke mpv_render_context_render() to draw a new/updated video frame.
@@ -241,7 +418,7 @@ void MpvWidget::maybeUpdate() {
     //       to a different workspace with a reparenting window manager.
     if(window()->isMinimized()) {
         makeCurrent();
-        renderMpv(); // nothing is visible; skip the QPainter composite
+        renderMpv(QSize(width(), height())); // nothing is visible; skip the QPainter composite
         context()->swapBuffers(context()->surface());
         doneCurrent();
     } else {

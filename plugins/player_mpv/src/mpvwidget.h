@@ -16,6 +16,8 @@
 #include <ctime>
 #include <QSurfaceFormat>
 #include <QTimer>
+#include "mpvplacement.h"
+#include "staleframecover.h"
 
 class MpvWidget Q_DECL_FINAL : public QOpenGLWidget {
     Q_OBJECT
@@ -24,7 +26,10 @@ public:
     ~MpvWidget() override;
 
     void command(const QVariant &params);
-    void setOption(const QString &name, const QVariant &value);
+    // "loadfile" / "stop", plus hiding the previous file's last frame until there is a frame of the
+    // new one to show. See paintGL().
+    void loadFile(const QString &file);
+    void stop();
     void setProperty(const QString &name, const QVariant &value);
     QVariant getProperty(const QString &name) const;
     // Related to this:
@@ -37,6 +42,7 @@ public:
     // Colour transparent video is composited onto. See paintGL().
     void setBackgroundColor(QColor color);
     void setTransparencyGrid(QPixmap const &tile);
+    void setVideoPlacement(MpvPlacementOptions const &placement);
 
     // Returns the QSurfaceFormat qimgv must install before the first
     // QOpenGLWidget is created, so that video with an alpha channel
@@ -52,15 +58,38 @@ signals:
     void positionChanged(int value);
     void videoPaused(bool);
     void playbackFinished();
+    void videoSizeChanged(QSize size);
+    void viewportResized(QSize devicePixels);
 
 protected:
     void initializeGL() override;
     void paintGL() override;
+    void resizeEvent(QResizeEvent *event) override;
+    bool event(QEvent *event) override;
 
 private:
-    void renderMpv();
+    void renderMpv(QSize target);
+    void requestVideoSize();
+    void onVideoSizeReply(mpv_event *event);
     QColor mBackgroundColor = Qt::black;
     QPixmap mTransparencyGrid;
+
+    void onVideoSettled();
+
+    StaleFrameCover mCover;
+    // Last size emitted; empty means there is no picture.
+    QSize mVideoSize;
+    MpvPlacementOptions mPlacement;
+    // True once all four sets for mPlacement are queued; a failed enqueue or an error reply clears it,
+    // so the next setVideoPlacement() sends them again. Lets a drag skip repeats of one placement.
+    bool mPlacementApplied = false;
+    // Asynchronous placement sets mpv has not answered yet.
+    int mPlacementReplies = 0;
+    // The cover stays up after mCover says it can come down until those have landed; see
+    // onVideoSettled().
+    bool mHoldCover = false;
+    // See paintGL().
+    bool mRelayout = false;
 
 private slots:
     void on_mpv_events();
