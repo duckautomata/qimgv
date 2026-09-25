@@ -20,6 +20,7 @@ public:
     int volume();
     void setBackgroundColor(QColor color) override;
     void setTransparencyGrid(QPixmap const &tile) override;
+    void setPlacement(Placement mode, double scale, double alignX, double alignY) override;
 
 public slots:
     void seek(int pos);

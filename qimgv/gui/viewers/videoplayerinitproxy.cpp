@@ -1,4 +1,5 @@
 #include "videoplayerinitproxy.h"
+#include "videozoom.h"
 
 #ifdef _QIMGV_PLAYER_PLUGIN
 #define QIMGV_PLAYER_PLUGIN _QIMGV_PLAYER_PLUGIN
@@ -6,12 +7,32 @@
 #define QIMGV_PLAYER_PLUGIN ""
 #endif
 
+static VideoZoomSettings videoZoomSettings() {
+    VideoZoomSettings s;
+    s.expandImage = settings->expandImage();
+    s.zoomStep = settings->zoomStep();
+    if(settings->useFixedZoomLevels())
+        s.zoomLevels = VideoZoomModel::parseZoomLevels(settings->zoomLevels());
+    s.unlockMinZoom = settings->unlockMinZoom();
+    s.scrolling = settings->imageScrolling();
+    s.scrollingSpeed = settings->mouseScrollingSpeed();
+    s.trackpadDetection = settings->trackpadDetection();
+    s.wayland = QGuiApplication::platformName() == QLatin1String("wayland");
+    return s;
+}
+
 VideoPlayerInitProxy::VideoPlayerInitProxy(QWidget *parent) : VideoPlayer(parent), player(nullptr) {
     setAccessibleName("VideoPlayerInitProxy");
     setMouseTracking(true);
     layout.setContentsMargins(0, 0, 0, 0);
     setLayout(&layout);
     connect(settings, &Settings::settingsChanged, this, &VideoPlayerInitProxy::onSettingsChanged);
+    mZoom = new VideoZoom(this, this);
+    mZoom->setSettings(videoZoomSettings());
+    // Pointers to members work here: this object's meta-object is the app's copy of VideoPlayer. The
+    // player's signals reach these through the SIGNAL() forwards in initPlayer().
+    connect(this, &VideoPlayer::videoSizeChanged, mZoom, &VideoZoom::onVideoSizeChanged);
+    connect(this, &VideoPlayer::viewportResized, mZoom, &VideoZoom::onViewportResized);
     updateBackgroundColor();
     // initPlayer() reads this when the plugin is eventually loaded, which is
     // long before the first settingsChanged.
@@ -45,10 +66,11 @@ void VideoPlayerInitProxy::onSettingsChanged() {
     updateBackgroundColor();
     mTransparencyGrid = settings->transparencyGrid();
     updateTransparencyGrid();
+    // Also where "expand images" reaches the player now, as part of its placement.
+    mZoom->setSettings(videoZoomSettings());
     if(!player)
         return;
     player->setMuted(!settings->playVideoSounds());
-    player->setVideoUnscaled(!settings->expandImage());
 }
 
 // Mirrors ImageViewerV2::onFullscreenModeChanged so that switching between an
@@ -128,7 +150,6 @@ inline bool VideoPlayerInitProxy::initPlayer() {
     }
 
     player->setMuted(!settings->playVideoSounds());
-    player->setVideoUnscaled(!settings->expandImage());
     player->setVolume(settings->volume());
     player->setBackgroundColor(bgColor);
     updateTransparencyGrid();
@@ -141,7 +162,12 @@ inline bool VideoPlayerInitProxy::initPlayer() {
     connect(player.get(), SIGNAL(positionChanged(int)), this, SIGNAL(positionChanged(int)));
     connect(player.get(), SIGNAL(videoPaused(bool)), this, SIGNAL(videoPaused(bool)));
     connect(player.get(), SIGNAL(playbackFinished()), this, SIGNAL(playbackFinished()));
+    connect(player.get(), SIGNAL(videoSizeChanged(QSize)), this, SIGNAL(videoSizeChanged(QSize)));
+    connect(player.get(), SIGNAL(viewportResized(QSize)), this, SIGNAL(viewportResized(QSize)));
 
+    // Before the click-zone filter below: the filter installed last runs first, and the edge zones
+    // must keep priority over pan and zoom.
+    player->installEventFilter(mZoom);
     if(eventFilterObj)
         player.get()->installEventFilter(eventFilterObj);
 
@@ -149,9 +175,12 @@ inline bool VideoPlayerInitProxy::initPlayer() {
 }
 
 bool VideoPlayerInitProxy::showVideo(QString file) {
-    if(!initPlayer())
+    if(!initPlayer() || !player->showVideo(file))
         return false;
-    return player->showVideo(file);
+    // Only now: the player has covered the previous file's frame, which mpv would otherwise visibly
+    // re-lay out at the new file's zoom.
+    mZoom->onNewFile();
+    return true;
 }
 
 void VideoPlayerInitProxy::seek(int pos) {
@@ -244,6 +273,16 @@ void VideoPlayerInitProxy::setLoopPlayback(bool mode) {
     if(!player)
         return;
     player->setLoopPlayback(mode);
+}
+
+void VideoPlayerInitProxy::setPlacement(Placement mode, double scale, double alignX, double alignY) {
+    if(!player)
+        return;
+    player->setPlacement(mode, scale, alignX, alignY);
+}
+
+VideoZoom *VideoPlayerInitProxy::zoom() const {
+    return mZoom;
 }
 
 void VideoPlayerInitProxy::show() {

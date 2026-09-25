@@ -11,6 +11,8 @@
 
 enum CurrentWidget { IMAGEVIEWER, VIDEOPLAYER, UNSET };
 
+class VideoZoom;
+
 class ViewerWidget : public FloatingWidgetContainer {
     Q_OBJECT
 public:
@@ -26,6 +28,7 @@ public:
     bool showAnimation(std::shared_ptr<QMovie> movie);
     void onScalingFinished(std::unique_ptr<QPixmap> scaled);
     bool isDisplaying();
+    bool isShowingVideo();
     bool lockZoomEnabled();
     bool lockViewEnabled();
     ScalingFilter scalingFilter();
@@ -55,6 +58,8 @@ private:
 
     bool eventFilter(QObject *object, QEvent *event);
 
+    void route(void (ImageViewerV2::*onImage)(), void (VideoZoom::*onVideo)());
+
 private slots:
     void onScaleChanged(qreal);
     void onVideoPlaybackFinished();
@@ -62,6 +67,16 @@ private slots:
 
 signals:
     void scalingRequested(QSize, ScalingFilter);
+    void toggleTransparencyGrid();
+    void draggedOut();
+    void setFilterNearest();
+    void setFilterBilinear();
+    void setScalingFilter(ScalingFilter filter);
+    void playbackFinished();
+    void showScriptSettings();
+
+public slots:
+    // Act on the viewer on screen.
     void zoomIn();
     void zoomOut();
     void zoomInCursor();
@@ -75,17 +90,9 @@ signals:
     void fitOriginal();
     void fitWindowStretch();
     void zoomLock();
-    void toggleTransparencyGrid();
-    void draggedOut();
-    void setFilterNearest();
-    void setFilterBilinear();
-    void setScalingFilter(ScalingFilter filter);
-    void playbackFinished();
     void toggleLockZoom();
     void toggleLockView();
-    void showScriptSettings();
 
-public slots:
     bool showVideo(QString file);
     void stopPlayback();
     void setFitMode(ImageFitMode mode);

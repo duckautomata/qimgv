@@ -168,3 +168,35 @@ add_test(NAME qimgv_randomizer_tests COMMAND qimgv_randomizer_tests)
 set_tests_properties(qimgv_randomizer_tests PROPERTIES
     TIMEOUT 30
     ENVIRONMENT "${QIMGV_TEST_ENV}")
+
+# ---------------------------------------------------------------------------
+# Video zoom: the pure VideoZoomModel, the mpv plugin's header-only helpers
+# (mpvOptionsFor, mpvDisplaySize, StaleFrameCover) and the VideoZoom
+# controller driven through a fake VideoPlayer with synthetic mouse and wheel
+# events. No libmpv and no settings.cpp: videozoommodel.h only needs the enums
+# from settings.h.
+# ---------------------------------------------------------------------------
+qt_add_executable(qimgv_videozoom_tests
+    test_videozoom.cpp
+    "${CMAKE_SOURCE_DIR}/qimgv/gui/viewers/videoplayer.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/gui/viewers/videozoom.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/gui/viewers/videozoommodel.cpp"
+)
+
+target_include_directories(qimgv_videozoom_tests PRIVATE
+    "${CMAKE_SOURCE_DIR}"
+    "${CMAKE_SOURCE_DIR}/qimgv"
+    "${CMAKE_SOURCE_DIR}/qimgv/gui/viewers"
+    "${CMAKE_SOURCE_DIR}/plugins/player_mpv/src"
+)
+
+target_link_libraries(qimgv_videozoom_tests PRIVATE
+    Qt6::Test
+    Qt6::Widgets
+    qimgv::warnings
+)
+
+add_test(NAME qimgv_videozoom_tests COMMAND qimgv_videozoom_tests)
+set_tests_properties(qimgv_videozoom_tests PROPERTIES
+    TIMEOUT 30
+    ENVIRONMENT "${QIMGV_TEST_ENV}")

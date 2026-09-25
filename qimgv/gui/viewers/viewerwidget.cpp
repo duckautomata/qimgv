@@ -4,6 +4,7 @@
  */
 
 #include "viewerwidget.h"
+#include "gui/viewers/videozoom.h"
 
 ViewerWidget::ViewerWidget(QWidget *parent)
     : FloatingWidgetContainer(parent), imageViewer(nullptr), videoPlayer(nullptr), contextMenu(nullptr),
@@ -44,6 +45,7 @@ ViewerWidget::ViewerWidget(QWidget *parent)
 
     connect(this, &ViewerWidget::toggleTransparencyGrid, videoPlayer.get(),
             &VideoPlayerInitProxy::toggleTransparencyGrid);
+    connect(videoPlayer->zoom(), &VideoZoom::scaleChanged, this, &ViewerWidget::onScaleChanged);
 
     connect(videoPlayer.get(), &VideoPlayer::playbackFinished, this, &ViewerWidget::onVideoPlaybackFinished);
 
@@ -131,6 +133,8 @@ void ViewerWidget::disableImageViewer() {
 void ViewerWidget::disableVideoPlayer() {
     if(currentWidget == VIDEOPLAYER) {
         currentWidget = UNSET;
+        videoPlayer->zoom()->deactivate();
+        zoomIndicator->hide();
         // videoControls->hide();
         disconnect(videoPlayer.get(), &VideoPlayer::durationChanged, videoControls,
                    &VideoControlsProxyWrapper::setPlaybackDuration);
@@ -176,47 +180,90 @@ void ViewerWidget::setInteractionEnabled(bool mode) {
     if(mInteractionEnabled == mode)
         return;
     mInteractionEnabled = mode;
+    // The zoom, fit, scroll and lock slots check mInteractionEnabled themselves; see route().
+    videoPlayer->zoom()->setInteractionEnabled(mode);
     if(mInteractionEnabled) {
-        connect(this, &ViewerWidget::toggleLockZoom, imageViewer.get(), &ImageViewerV2::toggleLockZoom);
-        connect(this, &ViewerWidget::toggleLockView, imageViewer.get(), &ImageViewerV2::toggleLockView);
-        connect(this, &ViewerWidget::zoomIn, imageViewer.get(), &ImageViewerV2::zoomIn);
-        connect(this, &ViewerWidget::zoomOut, imageViewer.get(), &ImageViewerV2::zoomOut);
-        connect(this, &ViewerWidget::zoomInCursor, imageViewer.get(), &ImageViewerV2::zoomInCursor);
-        connect(this, &ViewerWidget::zoomOutCursor, imageViewer.get(), &ImageViewerV2::zoomOutCursor);
-        connect(this, &ViewerWidget::scrollUp, imageViewer.get(), &ImageViewerV2::scrollUp);
-        connect(this, &ViewerWidget::scrollDown, imageViewer.get(), &ImageViewerV2::scrollDown);
-        connect(this, &ViewerWidget::scrollLeft, imageViewer.get(), &ImageViewerV2::scrollLeft);
-        connect(this, &ViewerWidget::scrollRight, imageViewer.get(), &ImageViewerV2::scrollRight);
-        connect(this, &ViewerWidget::fitWindow, imageViewer.get(), &ImageViewerV2::setFitWindow);
-        connect(this, &ViewerWidget::fitWidth, imageViewer.get(), &ImageViewerV2::setFitWidth);
-        connect(this, &ViewerWidget::fitOriginal, imageViewer.get(), &ImageViewerV2::setFitOriginal);
-        connect(this, &ViewerWidget::fitWindowStretch, imageViewer.get(), &ImageViewerV2::setFitWindowStretch);
-        connect(this, &ViewerWidget::zoomLock, imageViewer.get(), &ImageViewerV2::setZoomLock);
         connect(imageViewer.get(), &ImageViewerV2::draggedOut, this, &ViewerWidget::draggedOut);
         imageViewer->setAttribute(Qt::WA_TransparentForMouseEvents, false);
     } else {
-        // These two were connected above but never disconnected here, so every
-        // crop-panel open/close cycle added a duplicate: the toggle then fired
-        // twice, turning the lock on and straight back off.
-        disconnect(this, &ViewerWidget::toggleLockZoom, imageViewer.get(), &ImageViewerV2::toggleLockZoom);
-        disconnect(this, &ViewerWidget::toggleLockView, imageViewer.get(), &ImageViewerV2::toggleLockView);
-        disconnect(this, &ViewerWidget::zoomIn, imageViewer.get(), &ImageViewerV2::zoomIn);
-        disconnect(this, &ViewerWidget::zoomOut, imageViewer.get(), &ImageViewerV2::zoomOut);
-        disconnect(this, &ViewerWidget::zoomInCursor, imageViewer.get(), &ImageViewerV2::zoomInCursor);
-        disconnect(this, &ViewerWidget::zoomOutCursor, imageViewer.get(), &ImageViewerV2::zoomOutCursor);
-        disconnect(this, &ViewerWidget::scrollUp, imageViewer.get(), &ImageViewerV2::scrollUp);
-        disconnect(this, &ViewerWidget::scrollDown, imageViewer.get(), &ImageViewerV2::scrollDown);
-        disconnect(this, &ViewerWidget::scrollLeft, imageViewer.get(), &ImageViewerV2::scrollLeft);
-        disconnect(this, &ViewerWidget::scrollRight, imageViewer.get(), &ImageViewerV2::scrollRight);
-        disconnect(this, &ViewerWidget::fitWindow, imageViewer.get(), &ImageViewerV2::setFitWindow);
-        disconnect(this, &ViewerWidget::fitWidth, imageViewer.get(), &ImageViewerV2::setFitWidth);
-        disconnect(this, &ViewerWidget::fitOriginal, imageViewer.get(), &ImageViewerV2::setFitOriginal);
-        disconnect(this, &ViewerWidget::fitWindowStretch, imageViewer.get(), &ImageViewerV2::setFitWindowStretch);
-        disconnect(this, &ViewerWidget::zoomLock, imageViewer.get(), &ImageViewerV2::setZoomLock);
         disconnect(imageViewer.get(), &ImageViewerV2::draggedOut, this, &ViewerWidget::draggedOut);
         imageViewer->setAttribute(Qt::WA_TransparentForMouseEvents, true);
         hideContextMenu();
     }
+}
+
+// Zoom, fit, scroll and lock act on the viewer on screen. They used to reach the image viewer only,
+// which on a video did nothing visible but quietly rewrote the hidden viewer's fit mode and lock.
+// Videos only zoom and pan: each opens fitted to the window, so fit modes and locks do not apply.
+void ViewerWidget::route(void (ImageViewerV2::*onImage)(), void (VideoZoom::*onVideo)()) {
+    if(!mInteractionEnabled)
+        return;
+    if(currentWidget == VIDEOPLAYER) {
+        if(onVideo)
+            (videoPlayer->zoom()->*onVideo)();
+    } else {
+        (imageViewer.get()->*onImage)();
+    }
+}
+
+void ViewerWidget::zoomIn() {
+    route(&ImageViewerV2::zoomIn, &VideoZoom::zoomIn);
+}
+
+void ViewerWidget::zoomOut() {
+    route(&ImageViewerV2::zoomOut, &VideoZoom::zoomOut);
+}
+
+void ViewerWidget::zoomInCursor() {
+    route(&ImageViewerV2::zoomInCursor, &VideoZoom::zoomInCursor);
+}
+
+void ViewerWidget::zoomOutCursor() {
+    route(&ImageViewerV2::zoomOutCursor, &VideoZoom::zoomOutCursor);
+}
+
+void ViewerWidget::scrollUp() {
+    route(&ImageViewerV2::scrollUp, &VideoZoom::scrollUp);
+}
+
+void ViewerWidget::scrollDown() {
+    route(&ImageViewerV2::scrollDown, &VideoZoom::scrollDown);
+}
+
+void ViewerWidget::scrollLeft() {
+    route(&ImageViewerV2::scrollLeft, &VideoZoom::scrollLeft);
+}
+
+void ViewerWidget::scrollRight() {
+    route(&ImageViewerV2::scrollRight, &VideoZoom::scrollRight);
+}
+
+void ViewerWidget::fitWindow() {
+    route(&ImageViewerV2::setFitWindow, nullptr);
+}
+
+void ViewerWidget::fitWidth() {
+    route(&ImageViewerV2::setFitWidth, nullptr);
+}
+
+void ViewerWidget::fitOriginal() {
+    route(&ImageViewerV2::setFitOriginal, nullptr);
+}
+
+void ViewerWidget::fitWindowStretch() {
+    route(&ImageViewerV2::setFitWindowStretch, nullptr);
+}
+
+void ViewerWidget::zoomLock() {
+    route(&ImageViewerV2::setZoomLock, nullptr);
+}
+
+void ViewerWidget::toggleLockZoom() {
+    route(&ImageViewerV2::toggleLockZoom, nullptr);
+}
+
+void ViewerWidget::toggleLockView() {
+    route(&ImageViewerV2::toggleLockView, nullptr);
 }
 
 bool ViewerWidget::interactionEnabled() {
@@ -247,6 +294,8 @@ bool ViewerWidget::showAnimation(std::shared_ptr<QMovie> movie) {
 bool ViewerWidget::showVideo(QString file) {
     stopPlayback();
     enableVideoPlayer();
+    // The previous file's zoom level must not linger over this one.
+    zoomIndicator->hide();
     videoPlayer->showVideo(file);
     hideCursorTimed(false);
     return true;
@@ -274,15 +323,15 @@ void ViewerWidget::startPlayback() {
 
 void ViewerWidget::setFitMode(ImageFitMode mode) {
     if(mode == FIT_WINDOW)
-        emit fitWindow();
+        fitWindow();
     else if(mode == FIT_WIDTH)
-        emit fitWidth();
+        fitWidth();
     else if(mode == FIT_ORIGINAL)
-        emit fitOriginal();
+        fitOriginal();
     else if(mode == FIT_WINDOW_STRETCH)
-        emit fitWindowStretch();
+        fitWindowStretch();
     else if(mode == FIT_ZOOM_LOCK)
-        emit zoomLock();
+        zoomLock();
 }
 
 ImageFitMode ViewerWidget::fitMode() {
@@ -375,12 +424,17 @@ bool ViewerWidget::isDisplaying() {
         return false;
 }
 
+bool ViewerWidget::isShowingVideo() {
+    return currentWidget == VIDEOPLAYER;
+}
+
+// Locks are an image thing; a video never has one.
 bool ViewerWidget::lockZoomEnabled() {
-    return imageViewer->lockZoomEnabled();
+    return currentWidget != VIDEOPLAYER && imageViewer->lockZoomEnabled();
 }
 
 bool ViewerWidget::lockViewEnabled() {
-    return imageViewer->lockViewEnabled();
+    return currentWidget != VIDEOPLAYER && imageViewer->lockViewEnabled();
 }
 
 ScalingFilter ViewerWidget::scalingFilter() {
