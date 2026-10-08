@@ -8,4 +8,6 @@ target_sources(qimgv PRIVATE
     imagestatic.cpp
     thumbnail.cpp
     video.cpp
+    audio.cpp
+    mediaprobe.cpp
 )

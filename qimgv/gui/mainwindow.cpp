@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include <QPointer>
 
 // TODO: nuke this and rewrite
 
@@ -68,6 +69,8 @@ void MW::setupUi() {
     connect(viewerWidget.get(), &ViewerWidget::scalingRequested, this, &MW::scalingRequested);
     connect(viewerWidget.get(), &ViewerWidget::draggedOut, this, qOverload<>(&MW::draggedOut));
     connect(viewerWidget.get(), &ViewerWidget::playbackFinished, this, &MW::playbackFinished);
+    connect(viewerWidget.get(), &ViewerWidget::audioPlaybackFinished, this, &MW::audioPlaybackFinished);
+    connect(viewerWidget.get(), &ViewerWidget::audioPlaybackFailed, this, &MW::audioPlaybackFailed);
     connect(viewerWidget.get(), &ViewerWidget::showScriptSettings, this, &MW::showScriptSettings);
     connect(this, &MW::zoomIn, viewerWidget.get(), &ViewerWidget::zoomIn);
     connect(this, &MW::zoomOut, viewerWidget.get(), &ViewerWidget::zoomOut);
@@ -88,6 +91,25 @@ void MW::setupUi() {
     connect(this, &MW::volumeDown, viewerWidget.get(), &ViewerWidget::volumeDown);
     connect(this, &MW::toggleTransparencyGrid, viewerWidget.get(), &ViewerWidget::toggleTransparencyGrid);
     connect(this, &MW::setLoopPlayback, viewerWidget.get(), &ViewerWidget::setLoopPlayback);
+    // Nothing ever destroys this window or the audio player in it, so the player would otherwise play on
+    // while the process tears down. close() covers the usual way out; this, any other.
+    connect(qApp, &QCoreApplication::aboutToQuit, viewerWidget.get(), &ViewerWidget::stopAudio);
+    // One read of the QPointer, checked: GCC's -Wnull-dereference does not connect two at -O3.
+    actionManager->setMediaKeyFilter([self = QPointer<MW>(this)](Qt::Key key) {
+        MW *window = self.data();
+        return window && window->takesMediaKey(key);
+    });
+}
+
+// The media keys control what plays on screen. Without that they go on to the system and to other players --
+// play/pause on a photo would do nothing here, and should still pause the music playing elsewhere. Under the
+// folder view only audio plays on, and next and previous do nothing there.
+bool MW::takesMediaKey(Qt::Key key) {
+    if(!viewerWidget->isShowingMedia())
+        return false;
+    if(centralWidget->currentViewMode() == MODE_DOCUMENT)
+        return true;
+    return viewerWidget->isShowingAudio() && key != Qt::Key_MediaNext && key != Qt::Key_MediaPrevious;
 }
 
 void MW::setupFullUi() {
@@ -264,6 +286,32 @@ void MW::showVideo(QString file) {
     viewerWidget->showVideo(file);
 }
 
+void MW::showAudio(QString file) {
+    // No size to fit to, the same as a video. Not under the folder view, where the next track starts by
+    // itself and the window is in use for something else.
+    if(settings->autoResizeWindow() && centralWidget->currentViewMode() != MODE_FOLDERVIEW)
+        preShowResize(QSize());
+    viewerWidget->showAudio(file);
+}
+
+bool MW::isShowingAudio() {
+    return viewerWidget->isShowingAudio();
+}
+
+bool MW::isAudioPlaying() {
+    return viewerWidget->isAudioPlaying();
+}
+
+void MW::restartAudio() {
+    viewerWidget->restartAudio();
+}
+
+void MW::setAudioPlaybackMode(AudioPlaybackMode mode) {
+    audioPlaybackMode = mode;
+    viewerWidget->setAudioPlaybackMode(mode);
+    onInfoUpdated();
+}
+
 void MW::showContextMenu() {
     viewerWidget->showContextMenu();
 }
@@ -303,6 +351,9 @@ void MW::setDirectoryPath(QString path) {
 }
 
 void MW::toggleLockZoom() {
+    // Like the fit modes, locks do nothing on a video or audio -- and the image lock's state is not this one's.
+    if(viewerWidget->isShowingMedia())
+        return;
     viewerWidget->toggleLockZoom();
     if(viewerWidget->lockZoomEnabled())
         showMessage("Zoom lock: ON");
@@ -312,8 +363,8 @@ void MW::toggleLockZoom() {
 }
 
 void MW::toggleLockView() {
-    // Like the fit modes, locks do nothing on a video -- and the image lock's state is not this one's.
-    if(viewerWidget->isShowingVideo())
+    // See toggleLockZoom().
+    if(viewerWidget->isShowingMedia())
         return;
     viewerWidget->toggleLockView();
     if(viewerWidget->lockViewEnabled())
@@ -497,6 +548,8 @@ void MW::close() {
     // since qt6.3 QWidget::close() no longer works on hidden windows (bug?)
     if(copyOverlay)
         copyOverlay->saveSettings();
+    // Stop now, with the window, rather than whenever the process gets round to ending.
+    viewerWidget->stopAudio();
     QWidget::close();
 }
 
@@ -606,7 +659,8 @@ void MW::showOpenDialog(QString path) {
     imageFilter.append("All Files (*)");
     dialog.setDirectory(path);
     dialog.setNameFilters(imageFilter);
-    dialog.setWindowTitle("Open image");
+    // Not just images: the filter lists video and audio too.
+    dialog.setWindowTitle(tr("Open"));
     dialog.setWindowModality(Qt::ApplicationModal);
     connect(&dialog, &QFileDialog::fileSelected, this, &MW::opened);
     dialog.exec();
@@ -731,7 +785,7 @@ void MW::triggerCropPanel() {
 }
 
 void MW::showCropPanel() {
-    if(centralWidget->currentViewMode() == MODE_FOLDERVIEW)
+    if(centralWidget->currentViewMode() == MODE_FOLDERVIEW || viewerWidget->isShowingAudio())
         return;
 
     if(activeSidePanel != SIDEPANEL_CROP) {
@@ -830,7 +884,9 @@ void MW::onInfoUpdated() {
     if(info.fileSize)
         sizeString = this->locale().formattedDataSize(info.fileSize, 1);
 
-    if(renameOverlay)
+    // Not while it is open: the current file can change under it -- audio moves on by itself -- and what was
+    // typed there is still for the file it was opened for.
+    if(renameOverlay && renameOverlay->isHidden())
         renameOverlay->setName(info.fileName);
 
     QString windowTitle;
@@ -853,15 +909,26 @@ void MW::onInfoUpdated() {
         }
 
         // toggleable states
+        // Only what is in effect. A slideshow sets its own course, so the audio playback mode is not; and
+        // Play folder and Shuffle take next and previous over from the folder-wide shuffle, so that is not
+        // either. At most one shuffle shows, then, and it can carry the audio mode's own name.
+        AudioPlaybackMode const audioMode =
+            viewerWidget->isShowingAudio() && !info.slideshow ? audioPlaybackMode : AUDIO_MODE_SINGLE;
         QString states;
         if(info.slideshow)
             states.append(" [slideshow]");
-        if(info.shuffle)
+        if(info.shuffle && audioMode != AUDIO_MODE_FOLDER && audioMode != AUDIO_MODE_SHUFFLE)
             states.append(" [shuffle]");
         if(viewerWidget->lockZoomEnabled())
             states.append(" [zoom lock]");
         if(viewerWidget->lockViewEnabled())
             states.append(" [view lock]");
+        if(audioMode == AUDIO_MODE_REPEAT)
+            states.append(" " + tr("[repeat]"));
+        else if(audioMode == AUDIO_MODE_FOLDER)
+            states.append(" " + tr("[play folder]"));
+        else if(audioMode == AUDIO_MODE_SHUFFLE)
+            states.append(" " + tr("[shuffle]"));
 
         if(!settings->infoBarWindowed() && !states.isEmpty())
             windowTitle.append(" -" + states);

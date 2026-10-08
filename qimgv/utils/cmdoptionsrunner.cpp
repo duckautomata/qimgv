@@ -5,6 +5,8 @@
 #include <QTextStream>
 
 #include "appversion.h"
+#include "gui/viewers/playerplugin.h"
+#include "settings.h"
 
 // CLI output goes to stdout, NOT qDebug.
 //
@@ -16,6 +18,18 @@ static QTextStream &out() {
     static QTextStream stream(stdout);
     return stream;
 }
+
+#ifdef USE_MPV
+// Sorted, and without the duplicates a [mime type, extension] map has.
+static QStringList extensionList(QList<QByteArray> const &extensions) {
+    QStringList list;
+    for(auto const &ext : extensions)
+        list << QString::fromLatin1(ext);
+    list.sort();
+    list.removeDuplicates();
+    return list;
+}
+#endif
 
 void CmdOptionsRunner::generateThumbs(QString dirPath, int size) {
     if(size <= 50 || size > 400) {
@@ -64,7 +78,7 @@ void CmdOptionsRunner::showBuildOptions() {
 
     QStringList features;
 #ifdef USE_MPV
-    features << "USE_MPV       (video playback via libmpv)";
+    features << "USE_MPV       (video and audio playback via libmpv)";
 #endif
 #ifdef USE_EXIV2
     features << "USE_EXIV2     (EXIF metadata)";
@@ -107,6 +121,29 @@ void CmdOptionsRunner::showBuildOptions() {
             out() << " -- provided by " << entry.source;
         out() << "\n";
     }
+
+#ifdef USE_MPV
+    // Video and audio both play through the player plugin, so a missing or outdated one is the usual cause
+    // of "qimgv plays nothing". The extensions are what qimgv hands to libmpv; whether the codec inside
+    // decodes is up to the ffmpeg that libmpv was built with.
+    const bool haveVideo = PlayerPlugin::resolve("CreatePlayerWidget") != nullptr;
+    const bool haveAudio = PlayerPlugin::resolve("CreateAudioPlayer") != nullptr;
+    out() << "\nPlayer plugin:\n";
+    if(!haveVideo && !haveAudio) {
+        out() << "   " << PlayerPlugin::loadError().replace("\n", "\n   ") << "\n";
+    } else {
+        out() << "   " << (haveVideo ? "[x] " : "[ ] ") << "video\n";
+        out() << "   " << (haveAudio ? "[x] " : "[ ] ") << "audio"
+              << (haveAudio ? "" : " -- the plugin is from an older qimgv") << "\n";
+    }
+
+    const QStringList videoFiles = extensionList(settings->videoFormats().values());
+    const QStringList audioFiles = extensionList(settings->audioFormats().values());
+    out() << "\nVideo files (" << videoFiles.size() << (settings->videoPlayback() ? "" : ", playback off in settings")
+          << "):\n   " << videoFiles.join(QStringLiteral(" ")) << "\n";
+    out() << "\nAudio files (" << audioFiles.size() << (settings->audioPlayback() ? "" : ", playback off in settings")
+          << "):\n   " << audioFiles.join(QStringLiteral(" ")) << "\n";
+#endif
 
     out().flush();
     QCoreApplication::quit();

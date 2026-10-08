@@ -1,7 +1,7 @@
 <h1 align="center">qimgv</h1>
 
 <p align="center">
-  <b>Fast, configurable image viewer with optional video support.</b><br>
+  <b>Fast, configurable image viewer with optional video and audio playback.</b><br>
   <sub>Qt 6 · Windows · builds on Linux and macOS</sub>
 </p>
 
@@ -34,6 +34,8 @@
 - Quick copy / move to nine destination folders
 - Folder view with thumbnails
 - Video playback via libmpv
+- Audio playback via libmpv, in its own view with album art and a one-key toggle between playing a
+  single file, repeating it, playing the folder in order, or shuffling it
 - Run custom shell scripts on the current image
 
 ## Supported formats
@@ -61,6 +63,14 @@ ProRes (incl. 4444 with alpha) · MPEG-2/4 · Theora · WMV, in `mp4` `mkv` `web
 Video with an alpha channel (ProRes 4444, VP9/AV1 alpha, transparent WebM) is composited against the
 application background rather than rendered over black.
 
+**Audio (via libmpv — anything ffmpeg can decode):** MP3 · AAC · ALAC · FLAC · Vorbis · Opus · WAV ·
+AIFF · WMA · Monkey's Audio · WavPack · Musepack · TTA · DSD · AC-3 · DTS · tracker modules, in `mp3`
+`m4a` `flac` `ogg` `opus` `wav` `aiff` `wma` `ape` `wv` `mpc` `tta` `dsf` `dff` `mka` and more.
+Audio-only `webm`, `mp4` and `mkv` files are recognized by their contents and open as audio.
+
+Album art is read from the file's own tags, or from a picture next to it such as `cover.jpg` or
+`folder.png`, and doubles as the file's thumbnail in the folder view.
+
 ## Installation
 
 ### Windows
@@ -71,7 +81,7 @@ Three downloads on the [releases page](https://github.com/duckautomata/qimgv/rel
 |---|---|---|
 | `…-win64-setup.exe` | ~88 MB | You want it installed like a normal app. **Start here.** |
 | `…-win64.zip` | ~131 MB | You want it portable, with nothing written outside the folder. |
-| `…-win64-minimal.zip` | ~61 MB | Images only — no video playback, smallest download. |
+| `…-win64-minimal.zip` | ~61 MB | Images only — no video or audio playback, smallest download. |
 
 The installer is per-user, so it needs no administrator rights. Full instructions,
 including upgrading, where settings live and how to set qimgv as your default image
@@ -109,7 +119,7 @@ That's it — the presets carry every flag. Full dependency lists and per-platfo
 | `release` | Optimized with LTO |
 | `relwithdebinfo` | Optimized with symbols, for profiling |
 | `asan` | Debug + AddressSanitizer/UBSan |
-| `minimal` | No video/exiv2/OpenCV — checks the optional-feature paths still compile |
+| `minimal` | No video/audio, exiv2 or OpenCV — checks the optional-feature paths still compile |
 | `windows-msys2` | Windows release package build |
 | `macos` | macOS `.app` bundle |
 
@@ -117,15 +127,20 @@ That's it — the presets carry every flag. Full dependency lists and per-platfo
 
 | Action | Shortcut |
 | --- | --- |
-| Next / previous image | Right / Left arrow, MouseWheel |
-| First / last image | Home / End |
+| Next / previous file | Right / Left arrow, MouseWheel |
+| First / last file | Home / End |
 | Zoom in / out | Ctrl+MouseWheel, Ctrl+Up / Ctrl+Down |
 | Zoom (alternative) | Hold right mouse button and move up / down |
-| Fit window / width / 1:1 | 1 / 2 / 3 |
-| Cycle fit modes | Space |
+| Lock zoom / fit window / stretch to width / stretch to height / 1:1 | 0 / 1 / 2 / 3 / 4 |
+| Cycle fit modes (images) | Space |
+| Play / pause (video, audio) | Space |
+| Seek back / forward 10 s | Ctrl+Left / Ctrl+Right |
+| Seek back / forward 5 s (audio) | , / . |
+| Audio playback mode (single file, repeat, folder, shuffle) | A, on an audio file or in the folder view |
+| Play/pause, next, previous | Media keys, while a video or audio file is open (Windows; elsewhere if the desktop passes them on) |
 | Toggle fullscreen | DoubleClick, F, F11 |
 | Exit fullscreen | Esc |
-| EXIF panel | I |
+| File info panel | I |
 | Crop / Resize | X / R |
 | Rotate left / right | Ctrl+L / Ctrl+R |
 | Open containing directory | Ctrl+D |
@@ -166,6 +181,27 @@ gimp "$1"
 
 Script files must be executable and carry a shebang. Bind the script to a key under
 **Settings → Controls → Add**.
+
+### Audio playback
+
+An audio file opens like any other file and plays in the audio view. By default it is treated like
+one, too: next and previous go to the adjacent file whatever its type, and the track stops at its
+end. Press <kbd>A</kbd> (or click the mode button in the audio view) to cycle through:
+
+| Mode | At the end of a track | Next / previous |
+|---|---|---|
+| Single file (default) | stops | adjacent file of any type |
+| Repeat track | plays it again | adjacent file of any type |
+| Play folder | next audio file in the folder, wrapping around | next / previous audio file |
+| Shuffle | a random audio file not yet played | another unplayed one / back through what played |
+
+In Play folder and Shuffle, images and videos are skipped, and so is a file that will not play.
+Audio-only `webm`/`mp4`/`mkv` files are told apart from video by their contents and play along with
+the rest. Pausing holds a track wherever it is, even at its very end.
+
+Audio keeps playing while the folder view shows its folder; opening another file, or going to another
+folder, stops it. Turn audio playback off, or the blurred album art background, under
+**Settings → General**.
 
 ### HiDPI
 

@@ -7,6 +7,7 @@
 #include <QMap>
 #include <QDebug>
 #include <QStringList>
+#include <functional>
 #include "utils/actions.h"
 #include "shortcutbuilder.h"
 #include "components/scriptmanager/scriptmanager.h"
@@ -34,12 +35,15 @@ public:
     QString keyForNativeScancode(quint32 scanCode);
     void adjustFromVersion(QVersionNumber lastVer);
     void saveShortcuts();
+    // Whether a media or volume key is for qimgv at the moment; see processEvent(). Until one is set, it is.
+    void setMediaKeyFilter(std::function<bool(Qt::Key)> filter);
 public slots:
     bool invokeAction(const QString &actionName);
 
 private:
     explicit ActionManager(QObject *parent = nullptr);
     QMap<QString, QString> defaults, shortcuts; // <shortcut, action>
+    std::function<bool(Qt::Key)> mediaKeyFilter;
 
     static void initDefaults();
     static void initActions();
@@ -122,6 +126,7 @@ signals:
     void print();
     void toggleFullscreenInfoBar();
     void pasteFile();
+    void cycleAudioMode();
 };
 
 extern ActionManager *actionManager;

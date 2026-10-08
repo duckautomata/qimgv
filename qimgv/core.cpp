@@ -7,6 +7,8 @@
 
 #include "core.h"
 #include <QFile>
+#include <QScopeGuard>
+#include "utils/audionavigation.h"
 
 #ifdef __WIN32
 #include <tchar.h>
@@ -23,6 +25,9 @@ Core::Core()
     connectComponents();
     initActions();
     readSettings();
+    // State rather than a preference, so not in readSettings(): only cycleAudioMode() changes it.
+    audioMode = settings->audioPlaybackMode();
+    mw->setAudioPlaybackMode(audioMode);
     slideshowTimer.setSingleShot(true);
     connect(settings, &Settings::settingsChanged, this, &Core::readSettings);
 
@@ -122,6 +127,10 @@ void Core::connectComponents() {
     connect(mw, &MW::draggedOut, this, qOverload<>(&Core::onDraggedOut));
 
     connect(mw, &MW::playbackFinished, this, &Core::onPlaybackFinished);
+    // Queued: the audio view may report a failure from inside open(), and moving on from there would start
+    // the next file in the middle of showing this one.
+    connect(mw, &MW::audioPlaybackFinished, this, &Core::onAudioPlaybackFinished, Qt::QueuedConnection);
+    connect(mw, &MW::audioPlaybackFailed, this, &Core::onAudioPlaybackFailed, Qt::QueuedConnection);
 
     connect(mw, &MW::scalingRequested, this, &Core::scalingRequest);
     connect(model->scaler, &Scaler::scalingFinished, this, &Core::onScalingFinished);
@@ -199,6 +208,7 @@ void Core::initActions() {
     connect(mw, &MW::requestFileInfo, this, &Core::requestFileInfo);
     connect(&fileInfoExtractor, &FileInfoExtractor::ready, this, &Core::onFileInfoReady);
     connect(actionManager, &ActionManager::toggleShuffle, this, &Core::toggleShuffle);
+    connect(actionManager, &ActionManager::cycleAudioMode, this, &Core::cycleAudioMode);
     connect(actionManager, &ActionManager::toggleScalingFilter, mw, &MW::toggleScalingFilter);
     connect(actionManager, &ActionManager::showInDirectory, this, &Core::showInDirectory);
     connect(actionManager, &ActionManager::toggleMute, mw, &MW::toggleMute);
@@ -303,6 +313,31 @@ void Core::toggleShuffle() {
     updateInfoString();
 }
 
+// Only where the mode can matter: on an audio file, or in the folder view, where one may be playing or about
+// to be picked. Over an image a stray press of the plain A key would quietly change how the next audio file
+// plays, possibly days later.
+void Core::cycleAudioMode() {
+    if(!settings->audioPlayback() || (!mw->isShowingAudio() && mw->currentViewMode() != MODE_FOLDERVIEW))
+        return;
+    audioMode = static_cast<AudioPlaybackMode>((audioMode + 1) % (AUDIO_MODE_SHUFFLE + 1));
+    settings->setAudioPlaybackMode(audioMode);
+    mw->setAudioPlaybackMode(audioMode);
+    switch(audioMode) {
+    case AUDIO_MODE_SINGLE:
+        mw->showMessage(tr("Playback: Single file"));
+        break;
+    case AUDIO_MODE_REPEAT:
+        mw->showMessage(tr("Playback: Repeat track"));
+        break;
+    case AUDIO_MODE_FOLDER:
+        mw->showMessage(tr("Playback: Play folder"));
+        break;
+    case AUDIO_MODE_SHUFFLE:
+        mw->showMessage(tr("Playback: Shuffle"));
+        break;
+    }
+}
+
 void Core::toggleSlideshow() {
     if(slideshow) {
         stopSlideshow();
@@ -339,6 +374,155 @@ void Core::onPlaybackFinished() {
     }
 }
 
+// An end this soon after the file was opened is not a track that played: a file with no samples in it, such
+// as a WAV that is all header, ends at once every time. Such an end counts as a failure, so the continuous
+// modes skip it like one, and stop rather than spin through a folder of them for ever.
+static constexpr qint64 kMinAudioPlayback = 250; // ms
+
+void Core::onAudioPlaybackFinished(QString file) {
+    // From a file that has been replaced since; nothing to do with the current one.
+    if(file != state.currentFilePath)
+        return;
+    if(audioClock.isValid() && audioClock.elapsed() < kMinAudioPlayback) {
+        onAudioPlaybackFailed(file);
+        return;
+    }
+    if((!slideshow && !audioModeNavigates()) || deferAudioEnd(file, false))
+        return;
+    // A track played, so whatever failed before may be worth another try on the next lap.
+    deadAudio.clear();
+    if(slideshow) {
+        nextImageSlideshow();
+    } else {
+        audioForward = true;
+        playAudio(nextAudio(true));
+    }
+}
+
+// The view already says what went wrong. The slideshow and the continuous modes move on, as at the end of a
+// track, in the direction they were going -- but a folder where nothing plays must not have them spin
+// through it for ever, so they stop once nothing is left that has not failed since a track last played.
+void Core::onAudioPlaybackFailed(QString file) {
+    if(file != state.currentFilePath || !(slideshow || audioModeNavigates()) || deferAudioEnd(file, true))
+        return;
+    deadAudio.insert(file);
+    if(slideshow) {
+        if(deadAudio.size() < model->fileCount()) {
+            nextImageSlideshow();
+            return;
+        }
+        stopSlideshow();
+    } else {
+        QString const next = nextAudio(audioForward);
+        // Shuffle going back past the start of what it played: stay here.
+        if(next.isEmpty())
+            return;
+        if(next != file) {
+            playAudio(next);
+            return;
+        }
+    }
+    deadAudio.clear();
+    mw->showError(tr("Playback stopped: none of these files could be played"));
+}
+
+// What comes next depends on the folder's listing, which for a file opened from elsewhere is still on its
+// way (see modelDelayLoad()): a short or broken track can end before it lands. Moving on -- or concluding
+// that nothing here plays -- waits for onModelLoaded().
+bool Core::deferAudioEnd(QString const &file, bool failed) {
+    if(!folderListingPending && !model->isScanning())
+        return false;
+    deferredAudioEnd = file;
+    deferredAudioFailed = failed;
+    return true;
+}
+
+// currentImg lags behind currentFilePath while the next file loads; until it catches up, nothing counts
+// as audio.
+bool Core::currentIsAudio() {
+    return state.currentImg && state.currentImg->type() == AUDIO &&
+           state.currentImg->filePath() == state.currentFilePath;
+}
+
+// Play folder and Shuffle keep next/previous, and the end of a track, among the folder's audio files -- but
+// only from an audio file, or from the track they are loading: next pressed again before it is ready still
+// means the next track, not the next file. Anything else navigates as usual.
+bool Core::audioModeNavigates() {
+    if(audioMode != AUDIO_MODE_FOLDER && audioMode != AUDIO_MODE_SHUFFLE)
+        return false;
+    return currentIsAudio() || (!pendingAudio.isEmpty() && pendingAudio == state.currentFilePath);
+}
+
+// The folder's audio files as far as their names tell, less those known not to play: what a sniff found to
+// be something else (see isAudioFile()), and what has failed since a track last played. The current file
+// always stays in, as the place the step is taken from.
+QStringList Core::audioPool() {
+    QStringList files;
+    files.reserve(model->fileCount());
+    for(int i = 0; i < model->fileCount(); i++)
+        files.append(model->filePathAt(i));
+    // Video extensions too: an audio-only .webm, .mp4 or .mkv opens as audio.
+    QList<QByteArray> const videoList = settings->videoFormats().values();
+    QSet<QByteArray> const videoSuffixes(videoList.cbegin(), videoList.cend());
+    QStringList pool = AudioNavigation::pool(files, state.currentFilePath, [&videoSuffixes](QString const &suffix) {
+        QByteArray const name = suffix.toUtf8();
+        return settings->isAudioSuffix(name) || videoSuffixes.contains(name);
+    });
+    pool.removeIf([this](QString const &path) {
+        return path != state.currentFilePath && (deadAudio.contains(path) || !audioFiles.value(path, true));
+    });
+    return pool;
+}
+
+QString Core::adjacentAudio(QStringList const &pool, bool forward) {
+    if(audioMode == AUDIO_MODE_SHUFFLE) {
+        return forward ? audioShuffle.next(pool, state.currentFilePath)
+                       : audioShuffle.prev(pool, state.currentFilePath);
+    }
+    return AudioNavigation::step(pool, state.currentFilePath, forward ? 1 : -1);
+}
+
+// A name cannot tell an audio-only .webm from a video, or a Vorbis .ogg from a Theora one, and a video
+// reached this way would loop and end the run. So each candidate is sniffed before it is played: once per
+// folder, and only when navigation gets to it.
+bool Core::isAudioFile(QString const &path) {
+    auto known = audioFiles.constFind(path);
+    if(known == audioFiles.constEnd())
+        known = audioFiles.insert(path, documentType(path) == AUDIO);
+    return known.value();
+}
+
+// Where next or previous goes from the current track: empty for nowhere, the current track itself when
+// nothing else in the folder plays.
+QString Core::nextAudio(bool forward) {
+    return AudioNavigation::pick(
+        audioPool(), state.currentFilePath,
+        [this, forward](QStringList const &pool) { return adjacentAudio(pool, forward); },
+        [this](QString const &path) { return isAudioFile(path); });
+}
+
+// The current file again -- the only audio in its folder, or Shuffle going back past the start of its
+// history (an empty path) -- starts over rather than being reloaded.
+void Core::playAudio(QString const &path) {
+    if(path.isEmpty() || path == state.currentFilePath) {
+        audioClock.start();
+        mw->restartAudio();
+        return;
+    }
+    pendingAudio = path;
+    // Under the folder view this can only be the music moving on by itself, while the user may be in the
+    // middle of picking files there to delete or move: the selection there is theirs, not the player's.
+    loadFileIndex(model->indexOfFile(path), true, false, mw->currentViewMode() != MODE_FOLDERVIEW);
+}
+
+// What the playback modes know about a folder is about its files, and none of it carries over to another.
+void Core::forgetAudioFolder() {
+    audioShuffle.reset();
+    audioFiles.clear();
+    deadAudio.clear();
+    pendingAudio.clear();
+}
+
 void Core::syncRandomizer() {
     if(model) {
         randomizer.setCount(model->fileCount());
@@ -366,6 +550,7 @@ void Core::onFileInfoReady(QString path, QVector<FileInfoSection> sections) {
 }
 
 void Core::onModelLoaded() {
+    folderListingPending = false;
     // See modelDelayLoad(): the image was loaded before its directory existed,
     // so give the freshly listed entry the image we already have rather than
     // decoding it a second time.
@@ -390,11 +575,18 @@ void Core::onModelLoaded() {
     folderViewPresenter.selectAndFocus(state.currentFilePath);
     if(shuffle)
         syncRandomizer();
+    if(!deferredAudioEnd.isEmpty()) {
+        QString const file = std::exchange(deferredAudioEnd, QString());
+        deferredAudioFailed ? onAudioPlaybackFailed(file) : onAudioPlaybackFinished(file);
+    }
 }
 
 void Core::onDirectoryViewFileActivated(QString filePath) {
     // we aren`t using async load so it won't flicker with empty view
     mw->enableDocumentView();
+    // The track that kept playing under the folder view: going back to it must not start it over.
+    if(filePath == state.currentFilePath && currentIsAudio() && mw->isShowingAudio())
+        return;
     loadPath(filePath);
 }
 
@@ -502,6 +694,10 @@ void Core::enableDocumentView() {
             loadPath(selected);
         else
             loadPath(model->firstFile());
+    } else if(folderViewBehind) {
+        // The music moved on while the folder view was up; it opens on the track playing next time.
+        folderViewPresenter.selectAndFocus(state.currentFilePath);
+        folderViewBehind = false;
     }
 }
 
@@ -682,9 +878,11 @@ QMimeData *Core::getMimeDataForImage(std::shared_ptr<Image> img, MimeDataTarget 
         }
     }
     // !!! using setImageData() while doing drag'n'drop hangs Xorg !!!
-    // clipboard only!
-    if(img->type() != VIDEO && target == TARGET_CLIPBOARD)
-        mimeData->setImageData(*img->getImage().get());
+    // clipboard only! And only with pixels to give: a video or an audio file has none.
+    if(target == TARGET_CLIPBOARD) {
+        if(auto image = img->getImage())
+            mimeData->setImageData(*image);
+    }
     mimeData->setUrls({QUrl::fromLocalFile(path)});
     return mimeData;
 }
@@ -699,40 +897,84 @@ void Core::setFoldersDisplay(bool mode) {
 }
 
 void Core::renameCurrentSelection(QString newName) {
-    if(!model->fileCount() || newName.isEmpty() || selectedPath().isEmpty())
+    QString const path = renameTarget.isEmpty() ? selectedPath() : renameTarget;
+    if(!model->fileCount() || newName.isEmpty() || path.isEmpty())
         return;
+    QFileInfo const source(path);
+    // Releasing the file below stops playback, which starts over from the beginning when it is shown again.
+    // So everything that can be settled without touching the file is settled first: an unchanged name, and
+    // a name that is taken, whose question is then asked with the music still playing.
+    if(newName == source.fileName())
+        return;
+    bool overwrite = false;
+    QFileInfo const target(source.absolutePath() + "/" + newName);
+    if(target.exists()) {
+        if(target.isDir()) {
+            mw->toggleRenameOverlay(newName);
+            outputError(FileOpResult::DESTINATION_DIR_EXISTS);
+            return;
+        }
+        if(!mw->showConfirmation(tr("File exists"), tr("Overwrite file?"))) {
+            // show rename dialog again
+            mw->toggleRenameOverlay(newName);
+            return;
+        }
+        overwrite = true;
+    }
+    // See releaseFile(). After a successful rename onFileRenamed() opens it under the new name.
+    auto const closed = releaseFile(path);
     FileOpResult result;
-    model->renameEntry(selectedPath(), newName, false, result);
+    model->renameEntry(path, newName, overwrite, result);
+    // Only if the name was taken in the meantime.
     if(result == FileOpResult::DESTINATION_DIR_EXISTS) {
         mw->toggleRenameOverlay(newName);
     } else if(result == FileOpResult::DESTINATION_FILE_EXISTS) {
         if(mw->showConfirmation(tr("File exists"), tr("Overwrite file?"))) {
-            model->renameEntry(selectedPath(), newName, true, result);
+            model->renameEntry(path, newName, true, result);
         } else {
             // show rename dialog again
             mw->toggleRenameOverlay(newName);
         }
     }
+    if(closed && result != FileOpResult::SUCCESS)
+        guiSetImage(closed);
     outputError(result);
+}
+
+// Animations and players read their file for as long as it is open, and Windows will not rename, move or
+// delete a file that is open. If `path` is the current document and one of those, this closes it, and
+// returns it so that a failed operation can show it again.
+std::shared_ptr<Image> Core::releaseFile(QString const &path) {
+    if(path.isEmpty() || path != state.currentFilePath || !state.currentImg || state.currentImg->filePath() != path)
+        return nullptr;
+    DocumentType const type = state.currentImg->type();
+    if(type != ANIMATED && type != VIDEO && type != AUDIO)
+        return nullptr;
+    mw->closeImage();
+    return state.currentImg;
+}
+
+// Without decoding anything: the document on screen is known, and a sniff answers for any other file.
+DocumentType Core::documentType(QString const &path) {
+    if(state.currentImg && state.currentImg->filePath() == path)
+        return state.currentImg->type();
+    return DocumentInfo(path).type();
+}
+
+// Saving re-encodes pixels, and an audio file or a video has none to offer.
+bool Core::hasPixels(QString const &path) {
+    DocumentType const type = documentType(path);
+    return type != AUDIO && type != VIDEO;
 }
 
 FileOpResult Core::removeFile(QString filePath, bool trash) {
     if(model->isEmpty())
         return FileOpResult::NOTHING_TO_DO;
-
-    bool reopen = false;
-    std::shared_ptr<Image> img;
-    if(state.currentFilePath == filePath) {
-        img = model->getImage(filePath);
-        if(img->type() == ANIMATED || img->type() == VIDEO) {
-            mw->closeImage();
-            reopen = true;
-        }
-    }
+    auto const closed = releaseFile(filePath);
     FileOpResult result;
     model->removeFile(filePath, trash, result);
-    if(result != FileOpResult::SUCCESS && reopen)
-        guiSetImage(img);
+    if(result != FileOpResult::SUCCESS && closed)
+        guiSetImage(closed);
     return result;
 }
 
@@ -906,7 +1148,26 @@ void Core::doInteractiveMove(QString path, QString destDirectory, DialogResult &
     QFileInfo srcFi(path);
     // SINGLE FILE MOVE ===========================================================================
     if(!srcFi.isDir()) {
-        FileOpResult result;
+        FileOpResult result = FileOpResult::NOTHING_TO_DO;
+        // Into its own folder nothing moves (FileOperations says so too, but only after the file was closed),
+        // and a question about replacing a file is asked with the file still playing. Releasing it stops
+        // playback, which starts over when the file is shown again, so neither should cost that.
+        bool const ownFolder = destDirectory == srcFi.absolutePath();
+        QFileInfo const destFi(destDirectory + "/" + srcFi.fileName());
+        if(!ownFolder && !overwriteFiles && destFi.exists() && !destFi.isDir()) {
+            if(overwriteFiles.all) // skipping all
+                return;
+            overwriteFiles =
+                mw->fileReplaceDialog(srcFi.absoluteFilePath(), destFi.absoluteFilePath(), FILE_TO_FILE, true);
+            if(!overwriteFiles || overwriteFiles.cancel)
+                return;
+        }
+        // See releaseFile(). Shown again whichever way this returns, unless the file did move.
+        auto const closed = ownFolder ? nullptr : releaseFile(path);
+        auto const reopen = qScopeGuard([&] {
+            if(closed && result != FileOpResult::SUCCESS)
+                guiSetImage(closed);
+        });
         model->moveFileTo(path, destDirectory, overwriteFiles, result);
         if(result == FileOpResult::DESTINATION_FILE_EXISTS) {
             if(overwriteFiles.all) // skipping all
@@ -977,20 +1238,34 @@ void Core::movePathsTo(QList<QString> paths, QString destDirectory) {
 void Core::moveCurrentFile(QString destDirectory) {
     if(model->isEmpty())
         return;
+    QString const path = selectedPath();
+    QFileInfo const source(path);
+    // As in doInteractiveMove(): nothing to do for its own folder, and the question comes before the file is
+    // released, so that neither restarts playback.
+    if(destDirectory == source.absolutePath())
+        return;
+    bool overwrite = false;
+    QFileInfo const target(destDirectory + "/" + source.fileName());
+    if(target.exists() && !target.isDir()) {
+        if(!mw->showConfirmation(tr("File exists"), tr("Destination file exists. Overwrite?")))
+            return;
+        overwrite = true;
+    }
     // pause updates to avoid flicker
     mw->setUpdatesEnabled(false);
     // move fails during file playback, so we close it temporarily
-    mw->closeImage();
+    auto const closed = releaseFile(path);
     FileOpResult result;
-    model->moveFileTo(selectedPath(), destDirectory, false, result);
+    model->moveFileTo(path, destDirectory, overwrite, result);
     if(result == FileOpResult::SUCCESS) {
         mw->showMessageSuccess(tr("File moved."));
     } else if(result == FileOpResult::DESTINATION_FILE_EXISTS) {
         if(mw->showConfirmation(tr("File exists"), tr("Destination file exists. Overwrite?")))
-            model->moveFileTo(selectedPath(), destDirectory, true, result);
+            model->moveFileTo(path, destDirectory, true, result);
     }
     if(result != FileOpResult::SUCCESS) {
-        guiSetImage(model->getImage(selectedPath()));
+        if(closed)
+            guiSetImage(closed);
         updateInfoString();
         if(result != FileOpResult::DESTINATION_FILE_EXISTS)
             outputError(result);
@@ -1028,8 +1303,9 @@ void Core::toggleFullscreenInfoBar() {
     mw->toggleFullscreenInfoBar();
 }
 
+// See hasPixels().
 void Core::requestSavePath() {
-    if(model->isEmpty())
+    if(model->isEmpty() || !hasPixels(selectedPath()))
         return;
     mw->showSaveDialog(selectedPath());
 }
@@ -1038,7 +1314,7 @@ void Core::showResizeDialog() {
     if(model->isEmpty())
         return;
     auto img = model->getImage(selectedPath());
-    if(img)
+    if(img && img->type() != AUDIO)
         mw->showResizeDialog(img->size());
 }
 
@@ -1126,7 +1402,8 @@ void Core::saveCurrentFile() {
 }
 
 void Core::saveCurrentFileAs(QString destPath) {
-    if(model->isEmpty())
+    // Nothing to save is not a failure to save: no error, the same as Save As not offering a dialog.
+    if(model->isEmpty() || !hasPixels(selectedPath()))
         return;
     if(saveFile(selectedPath(), destPath)) {
         mw->showMessageSuccess(tr("File saved"));
@@ -1194,14 +1471,20 @@ void Core::sortBySize() {
 void Core::showRenameDialog() {
     if(model->isEmpty())
         return;
-    QFileInfo fi(selectedPath());
+    // Kept for renameCurrentSelection(): the current file and the selection can change while the overlay is
+    // up -- audio moves on to the next track by itself -- and the name typed is for this file.
+    renameTarget = selectedPath();
+    QFileInfo fi(renameTarget);
     mw->toggleRenameOverlay(fi.fileName());
 }
 
 void Core::runScript(const QString &scriptName) {
     if(model->isEmpty())
         return;
-    scriptManager->runScript(scriptName, model->getImage(selectedPath()));
+    // Null for a file that cannot be loaded at all, which the script manager would dereference.
+    auto img = model->getImage(selectedPath());
+    if(img)
+        scriptManager->runScript(scriptName, img);
 }
 
 void Core::setWallpaper() {
@@ -1277,9 +1560,29 @@ void Core::onScalingFinished(QPixmap *scaled, ScalerRequest req) {
 
 // reset state; clear cache; etc
 void Core::reset() {
+    // Audio plays on under the folder view, but only while it shows the track's own folder. Once it moves to
+    // another, nothing here refers to the track any more: its end could not go on to the next one, and
+    // picking it again would start it over. So it stops with the folder it belongs to.
+    if(mw->isShowingAudio())
+        mw->closeImage();
     state.hasActiveImage = false;
     state.currentFilePath = "";
+    forgetAudioFolder();
     model->setDirectory("");
+}
+
+// For a file that is not in the directory listing. The listing goes by extension, so the extension gets
+// the same answer here; failing that, the mime type. That is compared through inherits(), which resolves
+// aliases and parents: mime databases name the same format differently (a .ogg is audio/vorbis to one and
+// audio/x-vorbis+ogg to another), and an exact name check turned such files away.
+static bool isOpenable(QFileInfo const &fileInfo) {
+    QByteArray const suffix = fileInfo.suffix().toLower().toUtf8();
+    if(!suffix.isEmpty() && settings->supportedFormats().contains(suffix))
+        return true;
+    QMimeType const type = QMimeDatabase().mimeTypeForFile(fileInfo.absoluteFilePath());
+    QStringList const supported = settings->supportedMimeTypes();
+    return std::any_of(supported.cbegin(), supported.cend(),
+                       [&type](QString const &name) { return type.inherits(name); });
 }
 
 bool Core::loadPath(QString path) {
@@ -1289,6 +1592,8 @@ bool Core::loadPath(QString path) {
         path.remove(0, 7);
 
     stopSlideshow();
+    deadAudio.clear();
+    pendingAudio.clear();
     state.delayModel = false;
     QFileInfo fileInfo(path);
     if(fileInfo.isDir()) {
@@ -1308,18 +1613,9 @@ bool Core::loadPath(QString path) {
     // load file / folderview
     if(fileInfo.isFile()) {
         int index = model->indexOfFile(fileInfo.absoluteFilePath());
-        // DirectoryManager only checks file extensions via regex (performance reasons)
-        // But in this case we force check mimetype
-        if(index == -1) {
-            QStringList types = settings->supportedMimeTypes();
-            QMimeDatabase db;
-            QMimeType type = db.mimeTypeForFile(fileInfo.absoluteFilePath());
-            if(types.contains(type.name())) {
-                if(model->forceInsert(fileInfo.absoluteFilePath())) {
-                    index = model->indexOfFile(fileInfo.absoluteFilePath());
-                }
-            }
-        }
+        // Not listed (yet): another folder, the command line, a drop.
+        if(index == -1 && isOpenable(fileInfo) && model->forceInsert(fileInfo.absoluteFilePath()))
+            index = model->indexOfFile(fileInfo.absoluteFilePath());
         mw->enableDocumentView();
         return loadFileIndex(index, false, settings->usePreloader());
     } else {
@@ -1342,13 +1638,13 @@ bool Core::setDirectory(QString path) {
     return true;
 }
 
-bool Core::loadFileIndex(int index, bool async, bool preload) {
+bool Core::loadFileIndex(int index, bool async, bool preload, bool followInFolderView) {
     if(!model)
         return false;
     auto entry = model->fileEntryAt(index);
     if(entry.path.isEmpty())
         return false;
-    state.currentFilePath = entry.path;
+    QString const previous = std::exchange(state.currentFilePath, entry.path);
     model->unloadExcept(entry.path, preload);
     model->load(entry.path, async);
     if(preload) {
@@ -1356,7 +1652,14 @@ bool Core::loadFileIndex(int index, bool async, bool preload) {
         model->preload(model->prevOf(entry.path));
     }
     thumbPanelPresenter.selectAndFocus(entry.path);
-    folderViewPresenter.selectAndFocus(entry.path);
+    // Unless asked not to, and then still while the selection there is just the previous file, which the
+    // user has not touched: picking that would play it again rather than go back to this one.
+    if(followInFolderView || folderViewPresenter.selectedPaths() == QList<QString>{previous}) {
+        folderViewPresenter.selectAndFocus(entry.path);
+        folderViewBehind = false;
+    } else {
+        folderViewBehind = true;
+    }
     updateInfoString();
     return true;
 }
@@ -1436,13 +1739,20 @@ void Core::nextImage() {
     // than ignoring it -- and, more importantly, do not fall through to the
     // FOLDER_END_GOTO_ADJACENT branch below, which lists the parent directory
     // synchronously and would freeze the window the worker exists to keep free.
-    if(model->isScanning()) {
+    // Until a file opened from elsewhere has its folder listed, the model is still the previous folder's.
+    if(model->isScanning() || folderListingPending) {
         mw->showMessageLoadingFolder();
         return;
     }
     if(model->isEmpty() && folderEndAction != FOLDER_END_GOTO_ADJACENT)
         return;
     stopSlideshow();
+    deadAudio.clear();
+    if(audioModeNavigates()) {
+        audioForward = true;
+        playAudio(nextAudio(true));
+        return;
+    }
     if(shuffle) {
         loadFileIndex(randomizer.next(), true, false);
         return;
@@ -1471,13 +1781,20 @@ void Core::prevImage() {
     // than ignoring it -- and, more importantly, do not fall through to the
     // FOLDER_END_GOTO_ADJACENT branch below, which lists the parent directory
     // synchronously and would freeze the window the worker exists to keep free.
-    if(model->isScanning()) {
+    // Until a file opened from elsewhere has its folder listed, the model is still the previous folder's.
+    if(model->isScanning() || folderListingPending) {
         mw->showMessageLoadingFolder();
         return;
     }
     if(model->isEmpty() && folderEndAction != FOLDER_END_GOTO_ADJACENT)
         return;
     stopSlideshow();
+    deadAudio.clear();
+    if(audioModeNavigates()) {
+        audioForward = false;
+        playAudio(nextAudio(false));
+        return;
+    }
     if(shuffle) {
         loadFileIndex(randomizer.prev(), true, false);
         return;
@@ -1524,12 +1841,18 @@ void Core::startSlideshowTimer() {
     // start timer only for static images or single frame gifs
     // for proper gifs and video we get a playbackFinished() signal
     auto img = model->getImage(state.currentFilePath);
+    if(!img)
+        return;
     if(img->type() == STATIC) {
         slideshowTimer.start();
     } else if(img->type() == ANIMATED) {
         auto anim = dynamic_cast<ImageAnimated *>(img.get());
         if(anim && anim->frameCount() <= 1)
             slideshowTimer.start();
+    } else if(img->type() == AUDIO && !mw->isAudioPlaying()) {
+        // Ended, paused or failed: no end is on its way to move the slideshow on, so the timer does, as for a
+        // still image. The usual case is a slideshow started on a track that has already played.
+        slideshowTimer.start();
     }
 }
 
@@ -1551,6 +1874,8 @@ void Core::jumpToLast() {
 
 void Core::onLoadFailed(const QString &path) {
     mw->showMessage(tr("Load failed: ") + path);
+    if(path == pendingAudio)
+        pendingAudio.clear();
     if(path == state.currentFilePath)
         mw->closeImage();
 }
@@ -1558,6 +1883,13 @@ void Core::onLoadFailed(const QString &path) {
 void Core::onModelItemReady(std::shared_ptr<Image> img, const QString &path) {
     if(path == state.currentFilePath) {
         state.currentImg = img;
+        // From here on currentIsAudio() answers for it.
+        if(path == pendingAudio)
+            pendingAudio.clear();
+        // Before anything that processes events, showGui() included: a short or broken audio file can
+        // already have ended in there. See deferAudioEnd().
+        if(state.delayModel)
+            folderListingPending = true;
         guiSetImage(img);
         updateInfoString();
         if(state.delayModel) {
@@ -1576,7 +1908,11 @@ void Core::onModelItemReady(std::shared_ptr<Image> img, const QString &path) {
 // onModelLoaded() does it once the entries are actually there.
 void Core::modelDelayLoad() {
     reattachCurrentImageOnLoad = true;
-    model->setDirectory(state.directoryPath);
+    // A new folder, the same as in reset().
+    forgetAudioFolder();
+    // A folder that cannot be read sends no listing: the model just stays the previous folder's.
+    if(!model->setDirectory(state.directoryPath))
+        folderListingPending = false;
     mw->setDirectoryPath(state.directoryPath);
 }
 
@@ -1613,7 +1949,13 @@ void Core::guiSetImage(std::shared_ptr<Image> img) {
         // affects only initial startup (e.g. we open webm from file manager)
         showGui();
         mw->showVideo(video->filePath());
+    } else if(type == AUDIO) {
+        audioClock.start();
+        mw->showAudio(img->filePath());
     }
+    // Anything else on screen ends a run of unplayable audio; see onAudioPlaybackFailed().
+    if(type != AUDIO)
+        deadAudio.clear();
     img->isEdited() ? mw->showSaveOverlay() : mw->hideSaveOverlay();
     // Only if someone is looking. This used to run exiv2 synchronously here,
     // on every image, open panel or not.

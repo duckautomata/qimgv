@@ -26,6 +26,18 @@ target_sources(qimgv PRIVATE
 
     fileinfo/fileinfoextractor.cpp
 
+    audiometa/audiometadata.cpp
+    audiometa/audiometa_p.cpp
+    audiometa/id3.cpp
+    audiometa/ape.cpp
+    audiometa/riff.cpp
+    audiometa/matroska.cpp
+    audiometa/flac.cpp
+    audiometa/vorbiscomment.cpp
+    audiometa/ogg.cpp
+    audiometa/mp4.cpp
+    audiometa/asf.cpp
+
     directorymanager/watchers/directorywatcher.cpp
     directorymanager/watchers/dummywatcher.cpp
     directorymanager/watchers/watcherevent.cpp

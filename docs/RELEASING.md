@@ -85,7 +85,7 @@ if any is missing, and creates the release as a **draft**:
 
 - `qimgv-x.y.z-win64-setup.exe` — the per-user installer
 - `qimgv-x.y.z-win64.zip` — portable
-- `qimgv-x.y.z-win64-minimal.zip` — no video playback
+- `qimgv-x.y.z-win64-minimal.zip` — no video or audio playback
 
 Review the draft on GitHub and press **Publish release**. Until you do, the
 update check keeps reporting "up to date" — a draft is not `/releases/latest`.

@@ -15,6 +15,7 @@ target_sources(qimgv PRIVATE
     customwidgets/iconbutton.cpp
     customwidgets/iconwidget.cpp
     customwidgets/keysequenceedit.cpp
+    customwidgets/mediaslider.cpp
     customwidgets/menuitem.cpp
     customwidgets/overlaywidget.cpp
     customwidgets/pathselectormenuitem.cpp
@@ -65,8 +66,11 @@ target_sources(qimgv PRIVATE
     panels/infobar/infobar.cpp
     panels/infobar/infobarproxy.cpp
 
+    viewers/audioplayer.cpp
+    viewers/audioview.cpp
     viewers/documentwidget.cpp
     viewers/imageviewerv2.cpp
+    viewers/playerplugin.cpp
     viewers/videoplayer.cpp
     viewers/videoplayerinitproxy.cpp
     viewers/videozoom.cpp

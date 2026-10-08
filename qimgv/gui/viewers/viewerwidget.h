@@ -4,12 +4,13 @@
 #include <QVBoxLayout>
 #include "gui/viewers/imageviewerv2.h"
 #include "gui/viewers/videoplayerinitproxy.h"
+#include "gui/viewers/audioview.h"
 #include "gui/overlays/videocontrolsproxy.h"
 #include "gui/overlays/zoomindicatoroverlayproxy.h"
 #include "gui/overlays/clickzoneoverlay.h"
 #include "gui/contextmenu.h"
 
-enum CurrentWidget { IMAGEVIEWER, VIDEOPLAYER, UNSET };
+enum CurrentWidget { IMAGEVIEWER, VIDEOPLAYER, AUDIOPLAYER, UNSET };
 
 class VideoZoom;
 
@@ -29,6 +30,12 @@ public:
     void onScalingFinished(std::unique_ptr<QPixmap> scaled);
     bool isDisplaying();
     bool isShowingVideo();
+    bool isShowingAudio();
+    // On its way to the end of the track: not paused, not stopped at the end, not failed. Only then is a
+    // playbackFinished() or playbackFailed() still to come.
+    bool isAudioPlaying();
+    // Video or audio: nothing to fit, lock or crop.
+    bool isShowingMedia();
     bool lockZoomEnabled();
     bool lockViewEnabled();
     ScalingFilter scalingFilter();
@@ -37,6 +44,8 @@ private:
     QVBoxLayout layout;
     std::unique_ptr<ImageViewerV2> imageViewer;
     std::unique_ptr<VideoPlayerInitProxy> videoPlayer;
+    // Created on first use; see audio().
+    std::unique_ptr<AudioView> audioView;
     std::unique_ptr<ContextMenu> contextMenu;
     VideoControlsProxyWrapper *videoControls;
     ZoomIndicatorOverlayProxy *zoomIndicator;
@@ -44,6 +53,8 @@ private:
 
     void enableImageViewer();
     void enableVideoPlayer();
+    void enableAudioView();
+    AudioView *audio();
 
     CurrentWidget currentWidget;
     bool mInteractionEnabled, mWaylandCursorWorkaround;
@@ -53,6 +64,13 @@ private:
 
     void disableImageViewer();
     void disableVideoPlayer();
+    void disableAudioView();
+
+    // What setLoopPlayback() last asked for: false during a slideshow. Audio only loops in the Repeat
+    // mode on top of it; see applyAudioLoop().
+    bool mLoopPlayback = true;
+    AudioPlaybackMode mAudioMode = AUDIO_MODE_SINGLE;
+    void applyAudioLoop();
 
     QRect videoControlsArea();
 
@@ -64,6 +82,8 @@ private slots:
     void onScaleChanged(qreal);
     void onVideoPlaybackFinished();
     void onAnimationPlaybackFinished();
+    void onAudioPlaybackFinished();
+    void onAudioPlaybackFailed();
 
 signals:
     void scalingRequested(QSize, ScalingFilter);
@@ -73,6 +93,10 @@ signals:
     void setFilterBilinear();
     void setScalingFilter(ScalingFilter filter);
     void playbackFinished();
+    // Separate from playbackFinished(): the audio playback modes act on these outside a slideshow too.
+    // They carry the file so that a late one can be told from the file opened since.
+    void audioPlaybackFinished(QString file);
+    void audioPlaybackFailed(QString file);
     void showScriptSettings();
 
 public slots:
@@ -94,6 +118,12 @@ public slots:
     void toggleLockView();
 
     bool showVideo(QString file);
+    bool showAudio(QString file);
+    // Plays the current audio file again from the start.
+    void restartAudio();
+    // Unloads the audio file; nothing plays until the next showAudio().
+    void stopAudio();
+    void setAudioPlaybackMode(AudioPlaybackMode mode);
     void stopPlayback();
     void setFitMode(ImageFitMode mode);
     ImageFitMode fitMode();

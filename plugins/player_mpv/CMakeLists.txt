@@ -35,15 +35,17 @@ if(NOT Mpv_FOUND)
 endif()
 
 # --- Target -----------------------------------------------------------------
-# VideoPlayer is the plugin ABI: qimgv calls through its vtable across the DLL
-# boundary, so the two sides have to agree on it exactly. It used to be a
+# VideoPlayer and AudioPlayer are the plugin ABI: qimgv calls through their
+# vtables across the DLL boundary, so the two sides have to agree on them exactly. It used to be a
 # byte-for-byte copy in src/, which silently becomes a memory-corruption bug the
 # moment one side gains a virtual the other lacks. Compile the app's copy
 # instead -- the plugin still gets its own object code, just not its own source.
 qt_add_library(player_mpv MODULE
     "${CMAKE_SOURCE_DIR}/qimgv/gui/viewers/videoplayer.cpp"
+    "${CMAKE_SOURCE_DIR}/qimgv/gui/viewers/audioplayer.cpp"
     src/mpvwidget.cpp
     src/videoplayermpv.cpp
+    src/audioplayermpv.cpp
 )
 
 # src first: plugin-local headers win over anything in the app directory.
@@ -67,7 +69,7 @@ else()
     target_link_libraries(player_mpv PRIVATE mpv)
 endif()
 
-# Only CreatePlayerWidget() is part of the plugin ABI.
+# Only CreatePlayerWidget() and CreateAudioPlayer() are part of the plugin ABI.
 target_compile_definitions(player_mpv PRIVATE QIMGV_PLAYER_MPV_LIBRARY)
 
 set_target_properties(player_mpv PROPERTIES

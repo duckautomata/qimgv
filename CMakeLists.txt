@@ -9,8 +9,8 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(qimgv
-    VERSION 2.0.3
-    DESCRIPTION "Fast and configurable image viewer with optional video support"
+    VERSION 2.1.0
+    DESCRIPTION "Fast and configurable image viewer with optional video and audio playback"
     HOMEPAGE_URL "https://github.com/duckautomata/qimgv"
     LANGUAGES CXX)
 
@@ -24,7 +24,7 @@ include(FeatureSummary)
 # ---------------------------------------------------------------------------
 # Options
 # ---------------------------------------------------------------------------
-option(QIMGV_VIDEO_SUPPORT "Enable video playback via libmpv"          ON)
+option(QIMGV_VIDEO_SUPPORT "Enable video and audio playback via libmpv" ON)
 option(QIMGV_EXIV2         "Read/write EXIF metadata via exiv2"        ON)
 option(QIMGV_OPENCV        "High quality scaling via OpenCV"           ON)
 option(QIMGV_KDE_BLUR      "Enable KDE/KWin background blur"           OFF)
@@ -99,7 +99,7 @@ endif()
 # ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
-add_feature_info("Video playback (libmpv)" QIMGV_VIDEO_SUPPORT "H.264/H.265/AV1/VP9/ProRes via mpv")
+add_feature_info("Video & audio (libmpv)"  QIMGV_VIDEO_SUPPORT "H.264/H.265/AV1/VP9/ProRes video and MP3/AAC/FLAC/Opus audio via mpv")
 add_feature_info("EXIF metadata (exiv2)"   QIMGV_EXIV2         "read/write image metadata")
 add_feature_info("HQ scaling (OpenCV)"     QIMGV_OPENCV        "bicubic / bilinear+sharpen filters")
 add_feature_info("KDE blur"                QIMGV_KDE_BLUR      "translucent background under KWin")

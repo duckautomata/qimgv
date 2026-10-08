@@ -17,6 +17,7 @@
 #include "components/updatechecker.h"
 #include "gui/mainwindow.h"
 #include "utils/randomizer.h"
+#include "utils/audioshuffle.h"
 #include "gui/dialogs/printdialog.h"
 
 #ifdef __GLIBC__
@@ -63,6 +64,9 @@ private:
 
     // See Core::modelDelayLoad().
     bool reattachCurrentImageOnLoad = false;
+    // From the moment a file opened from another folder is shown until that folder's listing arrives, the
+    // model is still the old folder's.
+    bool folderListingPending = false;
     FileInfoExtractor fileInfoExtractor;
 
     // See Core::nextDirectory(). Listing a directory is asynchronous, so the
@@ -89,6 +93,42 @@ private:
 
     Randomizer randomizer;
     void syncRandomizer();
+
+    AudioPlaybackMode audioMode = AUDIO_MODE_SINGLE;
+    AudioShuffle audioShuffle;
+    // Whether a file the pool's names let in turned out to be audio, for the folder's files; see isAudioFile().
+    QHash<QString, bool> audioFiles;
+    // Files that would not play, or ended as soon as they started, since a track last played; see
+    // onAudioPlaybackFailed().
+    QSet<QString> deadAudio;
+    // Which way the folder's audio was last gone through: a file that will not play is skipped the same way.
+    bool audioForward = true;
+    // The track playAudio() is loading; see audioModeNavigates().
+    QString pendingAudio;
+    // Since the current audio file was shown or started over; see onAudioPlaybackFinished().
+    QElapsedTimer audioClock;
+    // An audio file that ended or failed before its folder was listed; see deferAudioEnd().
+    QString deferredAudioEnd;
+    bool deferredAudioFailed = false;
+    bool deferAudioEnd(QString const &file, bool failed);
+    bool currentIsAudio();
+    bool audioModeNavigates();
+    QStringList audioPool();
+    QString adjacentAudio(QStringList const &pool, bool forward);
+    bool isAudioFile(QString const &path);
+    QString nextAudio(bool forward);
+    void playAudio(QString const &path);
+    void forgetAudioFolder();
+
+    // The file the rename overlay was opened for; see showRenameDialog().
+    QString renameTarget;
+    // The folder view's selection was left where the user put it while the current file changed; see
+    // loadFileIndex().
+    bool folderViewBehind = false;
+
+    std::shared_ptr<Image> releaseFile(QString const &path);
+    DocumentType documentType(QString const &path);
+    bool hasPixels(QString const &path);
 
     void attachModel(DirectoryModel *_model);
     QString selectedPath();
@@ -170,6 +210,7 @@ private slots:
     void onDraggedOut(QList<QString> paths);
     void onDropIn(const QMimeData *mimeData, QObject *source);
     void toggleShuffle();
+    void cycleAudioMode();
     void onModelLoaded();
     void onFileInfoReady(QString path, QVector<FileInfoSection> sections);
     void requestFileInfo();
@@ -177,12 +218,15 @@ private slots:
     void showOpenDialog();
     void showInDirectory();
     void onDirectoryViewFileActivated(QString filePath);
-    bool loadFileIndex(int index, bool async, bool preload);
+    // followInFolderView false: see playAudio().
+    bool loadFileIndex(int index, bool async, bool preload, bool followInFolderView = true);
     void enableDocumentView();
     void enableFolderView();
     void toggleFolderView();
     void toggleSlideshow();
     void onPlaybackFinished();
+    void onAudioPlaybackFinished(QString file);
+    void onAudioPlaybackFailed(QString file);
     void setFoldersDisplay(bool mode);
     void loadParentDir();
     void nextDirectory();

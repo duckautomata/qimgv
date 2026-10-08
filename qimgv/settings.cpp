@@ -1,4 +1,5 @@
 #include "settings.h"
+#include <QRegularExpression>
 
 Settings *settings = nullptr;
 
@@ -60,6 +61,14 @@ Settings::Settings(QObject *parent) : QObject(parent) {
     themeConf = new QSettings(mConfDir->absolutePath() + "/theme.ini", QSettings::IniFormat);
 #endif
     fillVideoFormats();
+    fillAudioFormats();
+#ifdef USE_MPV
+    mVideoPlayback = settingsConf->value("videoPlayback", true).toBool();
+    mAudioPlayback = settingsConf->value("audioPlayback", true).toBool();
+#else
+    mVideoPlayback = false;
+    mAudioPlayback = false;
+#endif
 }
 //------------------------------------------------------------------------------
 Settings::~Settings() {
@@ -376,6 +385,122 @@ void Settings::fillVideoFormats() {
     mVideoFormatsMap.insert("video/h265", "h265");
     mVideoFormatsMap.insert("video/h265", "hevc");
     mVideoFormatsMap.insert("video/av1", "av1");
+
+    // Ogg with Theora inside, as freedesktop's database names it. "ogg" above already lists the file;
+    // this lets the mime check recognise it.
+    mVideoFormatsMap.insert("video/x-theora+ogg", "ogg");
+}
+//------------------------------------------------------------------------------
+// Audio goes to libmpv too, so as with video this is a list of what to offer it, and ffmpeg decides what
+// it can actually decode.
+//
+// Several mime databases are in play -- Qt's built-in one, the freedesktop.org.xml the Windows package
+// ships, and the system's shared-mime-info on Linux -- and they name the same file differently (a WAV is
+// audio/vnd.wave in one and audio/x-wav in another). So the names below include the aliases, and nothing
+// should decide a type from an exact mime name alone; DocumentInfo looks at the content. The names also
+// feed supportedMimeTypes(), for a file opened without a recognised extension.
+//
+// Formats with no reliable mime type at all are listed under a conventional "x-" name purely so they
+// have a key; only the extension matters for those.
+void Settings::fillAudioFormats() {
+    // MPEG audio
+    mAudioFormatsMap.insert("audio/mpeg", "mp3");
+    mAudioFormatsMap.insert("audio/mpeg", "mpga");
+    mAudioFormatsMap.insert("audio/mp2", "mp2");
+
+    // AAC, and MP4 audio (AAC, ALAC)
+    mAudioFormatsMap.insert("audio/aac", "aac");
+    mAudioFormatsMap.insert("audio/x-aac", "aac");
+    mAudioFormatsMap.insert("audio/aac", "adts");
+    mAudioFormatsMap.insert("audio/mp4", "m4a");
+    mAudioFormatsMap.insert("audio/mp4", "m4b");
+    mAudioFormatsMap.insert("audio/mp4", "m4r");
+    mAudioFormatsMap.insert("audio/mp4", "f4a");
+    mAudioFormatsMap.insert("audio/x-m4b", "m4b");
+
+    // FLAC
+    mAudioFormatsMap.insert("audio/flac", "flac");
+    mAudioFormatsMap.insert("audio/x-flac", "flac");
+
+    // Ogg: Vorbis, Opus, FLAC, Speex
+    mAudioFormatsMap.insert("audio/ogg", "ogg");
+    mAudioFormatsMap.insert("audio/ogg", "oga");
+    mAudioFormatsMap.insert("audio/x-vorbis+ogg", "ogg");
+    mAudioFormatsMap.insert("audio/vorbis", "ogg");
+    mAudioFormatsMap.insert("audio/x-opus+ogg", "opus");
+    mAudioFormatsMap.insert("audio/opus", "opus");
+    mAudioFormatsMap.insert("audio/x-flac+ogg", "oga");
+    mAudioFormatsMap.insert("audio/x-speex+ogg", "spx");
+    mAudioFormatsMap.insert("audio/x-speex", "spx");
+    mAudioFormatsMap.insert("audio/speex", "spx");
+
+    // Uncompressed
+    mAudioFormatsMap.insert("audio/vnd.wave", "wav");
+    mAudioFormatsMap.insert("audio/x-wav", "wav");
+    mAudioFormatsMap.insert("audio/wav", "wav");
+    mAudioFormatsMap.insert("audio/x-w64", "w64");
+    mAudioFormatsMap.insert("audio/x-aiff", "aiff");
+    mAudioFormatsMap.insert("audio/x-aiff", "aif");
+    mAudioFormatsMap.insert("audio/x-aiff", "aifc");
+    mAudioFormatsMap.insert("audio/aiff", "aiff");
+    mAudioFormatsMap.insert("audio/x-caf", "caf");
+    mAudioFormatsMap.insert("audio/basic", "au");
+    mAudioFormatsMap.insert("audio/basic", "snd");
+
+    // Lossless codecs with containers of their own
+    mAudioFormatsMap.insert("audio/x-ape", "ape");
+    mAudioFormatsMap.insert("audio/x-wavpack", "wv");
+    mAudioFormatsMap.insert("audio/x-musepack", "mpc");
+    mAudioFormatsMap.insert("audio/x-tta", "tta");
+    mAudioFormatsMap.insert("audio/tta", "tta");
+    mAudioFormatsMap.insert("audio/x-tak", "tak");
+    mAudioFormatsMap.insert("audio/x-dsf", "dsf");
+    mAudioFormatsMap.insert("audio/x-dff", "dff");
+
+    // Windows Media
+    mAudioFormatsMap.insert("audio/x-ms-wma", "wma");
+
+    // Matroska / WebM audio
+    mAudioFormatsMap.insert("audio/x-matroska", "mka");
+    mAudioFormatsMap.insert("audio/webm", "weba");
+
+    // Surround and broadcast
+    mAudioFormatsMap.insert("audio/ac3", "ac3");
+    mAudioFormatsMap.insert("audio/eac3", "eac3");
+    mAudioFormatsMap.insert("audio/eac3", "ec3");
+    mAudioFormatsMap.insert("audio/vnd.dts", "dts");
+    mAudioFormatsMap.insert("audio/x-dts", "dts");
+    mAudioFormatsMap.insert("audio/vnd.dts.hd", "dtshd");
+
+    // Speech
+    mAudioFormatsMap.insert("audio/amr", "amr");
+    mAudioFormatsMap.insert("audio/AMR", "amr");
+    mAudioFormatsMap.insert("audio/amr-wb", "awb");
+    mAudioFormatsMap.insert("audio/AMR-WB", "awb");
+
+    // Tracker modules (ffmpeg's libopenmpt or libmodplug demuxer)
+    mAudioFormatsMap.insert("audio/x-mod", "mod");
+    mAudioFormatsMap.insert("audio/x-xm", "xm");
+    mAudioFormatsMap.insert("audio/x-it", "it");
+    mAudioFormatsMap.insert("audio/x-s3m", "s3m");
+
+    // Game music (ffmpeg's libgme demuxer)
+    mAudioFormatsMap.insert("audio/x-spc", "spc");
+    mAudioFormatsMap.insert("audio/x-vgm", "vgm");
+    mAudioFormatsMap.insert("audio/x-vgm", "vgz");
+    mAudioFormatsMap.insert("audio/x-nsf", "nsf");
+    mAudioFormatsMap.insert("audio/x-gbs", "gbs");
+
+    for(auto const &suffix : std::as_const(mAudioFormatsMap))
+        mAudioSuffixes.insert(suffix);
+}
+
+const QMultiMap<QByteArray, QByteArray> &Settings::audioFormats() const {
+    return mAudioFormatsMap;
+}
+
+bool Settings::isAudioSuffix(QByteArrayView suffix) const {
+    return mAudioSuffixes.contains(suffix.toByteArray());
 }
 //------------------------------------------------------------------------------
 QString Settings::mpvBinary() {
@@ -405,6 +530,8 @@ QList<QByteArray> Settings::supportedFormats() {
     formats << "jfif";
     if(videoPlayback())
         formats << mVideoFormatsMap.values();
+    if(audioPlayback())
+        formats << mAudioFormatsMap.values();
     formats.removeAll("pdf");
     return formats;
 }
@@ -425,8 +552,10 @@ QString Settings::supportedFormatsRegex() {
     QString filter;
     QList<QByteArray> formats = supportedFormats();
     filter.append(".*\\.(");
+    // Escaped: an extension is literal text, and one with a '+' or '.' in it would otherwise change the
+    // meaning of the whole pattern.
     for(int i = 0; i < formats.count(); i++)
-        filter.append(QString(formats.at(i)) + "|");
+        filter.append(QRegularExpression::escape(QString(formats.at(i))) + "|");
     filter.chop(1);
     filter.append(")$");
     return filter;
@@ -438,6 +567,8 @@ QStringList Settings::supportedMimeTypes() {
     QList<QByteArray> mimeTypes = QImageReader::supportedMimeTypes();
     if(videoPlayback())
         mimeTypes << mVideoFormatsMap.keys();
+    if(audioPlayback())
+        mimeTypes << mAudioFormatsMap.keys();
     for(int i = 0; i < mimeTypes.count(); i++) {
         filters << QString(mimeTypes.at(i));
     }
@@ -445,15 +576,44 @@ QStringList Settings::supportedMimeTypes() {
 }
 //------------------------------------------------------------------------------
 bool Settings::videoPlayback() {
-#ifdef USE_MPV
-    return settings->settingsConf->value("videoPlayback", true).toBool();
-#else
-    return false;
-#endif
+    return mVideoPlayback;
 }
 
 void Settings::setVideoPlayback(bool mode) {
     settings->settingsConf->setValue("videoPlayback", mode);
+#ifdef USE_MPV
+    mVideoPlayback = mode;
+#endif
+}
+//------------------------------------------------------------------------------
+bool Settings::audioPlayback() {
+    return mAudioPlayback;
+}
+
+void Settings::setAudioPlayback(bool mode) {
+    settings->settingsConf->setValue("audioPlayback", mode);
+#ifdef USE_MPV
+    mAudioPlayback = mode;
+#endif
+}
+//------------------------------------------------------------------------------
+AudioPlaybackMode Settings::audioPlaybackMode() {
+    int mode = settings->stateConf->value("audioPlaybackMode", AUDIO_MODE_SINGLE).toInt();
+    if(mode < AUDIO_MODE_SINGLE || mode > AUDIO_MODE_SHUFFLE)
+        mode = AUDIO_MODE_SINGLE;
+    return static_cast<AudioPlaybackMode>(mode);
+}
+
+void Settings::setAudioPlaybackMode(AudioPlaybackMode mode) {
+    settings->stateConf->setValue("audioPlaybackMode", mode);
+}
+//------------------------------------------------------------------------------
+bool Settings::audioBackdrop() {
+    return settings->settingsConf->value("audioBackdrop", true).toBool();
+}
+
+void Settings::setAudioBackdrop(bool mode) {
+    settings->settingsConf->setValue("audioBackdrop", mode);
 }
 //------------------------------------------------------------------------------
 bool Settings::useSystemColorScheme() {

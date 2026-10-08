@@ -63,6 +63,11 @@ QString ShortcutBuilder::processMouseEvent(QMouseEvent *event) {
 QString ShortcutBuilder::processKeyEvent(QKeyEvent *event) {
     if(event->type() != QEvent::KeyPress || isModifier(Qt::Key(event->key())))
         return "";
+    // Media keys are not in InputMap's scan code tables -- their scan codes are extended ones, or 0 when
+    // Windows delivers them as WM_APPCOMMAND from a headset or remote -- so they are named from the key
+    // itself, the way fromEventText() names them, which is what macOS has always produced for them.
+    if(isMediaKey(Qt::Key(event->key())))
+        return fromEventText(event);
 #if defined(__linux__) || defined(__FreeBSD__) || defined(_WIN32)
     return fromEventNativeScanCode(event);
 #else
@@ -87,6 +92,23 @@ bool ShortcutBuilder::isModifier(Qt::Key key) {
         return true;
     }
     return false;
+}
+//------------------------------------------------------------------------------
+bool ShortcutBuilder::isMediaKey(Qt::Key key) {
+    switch(key) {
+    case Qt::Key_MediaTogglePlayPause:
+    case Qt::Key_MediaPlay:
+    case Qt::Key_MediaPause:
+    case Qt::Key_MediaStop:
+    case Qt::Key_MediaNext:
+    case Qt::Key_MediaPrevious:
+    case Qt::Key_VolumeUp:
+    case Qt::Key_VolumeDown:
+    case Qt::Key_VolumeMute:
+        return true;
+    default:
+        return false;
+    }
 }
 //------------------------------------------------------------------------------
 QString ShortcutBuilder::fromEventNativeScanCode(QKeyEvent *event) {

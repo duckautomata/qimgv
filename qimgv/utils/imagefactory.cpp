@@ -9,6 +9,8 @@ std::shared_ptr<Image> ImageFactory::createImage(QString path) {
         img.reset(new ImageAnimated(move(docInfo)));
     } else if(docInfo->type() == VIDEO) {
         img.reset(new Video(move(docInfo)));
+    } else if(docInfo->type() == AUDIO) {
+        img.reset(new Audio(move(docInfo)));
     } else {
         img.reset(new ImageStatic(move(docInfo)));
     }

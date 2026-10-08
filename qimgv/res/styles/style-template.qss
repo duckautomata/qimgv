@@ -461,6 +461,62 @@ VideoControls QSlider::sub-page:horizontal {
 }
 
 /*----------------------------------------------------------------------------*/
+/* Audio view. The cover, the background and the sliders are painted in code  */
+/* from the same color scheme; the failure line takes its color from there.   */
+/*----------------------------------------------------------------------------*/
+
+AudioView #AudioCard {
+    background-color: %widget%;
+    border: 1px solid %widget_border%;
+    border-radius: 8px;
+}
+
+AudioView #AudioTitle {
+    color: %text_hc2%;
+}
+
+AudioView #AudioSubtitle {
+    color: %text%;
+}
+
+AudioView #AudioDetails,
+AudioView #AudioElapsed,
+AudioView #AudioDuration {
+    color: %text_lc%;
+}
+
+AudioView #AudioPluginError {
+    color: #BB0000;
+    font: bold;
+}
+
+AudioView [audioButton="small"] {
+    background-color: transparent;
+    border-radius: 18px;
+}
+
+AudioView [audioButton="small"]:hover {
+    background-color: %button%;
+}
+
+AudioView [audioButton="small"][pressed="true"] {
+    background-color: %button_pressed%;
+}
+
+AudioView [audioButton="primary"] {
+    background-color: %button%;
+    border-radius: 24px;
+}
+
+AudioView [audioButton="primary"]:hover {
+    background-color: %button_hover%;
+}
+
+AudioView [audioButton="primary"][pressed="true"] {
+    background-color: %button_pressed%;
+}
+
+/*----------------------------------------------------------------------------*/
 /* File copy - move window */
 /*----------------------------------------------------------------------------*/
 

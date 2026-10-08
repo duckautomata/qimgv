@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <!-- Source of common/buttons/audio/mode-shuffle24.png (rsvg-convert -w 24 -h 24) and its @2x (-w 48 -h 48).
+       Only alpha matters: the magenta is replaced by the theme colour at runtime. -->
+  <defs>
+    <!-- Cuts the under-passing line where they cross; without the gap the X is a blob at 24 px. -->
+    <mask id="gap">
+      <rect width="24" height="24" fill="#fff"/>
+      <path fill="none" stroke="#000" stroke-width="5" d="M6 17l8-10"/>
+    </mask>
+  </defs>
+  <g fill="none" stroke="#ff00ff" stroke-width="2" stroke-linejoin="round">
+    <path mask="url(#gap)" d="M3 7h3l8 10h3"/>
+    <path d="M3 17h3l8-10h3"/>
+  </g>
+  <path fill="#ff00ff" d="M16 3.5v7l4.5-3.5zM16 13.5v7l4.5-3.5z"/>
+</svg>

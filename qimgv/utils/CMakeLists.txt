@@ -7,6 +7,8 @@ target_sources(qimgv PRIVATE
     imagelib.cpp
     inputmap.cpp
     randomizer.cpp
+    audioshuffle.cpp
+    audionavigation.cpp
     script.cpp
     sleep.cpp
     stuff.cpp

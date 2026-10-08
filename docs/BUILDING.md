@@ -22,7 +22,7 @@ pass `-D` by hand for a normal build.
 | Qt 6 LinguistTools | no | compiles translations; skipped with a warning if absent |
 | exiv2 ≥ 0.27 | optional (`QIMGV_EXIV2`) | EXIF metadata |
 | OpenCV (core, imgproc) | optional (`QIMGV_OPENCV`) | high-quality scaling filters |
-| libmpv ≥ 2.0 | optional (`QIMGV_VIDEO_SUPPORT`) | video playback |
+| libmpv ≥ 2.0 | optional (`QIMGV_VIDEO_SUPPORT`) | video and audio playback |
 | KF6WindowSystem | optional (`QIMGV_KDE_BLUR`) | KWin background blur |
 
 Optional dependencies default to **on**. Turn one off if you don't have it:
@@ -143,7 +143,7 @@ they actually need. There is no hardcoded DLL list to go stale.
 ### MSVC
 
 The CMake config is MSVC-clean and the app will build, but **libmpv has no usable MSVC build**, so
-you must disable video:
+you must disable video, which also disables audio playback:
 
 ```bash
 cmake -B build -DQIMGV_VIDEO_SUPPORT=OFF
@@ -194,7 +194,7 @@ relevant image plugin isn't installed, so a bare system won't produce false fail
 
 | Option | Default | Effect |
 |---|---|---|
-| `QIMGV_VIDEO_SUPPORT` | ON | libmpv video playback |
+| `QIMGV_VIDEO_SUPPORT` | ON | libmpv video and audio playback |
 | `QIMGV_EXIV2` | ON | EXIF metadata |
 | `QIMGV_OPENCV` | ON | HQ scaling filters |
 | `QIMGV_KDE_BLUR` | OFF | KWin background blur |
@@ -235,7 +235,8 @@ run picks them up automatically.
 `-DCMAKE_PREFIX_PATH=/path/to/Qt/6.10.1/gcc_64`.
 
 **`libmpv not found`** — install the dev package (`mpv-libs-devel`, `libmpv-dev`,
-`mingw-w64-ucrt-x86_64-mpv`), or build without video: `-DQIMGV_VIDEO_SUPPORT=OFF`.
+`mingw-w64-ucrt-x86_64-mpv`), or build without video and audio playback:
+`-DQIMGV_VIDEO_SUPPORT=OFF`.
 
 **AVIF/JXL/HEIF files won't open** — the Qt image plugin isn't installed. See
 [Image format plugins](#image-format-plugins) above, then check `qimgv --build-options`,

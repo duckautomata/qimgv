@@ -5,6 +5,7 @@
 #include <QThread>
 #include <QCryptographicHash>
 #include <ctime>
+#include "components/audiometa/audiometadata.h"
 #include "sourcecontainers/thumbnail.h"
 #include "components/cache/thumbnailcache.h"
 #include "utils/imagefactory.h"
@@ -25,6 +26,7 @@ private:
     static QString generateIdString(QString path, int size, bool crop);
     static std::pair<QImage *, QSize> createThumbnail(QString path, const char *format, int size, bool crop);
     static std::pair<QImage *, QSize> createVideoThumbnail(QString path, int size, bool crop);
+    static std::pair<QImage *, QSize> createAudioThumbnail(QString path, int size, bool crop, AudioCoverSource *source);
     QString path;
     int size;
     bool crop, force;

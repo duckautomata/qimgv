@@ -1,11 +1,6 @@
 #include "videoplayerinitproxy.h"
+#include "playerplugin.h"
 #include "videozoom.h"
-
-#ifdef _QIMGV_PLAYER_PLUGIN
-#define QIMGV_PLAYER_PLUGIN _QIMGV_PLAYER_PLUGIN
-#else
-#define QIMGV_PLAYER_PLUGIN ""
-#endif
 
 static VideoZoomSettings videoZoomSettings() {
     VideoZoomSettings s;
@@ -48,14 +43,6 @@ VideoPlayerInitProxy::VideoPlayerInitProxy(QWidget *parent) : VideoPlayer(parent
     // GL context; the cost is one QWidget.
     glBackingStorePin = new QOpenGLWidget(this);
     glBackingStorePin->hide();
-#endif
-
-    libFile = QIMGV_PLAYER_PLUGIN;
-#ifdef _WIN32
-    libDirs << QApplication::applicationDirPath() + "/plugins";
-#else
-    QDir libPath(QApplication::applicationDirPath() + "/../lib/qimgv");
-    libDirs << (libPath.makeAbsolute() ? libPath.path() : ".") << "/usr/lib/qimgv" << "/usr/lib64/qimgv";
 #endif
 }
 
@@ -124,30 +111,12 @@ inline bool VideoPlayerInitProxy::initPlayer() {
     if(player)
         return true;
 
-    QFileInfo pluginFile;
-    for(auto dir : libDirs) {
-        pluginFile.setFile(dir + "/" + libFile);
-        if(pluginFile.isFile() && pluginFile.isReadable()) {
-            playerLib.setFileName(pluginFile.absoluteFilePath());
-            break;
-        }
-    }
-    if(playerLib.fileName().isEmpty()) {
-        qDebug() << "Could not find" << libFile << "in the following directories:" << libDirs;
-        return false;
-    }
-
-    // load lib
     typedef VideoPlayer *(*createPlayerWidgetFn)();
-    createPlayerWidgetFn fn = (createPlayerWidgetFn)playerLib.resolve("CreatePlayerWidget");
-    if(fn) {
-        VideoPlayer *pl = fn();
-        player.reset(pl);
-    }
-    if(!player) {
-        qDebug() << "Could not load:" << playerLib.fileName() << ". Wrong plugin version?";
+    createPlayerWidgetFn fn = reinterpret_cast<createPlayerWidgetFn>(PlayerPlugin::resolve("CreatePlayerWidget"));
+    if(fn)
+        player.reset(fn());
+    if(!player)
         return false;
-    }
 
     player->setMuted(!settings->playVideoSounds());
     player->setVolume(settings->volume());
@@ -294,10 +263,7 @@ void VideoPlayerInitProxy::show() {
         errorLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
         errorLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         // errorLabel->setAlignment(Qt::AlignVCenter);
-        QString errString = "Could not load " + libFile + " from:";
-        for(auto path : libDirs)
-            errString.append("\n" + path + "/");
-        errorLabel->setText(errString);
+        errorLabel->setText(PlayerPlugin::loadError());
         layout.addWidget(errorLabel);
     }
     VideoPlayer::show();

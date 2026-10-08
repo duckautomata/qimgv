@@ -17,6 +17,8 @@
 #include <QVersionNumber>
 #include <QDateTime>
 #include <QThread>
+#include <QSet>
+#include <atomic>
 #include "utils/script.h"
 #include "themestore.h"
 
@@ -49,6 +51,10 @@ enum FolderEndAction { FOLDER_END_NO_ACTION, FOLDER_END_LOOP, FOLDER_END_GOTO_AD
 enum FolderViewMode { FV_SIMPLE, FV_EXTENDED, FV_EXT_FOLDERS };
 
 enum ThumbPanelStyle { TH_PANEL_SIMPLE, TH_PANEL_EXTENDED };
+
+// What happens when an audio file ends, and what next/previous do while one is open. SINGLE is "a file
+// like any other": next/previous go to the adjacent file and the track stops at its end.
+enum AudioPlaybackMode { AUDIO_MODE_SINGLE, AUDIO_MODE_REPEAT, AUDIO_MODE_FOLDER, AUDIO_MODE_SHUFFLE };
 
 class Settings : public QObject {
     Q_OBJECT
@@ -194,6 +200,17 @@ public:
     bool videoPlayback();
     void setVideoPlayback(bool mode);
 
+    // Playing audio files needs the same player plugin as video, so this is always false without USE_MPV.
+    bool audioPlayback();
+    void setAudioPlayback(bool mode);
+    // Quick-toggle state, not a preference: lives in the state file and changing it does not go through
+    // settingsChanged().
+    AudioPlaybackMode audioPlaybackMode();
+    void setAudioPlaybackMode(AudioPlaybackMode mode);
+    // Draw the album art, blurred, behind the audio view.
+    bool audioBackdrop();
+    void setAudioBackdrop(bool mode);
+
     bool useSystemColorScheme();
     void setUseSystemColorScheme(bool mode);
 
@@ -210,6 +227,11 @@ public:
     void setFolderViewMode(FolderViewMode mode);
 
     const QMultiMap<QByteArray, QByteArray> videoFormats() const;
+    // [mime type, extension], like videoFormats(). Filled once in the constructor, so safe to read from
+    // any thread.
+    const QMultiMap<QByteArray, QByteArray> &audioFormats() const;
+    // Lower-case extension without the dot. Cheap; no file access.
+    bool isAudioSuffix(QByteArrayView suffix) const;
 
     bool printLandscape();
     void setPrintLandscape(bool mode);
@@ -273,12 +295,18 @@ private:
     QDir *mTmpDir, *mThumbCacheDir, *mConfDir;
     ColorScheme mColorScheme;
     QMultiMap<QByteArray, QByteArray> mVideoFormatsMap; // [mimetype, format]
+    QMultiMap<QByteArray, QByteArray> mAudioFormatsMap; // [mimetype, format]
+    QSet<QByteArray> mAudioSuffixes;
+    // Read by DocumentInfo on loader, thumbnailer and file-info threads, where QSettings must not be
+    // touched. Loaded in the constructor and kept current by the setters.
+    std::atomic<bool> mVideoPlayback{true}, mAudioPlayback{true};
     void loadTheme();
     void saveTheme();
     void createColorVariants();
 
     void setupCache();
     void fillVideoFormats();
+    void fillAudioFormats();
 
 signals:
     void settingsChanged();

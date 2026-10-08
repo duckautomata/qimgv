@@ -9,6 +9,8 @@
 class ShortcutBuilder {
 public:
     static QString fromEvent(QInputEvent *event);
+    // Play/pause, stop, next, previous and the volume keys: named from the key rather than the scan code.
+    static bool isMediaKey(Qt::Key key);
 
 private:
     static QString processWheelEvent(QWheelEvent *event);

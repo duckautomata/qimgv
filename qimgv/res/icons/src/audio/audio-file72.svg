@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72">
+  <!-- Source of common/other/audio-file72.png (rsvg-convert -w 72 -h 72) and its @2x (-w 144 -h 144).
+       Only alpha matters: the magenta is replaced by the theme colour at runtime. -->
+  <g fill="#ff00ff">
+    <path d="M26 17l38-10v11l-38 10z"/>
+    <path d="M26 20h6v36h-6zM58 10h6v36h-6z"/>
+    <ellipse cx="20.3" cy="56" rx="12" ry="9" transform="rotate(-20 20.3 56)"/>
+    <ellipse cx="52.3" cy="46" rx="12" ry="9" transform="rotate(-20 52.3 46)"/>
+  </g>
+</svg>

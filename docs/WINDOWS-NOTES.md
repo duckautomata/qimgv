@@ -185,8 +185,13 @@ diffing it, which is not the same thing.
 ## Driving the app for a test
 
 Synthetic input — `SendKeys`, `SendInput`, with or without real scan codes —
-does not reach the window. Anything that needs a keypress or a click has to be
-checked by hand.
+does not reach the window. Posting the messages does, though:
+`PostMessageW(hwnd, WM_KEYDOWN / WM_KEYUP, vk, lParam)` to the main window's
+`HWND`, with the scan code in bits 16-23 of `lParam` (qimgv maps keys by native
+scan code, so `vk` alone is not enough) and bit 24 set for extended keys such as
+the arrows. That is how keyboard behaviour of the audio view was checked for
+2.1.0, together with `PrintWindow` for screenshots. Mouse clicks still have to
+be checked by hand.
 
 Non-interactive entry points that do work, and are worth reaching for first:
 

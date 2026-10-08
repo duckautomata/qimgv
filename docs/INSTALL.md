@@ -13,11 +13,11 @@ Windows builds are published; Linux and macOS are built from source for now.
 
 All three read the same image formats, including AVIF, HEIF and JPEG XL.
 
-The **minimal** build drops video playback and the OpenCV high-quality scaling
-filters. That is where the size difference comes from: a bundled video stack and
-OpenCV's numerical library are together larger than the rest of the application.
-If you open videos in qimgv, or you use the bicubic/sharpen scaling filters, take
-the full build.
+The **minimal** build drops video and audio playback and the OpenCV high-quality
+scaling filters. That is where the size difference comes from: a bundled media
+stack and OpenCV's numerical library are together larger than the rest of the
+application. If you open videos or audio files in qimgv, or you use the
+bicubic/sharpen scaling filters, take the full build.
 
 64-bit Windows 10 or later. There is no 32-bit or ARM build.
 
@@ -47,8 +47,9 @@ and programs that force it get reset by Windows anyway.
 What it does do is register qimgv as an app you can *choose*. To make it the
 default:
 
-**Settings → Apps → Default apps → qimgv**, then assign the types you want. Or
-right-click any image → **Open with → Choose another app**.
+**Settings → Apps → Default apps → qimgv**, then assign the types you want —
+images, videos and audio files are all listed. Or right-click a file →
+**Open with → Choose another app**.
 
 ## Installing the portable build
 

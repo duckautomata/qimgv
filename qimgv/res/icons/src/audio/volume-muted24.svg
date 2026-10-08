@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <!-- Source of common/buttons/audio/volume-muted24.png (rsvg-convert -w 24 -h 24) and its @2x (-w 48 -h 48).
+       Only alpha matters: the magenta is replaced by the theme colour at runtime. -->
+  <path fill="#ff00ff" d="M3 8h6l5-5h1v18h-1l-5-5H3z"/>
+  <path fill="none" stroke="#ff00ff" stroke-width="2" d="M17 9l5 6M22 9l-5 6"/>
+</svg>

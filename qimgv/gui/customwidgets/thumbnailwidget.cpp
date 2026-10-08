@@ -197,21 +197,13 @@ void ThumbnailWidget::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
         drawHighlight(painter);
 
     if(!thumbnail) { // not loaded
-        // todo: recolor once in shrRes
-        QPixmap loadingIcon(*shrRes->getPixmap(ShrIcon::SHR_ICON_LOADING, dpr));
-        if(isHighlighted())
-            ImageLib::recolor(loadingIcon, settings->colorScheme().accent);
-        else
-            ImageLib::recolor(loadingIcon, settings->colorScheme().folderview_hc2);
-        drawIcon(painter, &loadingIcon);
+        drawIcon(painter, ShrIcon::SHR_ICON_LOADING);
     } else {
-        if(!thumbnail->pixmap() || thumbnail->pixmap().get()->width() == 0) { // invalid thumb
-            QPixmap errorIcon(*shrRes->getPixmap(ShrIcon::SHR_ICON_ERROR, dpr));
-            if(isHighlighted())
-                ImageLib::recolor(errorIcon, settings->colorScheme().accent);
+        if(!thumbnail->pixmap() || thumbnail->pixmap().get()->width() == 0) { // no image
+            if(thumbnail->kind() == Thumbnail::Kind::Audio)
+                drawIcon(painter, ShrIcon::SHR_ICON_AUDIO);
             else
-                ImageLib::recolor(errorIcon, settings->colorScheme().folderview_hc2);
-            drawIcon(painter, &errorIcon);
+                drawIcon(painter, ShrIcon::SHR_ICON_ERROR);
         } else {
             drawThumbnail(painter, thumbnail->pixmap().get());
             if(isHovered())
@@ -324,10 +316,12 @@ void ThumbnailWidget::drawThumbnail(QPainter *painter, const QPixmap *pixmap) {
     painter->drawPixmap(drawRectCentered, *pixmap);
 }
 
-void ThumbnailWidget::drawIcon(QPainter *painter, const QPixmap *pixmap) {
-    QPointF drawPosCentered(width() / 2 - pixmap->width() / (2 * pixmap->devicePixelRatioF()),
-                            height() / 2 - pixmap->height() / (2 * pixmap->devicePixelRatioF()));
-    painter->drawPixmap(drawPosCentered, *pixmap, QRectF(QPoint(0, 0), pixmap->size()));
+void ThumbnailWidget::drawIcon(QPainter *painter, ShrIcon icon) {
+    QColor const &color = isHighlighted() ? settings->colorScheme().accent : settings->colorScheme().folderview_hc2;
+    QPixmap const pixmap = shrRes->getPixmap(icon, dpr, color);
+    QPointF drawPosCentered(width() / 2 - pixmap.width() / (2 * pixmap.devicePixelRatioF()),
+                            height() / 2 - pixmap.height() / (2 * pixmap.devicePixelRatioF()));
+    painter->drawPixmap(drawPosCentered, pixmap, QRectF(QPoint(0, 0), pixmap.size()));
 }
 
 QSizeF ThumbnailWidget::sizeHint(Qt::SizeHint which, const QSizeF &constraint) const {

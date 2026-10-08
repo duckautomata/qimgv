@@ -131,7 +131,14 @@ int main(int argc, char *argv[]) {
 
     // parse args ------------------------------------------------------------------
     QCommandLineParser parser;
-    QString appDescription = qApp->applicationName() + " - Fast and configurable image viewer.";
+#ifdef USE_MPV
+    QString appDescription =
+        qApp->applicationName() + " - " +
+        QCoreApplication::translate("main", "Fast and configurable image viewer with video and audio playback.");
+#else
+    QString appDescription =
+        qApp->applicationName() + " - " + QCoreApplication::translate("main", "Fast and configurable image viewer.");
+#endif
     appDescription.append("\nVersion: " + qApp->applicationVersion());
     appDescription.append("\nLicense: GNU GPLv3");
     parser.setApplicationDescription(appDescription);
