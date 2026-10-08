@@ -9,6 +9,7 @@
 #include <QLocale>
 #include <QMimeDatabase>
 #include <QSet>
+#include <algorithm>
 #include <iterator>
 
 #include "components/audiometa/audiometadata.h"
@@ -19,6 +20,18 @@
 #endif
 
 namespace {
+
+// `prefix` is "audio/" or "video/". Aliases and parents count: databases disagree on which name a format
+// goes by, but agree on what it is a kind of.
+bool isOfKind(QMimeType const &mime, QLatin1String prefix) {
+    if(!mime.isValid())
+        return false;
+    if(mime.name().startsWith(prefix))
+        return true;
+    QStringList const ancestors = mime.allAncestors();
+    return std::any_of(ancestors.cbegin(), ancestors.cend(),
+                       [prefix](QString const &ancestor) { return ancestor.startsWith(prefix); });
+}
 
 QString tr_(char const *s) {
     return QCoreApplication::translate("FileInfo", s);
@@ -337,12 +350,17 @@ FileInfoResult extractFileInfo(QString const &path) {
     QString const format = doc.format();
     if(!format.isEmpty())
         media.fields.append({tr_("Format"), format.toUpper()});
-    QMimeType const mime = doc.mimeType();
+    QMimeType mime = doc.mimeType();
     // The mime database names the container, and Ogg, Matroska, MP4 and ASF
     // hold either kind of media: an .mp4 of sound alone is "video/mp4, MPEG-4
-    // video" to it. Under a heading that says otherwise it only contradicts.
-    bool const contradicts = (doc.type() == AUDIO && mime.name().startsWith(QLatin1String("video/"))) ||
-                             (doc.type() == VIDEO && mime.name().startsWith(QLatin1String("audio/")));
+    // video" to it, and a .wma "application/vnd.ms-asf, ASF video" to
+    // shared-mime-info. Under the Audio heading only an audio type is shown,
+    // falling back to what the extension says -- audio/x-ms-wma for that .wma.
+    if(doc.type() == AUDIO && !isOfKind(mime, QLatin1String("audio/"))) {
+        QMimeType const byName = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase::MatchExtension);
+        mime = isOfKind(byName, QLatin1String("audio/")) ? byName : QMimeType();
+    }
+    bool const contradicts = doc.type() == VIDEO && mime.name().startsWith(QLatin1String("audio/"));
     if(mime.isValid() && !contradicts) {
         media.fields.append({tr_("MIME type"), mime.name()});
         // comment() repeats the name when the database has no description of
