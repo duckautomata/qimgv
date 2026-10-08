@@ -1,4 +1,7 @@
 #include "documentinfo.h"
+#include "mediaprobe.h"
+
+#include <QHash>
 
 // Plugin availability cannot change while the process is running, so build
 // the set once. QImageReader::supportedImageFormats() walks the plugin loader
@@ -87,13 +90,13 @@ void DocumentInfo::detectFormat() {
     auto suffix = fileInfo.suffix().toLower().toUtf8();
 
     // Mime databases sniff an ISOBMFF container by its major brand, and an
-    // image *sequence* declares a brand they read as video: an animated AVIF
-    // out of ffmpeg has major brand 'avis' and comes back as video/quicktime,
-    // which would hand an animated image to the video player. Qt's built-in
-    // copy of freedesktop.org.xml does exactly this, so it happens on any
-    // system without an external shared-mime-info. The ftyp brands are
-    // authoritative and we already parse them -- let them correct the verdict
-    // before dispatch. Only these two mime names pay for the extra read.
+    // image *sequence* declares a brand they can read as video: an animated
+    // AVIF out of ffmpeg has major brand 'avis', which Qt's built-in database
+    // calls video/quicktime -- on Windows that database is Apache Tika's, not
+    // freedesktop's -- and that would hand an animated image to the video
+    // player. The ftyp brands are authoritative and we already parse them --
+    // let them correct the verdict before dispatch. Only these two mime names
+    // pay for the extra read.
     if(mimeName == "video/quicktime" || mimeName == "video/mp4") {
         const QSet<QByteArray> brands = isoBmffBrands();
         const char *corrected = nullptr;
@@ -141,20 +144,138 @@ void DocumentInfo::detectFormat() {
     } else if(mimeName == "image/bmp") {
         mFormat = "bmp";
         mDocumentType = DocumentType::STATIC;
-    } else if(settings->videoPlayback() && settings->videoFormats().contains(mimeName)) {
+    } else {
+        detectMedia(mimeName, suffix);
+    }
+    loadExifOrientation();
+}
+
+// ---------------------------------------------------------------------------
+// Audio and video
+// ---------------------------------------------------------------------------
+
+namespace {
+// What a file holds by the evidence, before the playback settings have their say. Neither: the mime type rules
+// out playing it, and only an audio extension makes it worth a try (see detectMedia()).
+enum class Media { Unknown, Audio, Video, Neither };
+} // namespace
+
+static bool isImageType(const QMimeType &mime) {
+    if(mime.name().startsWith(QLatin1String("image/")))
+        return true;
+    const QStringList ancestors = mime.allAncestors();
+    for(const QString &name : ancestors) {
+        if(name.startsWith(QLatin1String("image/")))
+            return true;
+    }
+    return false;
+}
+
+// MIDI and its relatives are notes for a synthesiser, which ffmpeg does not have, and playlists only point at
+// audio. Fragments rather than names, since each database spells them its own way (Tika calls an M3U
+// application/vnd.apple.mpegurl, freedesktop audio/x-mpegurl).
+static bool isUnplayableAudio(const QString &name) {
+    static const char *const kFragments[] = {"midi",     "xmf",      "mpegurl",      "scpls",
+                                             "x-ms-asx", "x-ms-wax", "x-iriver-pla", "x-amzxml"};
+    for(const char *fragment : kFragments) {
+        if(name.contains(QLatin1String(fragment)))
+            return true;
+    }
+    return false;
+}
+
+// Only a hint, for files MediaProbe could not place: the databases disagree on names (see mediaprobe.h), so
+// this goes by the top-level type of the name and of every ancestor, never by an exact name.
+static Media mediaFromMimeType(const QMimeType &mime) {
+    // freedesktop marks playlists as text this way; Tika does not, hence the names above as well.
+    if(mime.inherits(QStringLiteral("text/plain")))
+        return Media::Neither;
+    QStringList names = mime.allAncestors();
+    names.prepend(mime.name());
+    for(const QString &name : std::as_const(names)) {
+        if(isUnplayableAudio(name))
+            return Media::Neither;
+        if(name.startsWith(QLatin1String("audio/")))
+            return Media::Audio;
+        if(name.startsWith(QLatin1String("video/")))
+            return Media::Video;
+    }
+    return Media::Unknown;
+}
+
+// What to call a file of sound. Its extension when that is one of ours, audio or video, so that a .3gp or an
+// .mkv holding only sound still says so; otherwise the container, as its files are usually named.
+static QString audioFormatName(const QByteArray &suffix, const QByteArray &container, const QMimeType &mime) {
+    if(settings->isAudioSuffix(suffix) || settings->videoFormats().values().contains(suffix))
+        return QString::fromLatin1(suffix);
+    static const QHash<QByteArray, QByteArray> kSuffixes = {
+        {"matroska", "mka"}, {"asf", "wma"}, {"wavpack", "wv"}, {"musepack", "mpc"}};
+    if(!container.isEmpty())
+        return QString::fromLatin1(kSuffixes.value(container, container));
+    const QString preferred = mime.preferredSuffix().toLower();
+    return preferred.isEmpty() ? QString::fromLatin1(suffix) : preferred;
+}
+
+// For anything the image branches did not claim. The content decides first, since containers such as Ogg,
+// Matroska and MP4 hold audio or video alike and the mime databases cannot tell which; then the mime type;
+// then the extension, which is all there is for bare MPEG audio, AAC, AC-3 and DTS streams.
+//
+// With audio playback off, an audio file goes down the old path below: a Vorbis .ogg is then the video it was
+// before audio support, by its extension.
+void DocumentInfo::detectMedia(const QByteArray &mimeName, const QByteArray &suffix) {
+    const bool audioPlayback = settings->audioPlayback();
+    const bool videoPlayback = settings->videoPlayback();
+    // An image type the branches above have no case for (TIFF, raw, ...) stays an image without a look
+    // inside: a Canon CR3, for one, is an MP4 that keeps its pictures in tracks of video.
+    const bool image = isImageType(mMimeType);
+    MediaProbe::Result probe;
+    if((audioPlayback || videoPlayback) && !image)
+        probe = MediaProbe::probe(fileInfo.filePath());
+    const bool probedVideo = probe.kind == MediaProbe::Kind::Video;
+
+    if(audioPlayback && !image && !probedVideo) {
+        Media media = probe.kind == MediaProbe::Kind::Audio ? Media::Audio : Media::Unknown;
+        if(media == Media::Unknown)
+            media = mediaFromMimeType(mMimeType);
+        // An audio extension on what is neither an image nor a video goes to the player even when nothing
+        // says it holds sound -- text, MIDI, a playlist. The audio view then says it cannot be played, and
+        // Play folder and Shuffle move past it; as an image it would be an empty view that stops them.
+        if(media != Media::Video && settings->isAudioSuffix(suffix))
+            media = Media::Audio;
+        if(media == Media::Audio) {
+            mDocumentType = DocumentType::AUDIO;
+            mFormat = audioFormatName(suffix, probe.container, mMimeType);
+            return;
+        }
+    }
+
+    // A video with video playback off is no image either. NONE is a load failure, which says so; STATIC
+    // would show an empty view. Only once the probe has looked: with neither kind of playback on, nothing
+    // has, and video files open as they always did.
+    if(probedVideo && !videoPlayback) {
+        mDocumentType = DocumentType::NONE;
+        mFormat = suffix;
+        return;
+    }
+
+    // As before audio support: video by mime name, else by extension -- or by a video track the probe found,
+    // which neither of those may show (a .mka with a picture).
+    if(videoPlayback && settings->videoFormats().contains(mimeName)) {
         mDocumentType = DocumentType::VIDEO;
-        mFormat = settings->videoFormats().value(mimeName);
+        // The extension, when it is a video one: the map has several for most types, and its pick for an .mp4
+        // can be "m4v", or "qt" from a database that calls it QuickTime.
+        const auto videoFormats = settings->videoFormats();
+        mFormat = videoFormats.values().contains(suffix) ? suffix : videoFormats.value(mimeName);
     } else {
         // just try to open via suffix if all of the above fails
         mFormat = suffix;
         if(mFormat.compare("jfif", Qt::CaseInsensitive) == 0)
             mFormat = "jpg";
-        if(settings->videoPlayback() && settings->videoFormats().values().contains(suffix))
+        if(videoPlayback && (probedVideo || settings->videoFormats().values().contains(suffix)))
             mDocumentType = DocumentType::VIDEO;
         else
             mDocumentType = DocumentType::STATIC;
     }
-    loadExifOrientation();
 }
 
 // ---------------------------------------------------------------------------
@@ -404,7 +525,8 @@ QMap<QString, QString> DocumentInfo::getExifTags() {
 }
 
 void DocumentInfo::loadExifOrientation() {
-    if(mDocumentType == DocumentType::VIDEO || mDocumentType == DocumentType::NONE)
+    if(mDocumentType == DocumentType::VIDEO || mDocumentType == DocumentType::AUDIO ||
+       mDocumentType == DocumentType::NONE)
         return;
 
     QString path = filePath();

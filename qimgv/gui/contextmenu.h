@@ -16,7 +16,10 @@ class ContextMenu : public QWidget {
 public:
     explicit ContextMenu(QWidget *parent = nullptr);
     ~ContextMenu();
+    // Rotate, flip, crop, resize and print: the entries that work on pixels.
     void setImageEntriesEnabled(bool mode);
+    // Copy, move, trash, open with and show in folder: they act on the file, whatever is in it.
+    void setFileEntriesEnabled(bool mode);
 
 public slots:
     void showAt(QPoint pos);

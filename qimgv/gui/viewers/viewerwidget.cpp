@@ -1,5 +1,5 @@
 /*
- * This widget combines ImageViewer / VideoPlayer.
+ * This widget combines ImageViewer / VideoPlayer / AudioView.
  * Only one is displayed at a time.
  */
 
@@ -87,6 +87,7 @@ QSize ViewerWidget::sourceSize() {
 void ViewerWidget::enableImageViewer() {
     if(currentWidget != IMAGEVIEWER) {
         disableVideoPlayer();
+        disableAudioView();
         videoControls->setMode(PLAYBACK_ANIMATION);
         connect(imageViewer.get(), &ImageViewerV2::durationChanged, videoControls,
                 &VideoControlsProxyWrapper::setPlaybackDuration);
@@ -103,6 +104,9 @@ void ViewerWidget::enableImageViewer() {
 void ViewerWidget::enableVideoPlayer() {
     if(currentWidget != VIDEOPLAYER) {
         disableImageViewer();
+        disableAudioView();
+        // The volume is shared with the audio view, which may have changed it since this player last played.
+        videoPlayer->setVolume(settings->volume());
         videoControls->setMode(PLAYBACK_VIDEO);
         connect(videoPlayer.get(), &VideoPlayer::durationChanged, videoControls,
                 &VideoControlsProxyWrapper::setPlaybackDuration);
@@ -152,6 +156,57 @@ void ViewerWidget::disableVideoPlayer() {
     }
 }
 
+// Built on first use, so a session without audio never pays for it. It is created after the overlays,
+// which would leave it stacked over them: lower() puts it back underneath, where the viewers are.
+AudioView *ViewerWidget::audio() {
+    if(!audioView) {
+        audioView.reset(new AudioView(this));
+        // Expanding, like the image viewer: it shares the layout with the mpv proxy, which is never hidden
+        // once initialised and must get none of the space.
+        audioView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        // Qt drops a hover move at the first widget under the cursor that does not track the mouse. This one
+        // must pass them on: the click-zone highlight, and the panel's hover trigger in DocumentWidget, run
+        // on them.
+        audioView->setMouseTracking(true);
+        audioView->hide();
+        layout.addWidget(audioView.get());
+        audioView->lower();
+        audioView->onFullscreenModeChanged(mIsFullscreen);
+        audioView->setPlaybackMode(mAudioMode);
+        connect(audioView.get(), &AudioView::playbackFinished, this, &ViewerWidget::onAudioPlaybackFinished);
+        connect(audioView.get(), &AudioView::playbackFailed, this, &ViewerWidget::onAudioPlaybackFailed);
+        if(settings->clickableEdges())
+            audioView->installEventFilter(this);
+    }
+    return audioView.get();
+}
+
+void ViewerWidget::enableAudioView() {
+    if(currentWidget != AUDIOPLAYER) {
+        disableImageViewer();
+        disableVideoPlayer();
+        audio()->show();
+        currentWidget = AUDIOPLAYER;
+    }
+}
+
+void ViewerWidget::disableAudioView() {
+    if(currentWidget == AUDIOPLAYER) {
+        currentWidget = UNSET;
+        // Unloaded rather than paused, but without waiting for mpv to close the file, which can take as long
+        // as opening the audio device: this is moving on to another file. closeImage() -- for a rename, move
+        // or delete -- and exit go through stopAudio(), which does wait.
+        audioView->unload();
+        audioView->hide();
+    }
+}
+
+// Repeat is the only mode that loops, and not even that during a slideshow, which has to move on.
+void ViewerWidget::applyAudioLoop() {
+    if(audioView)
+        audioView->setLoop(mLoopPlayback && mAudioMode == AUDIO_MODE_REPEAT);
+}
+
 void ViewerWidget::onScaleChanged(qreal scale) {
     if(!this->isVisible())
         return;
@@ -176,6 +231,16 @@ void ViewerWidget::onAnimationPlaybackFinished() {
         emit playbackFinished();
 }
 
+void ViewerWidget::onAudioPlaybackFinished() {
+    if(currentWidget == AUDIOPLAYER)
+        emit audioPlaybackFinished(audioView->currentFile());
+}
+
+void ViewerWidget::onAudioPlaybackFailed() {
+    if(currentWidget == AUDIOPLAYER)
+        emit audioPlaybackFailed(audioView->currentFile());
+}
+
 void ViewerWidget::setInteractionEnabled(bool mode) {
     if(mInteractionEnabled == mode)
         return;
@@ -195,8 +260,9 @@ void ViewerWidget::setInteractionEnabled(bool mode) {
 // Zoom, fit, scroll and lock act on the viewer on screen. They used to reach the image viewer only,
 // which on a video did nothing visible but quietly rewrote the hidden viewer's fit mode and lock.
 // Videos only zoom and pan: each opens fitted to the window, so fit modes and locks do not apply.
+// Audio has nothing to zoom at all.
 void ViewerWidget::route(void (ImageViewerV2::*onImage)(), void (VideoZoom::*onVideo)()) {
-    if(!mInteractionEnabled)
+    if(!mInteractionEnabled || currentWidget == AUDIOPLAYER)
         return;
     if(currentWidget == VIDEOPLAYER) {
         if(onVideo)
@@ -301,6 +367,39 @@ bool ViewerWidget::showVideo(QString file) {
     return true;
 }
 
+bool ViewerWidget::showAudio(QString file) {
+    stopPlayback();
+    videoControls->hide();
+    enableAudioView();
+    zoomIndicator->hide();
+    applyAudioLoop();
+    bool opened = audioView->open(file);
+    // The cursor stays visible over audio (see hideCursor()), so undo an image's hiding of it.
+    showCursor();
+    return opened;
+}
+
+void ViewerWidget::restartAudio() {
+    if(currentWidget != AUDIOPLAYER)
+        return;
+    audioView->seek(0);
+    audioView->setPaused(false);
+}
+
+void ViewerWidget::stopAudio() {
+    if(audioView)
+        audioView->stop();
+}
+
+void ViewerWidget::setAudioPlaybackMode(AudioPlaybackMode mode) {
+    mAudioMode = mode;
+    if(audioView)
+        audioView->setPlaybackMode(mode);
+    applyAudioLoop();
+}
+
+// These two are for the folder view, which pauses what it covers. Not audio, which is there to be listened
+// to while browsing; leaving the document view for another file is what stops it.
 void ViewerWidget::stopPlayback() {
     if(currentWidget == IMAGEVIEWER && imageViewer->hasAnimation())
         imageViewer->stopAnimation();
@@ -345,12 +444,23 @@ void ViewerWidget::onScalingFinished(std::unique_ptr<QPixmap> scaled) {
 void ViewerWidget::closeImage() {
     imageViewer->closeImage();
     videoPlayer->stop();
+    // An emptied audio view is still a card full of controls that look live; with nothing open, the empty
+    // image viewer is what shows, as after any other file. Not UNSET: route() would send zoom and the rest
+    // to the hidden image viewer. Showing audio again re-enables the view, so a file closed only to be
+    // renamed or moved comes back as before.
+    if(currentWidget == AUDIOPLAYER) {
+        stopAudio();
+        disableAudioView();
+        enableImageViewer();
+    }
     showCursor();
 }
 
 void ViewerWidget::pauseResumePlayback() {
     if(currentWidget == VIDEOPLAYER)
         videoPlayer.get()->pauseResume();
+    else if(currentWidget == AUDIOPLAYER)
+        audioView->togglePaused();
     else if(imageViewer->hasAnimation())
         imageViewer->pauseResume();
 }
@@ -358,6 +468,8 @@ void ViewerWidget::pauseResumePlayback() {
 void ViewerWidget::seek(int pos) {
     if(currentWidget == VIDEOPLAYER) {
         videoPlayer.get()->seek(pos);
+    } else if(currentWidget == AUDIOPLAYER) {
+        audioView->seek(pos);
     } else if(imageViewer->hasAnimation()) {
         imageViewer->stopAnimation();
         imageViewer->showAnimationFrame(pos);
@@ -367,21 +479,24 @@ void ViewerWidget::seek(int pos) {
 void ViewerWidget::seekRelative(int pos) {
     if(currentWidget == VIDEOPLAYER)
         videoPlayer.get()->seekRelative(pos);
+    else if(currentWidget == AUDIOPLAYER)
+        audioView->seekRelative(pos);
 }
 
 void ViewerWidget::seekBackward() {
-    if(currentWidget == VIDEOPLAYER)
-        videoPlayer.get()->seekRelative(-10);
+    seekRelative(-10);
 }
 
 void ViewerWidget::seekForward() {
-    if(currentWidget == VIDEOPLAYER)
-        videoPlayer.get()->seekRelative(10);
+    seekRelative(10);
 }
 
+// Audio has no frames, so the frame-step keys nudge it by a few seconds: finer than the seek keys.
 void ViewerWidget::frameStep() {
     if(currentWidget == VIDEOPLAYER)
         videoPlayer.get()->frameStep();
+    else if(currentWidget == AUDIOPLAYER)
+        audioView->seekRelative(5);
     else if(imageViewer->hasAnimation()) {
         imageViewer->stopAnimation();
         imageViewer->nextFrame();
@@ -391,6 +506,8 @@ void ViewerWidget::frameStep() {
 void ViewerWidget::frameStepBack() {
     if(currentWidget == VIDEOPLAYER)
         videoPlayer.get()->frameStepBack();
+    else if(currentWidget == AUDIOPLAYER)
+        audioView->seekRelative(-5);
     else if(imageViewer->hasAnimation()) {
         imageViewer->stopAnimation();
         imageViewer->prevFrame();
@@ -401,40 +518,54 @@ void ViewerWidget::toggleMute() {
     if(currentWidget == VIDEOPLAYER) {
         videoPlayer->setMuted(!videoPlayer->muted());
         videoControls->onVideoMuted(videoPlayer->muted());
+    } else if(currentWidget == AUDIOPLAYER) {
+        audioView->toggleMute();
     }
 }
 
 void ViewerWidget::volumeUp() {
     if(currentWidget == VIDEOPLAYER)
         videoPlayer->volumeUp();
+    else if(currentWidget == AUDIOPLAYER)
+        audioView->volumeUp();
 }
 
 void ViewerWidget::volumeDown() {
-    if(currentWidget == VIDEOPLAYER) {
+    if(currentWidget == VIDEOPLAYER)
         videoPlayer->volumeDown();
-    }
+    else if(currentWidget == AUDIOPLAYER)
+        audioView->volumeDown();
 }
 
 bool ViewerWidget::isDisplaying() {
     if(currentWidget == IMAGEVIEWER && imageViewer->isDisplaying())
         return true;
-    if(currentWidget == VIDEOPLAYER)
-        return true;
-    else
-        return false;
+    return currentWidget == VIDEOPLAYER || currentWidget == AUDIOPLAYER;
 }
 
 bool ViewerWidget::isShowingVideo() {
     return currentWidget == VIDEOPLAYER;
 }
 
-// Locks are an image thing; a video never has one.
+bool ViewerWidget::isShowingAudio() {
+    return currentWidget == AUDIOPLAYER;
+}
+
+bool ViewerWidget::isAudioPlaying() {
+    return currentWidget == AUDIOPLAYER && !audioView->isPaused();
+}
+
+bool ViewerWidget::isShowingMedia() {
+    return currentWidget == VIDEOPLAYER || currentWidget == AUDIOPLAYER;
+}
+
+// Locks are an image thing; a video or an audio file never has one.
 bool ViewerWidget::lockZoomEnabled() {
-    return currentWidget != VIDEOPLAYER && imageViewer->lockZoomEnabled();
+    return currentWidget == IMAGEVIEWER && imageViewer->lockZoomEnabled();
 }
 
 bool ViewerWidget::lockViewEnabled() {
-    return currentWidget != VIDEOPLAYER && imageViewer->lockViewEnabled();
+    return currentWidget == IMAGEVIEWER && imageViewer->lockViewEnabled();
 }
 
 ScalingFilter ViewerWidget::scalingFilter() {
@@ -458,7 +589,7 @@ void ViewerWidget::mouseMoveEvent(QMouseEvent *event) {
         showCursor();
         hideCursorTimed(true);
     }
-    if(currentWidget == VIDEOPLAYER || imageViewer->hasAnimation()) {
+    if(currentWidget == VIDEOPLAYER || (currentWidget == IMAGEVIEWER && imageViewer->hasAnimation())) {
         if(videoControlsArea().contains(event->pos()))
             videoControls->show();
         else
@@ -475,7 +606,8 @@ void ViewerWidget::hideCursorTimed(bool restartTimer) {
 void ViewerWidget::hideCursor() {
     cursorTimer.stop();
     // ignore if we have something else open like settings window
-    if(!isDisplaying() || !isActiveWindow())
+    // and never over audio: the view is all controls, with no picture for the cursor to get in the way of
+    if(!isDisplaying() || !isActiveWindow() || currentWidget == AUDIOPLAYER)
         return;
     // ignore when menu is up
     if(contextMenu && contextMenu->isVisible())
@@ -489,7 +621,7 @@ void ViewerWidget::hideCursor() {
             QPoint posMapped = mapFromGlobal(QCursor::pos());
             // if(settings->enableClickZoneThing())
             //  ignore when we are hovering the click zone
-            if(clickZoneOverlay->leftZone().contains(posMapped) || clickZoneOverlay->leftZone().contains(posMapped)) {
+            if(clickZoneOverlay->leftZone().contains(posMapped) || clickZoneOverlay->rightZone().contains(posMapped)) {
                 return;
             }
 
@@ -611,7 +743,9 @@ void ViewerWidget::showContextMenu(QPoint pos) {
             contextMenu.reset(new ContextMenu(this));
             connect(contextMenu.get(), &ContextMenu::showScriptSettings, this, &ViewerWidget::showScriptSettings);
         }
-        contextMenu->setImageEntriesEnabled(isDisplaying());
+        contextMenu->setFileEntriesEnabled(isDisplaying());
+        // Rotate, crop, print and the rest would do nothing to an audio file.
+        contextMenu->setImageEntriesEnabled(isDisplaying() && currentWidget != AUDIOPLAYER);
         if(!contextMenu->isVisible())
             contextMenu->showAt(pos);
         else
@@ -622,26 +756,36 @@ void ViewerWidget::showContextMenu(QPoint pos) {
 void ViewerWidget::onFullscreenModeChanged(bool mode) {
     imageViewer->onFullscreenModeChanged(mode);
     videoPlayer->onFullscreenModeChanged(mode);
+    if(audioView)
+        audioView->onFullscreenModeChanged(mode);
     mIsFullscreen = mode;
 }
 
 void ViewerWidget::readSettings() {
     videoControls->onVideoMuted(!settings->playVideoSounds());
+    // On the audio view itself and not its children: the zones are in the watched widget's coordinates,
+    // and only it shares this widget's. Its controls see their own clicks first and keep them.
     if(settings->clickableEdges()) {
         imageViewer->viewport()->installEventFilter(this);
         videoPlayer->installEventFilter(this);
+        if(audioView)
+            audioView->installEventFilter(this);
         clickZoneOverlay->show();
     } else {
         imageViewer->viewport()->removeEventFilter(this);
         videoPlayer->removeEventFilter(this);
+        if(audioView)
+            audioView->removeEventFilter(this);
         imageViewer.get()->enableDrags();
         clickZoneOverlay->hide();
     }
 }
 
 void ViewerWidget::setLoopPlayback(bool mode) {
+    mLoopPlayback = mode;
     imageViewer->setLoopPlayback(mode);
     videoPlayer->setLoopPlayback(mode);
+    applyAudioLoop();
 }
 
 void ViewerWidget::hideContextMenu() {
@@ -663,6 +807,10 @@ void ViewerWidget::keyPressEvent(QKeyEvent *event) {
     event->accept();
     if(currentWidget == VIDEOPLAYER && event->key() == Qt::Key_Space) {
         videoPlayer->pauseResume();
+        return;
+    }
+    if(currentWidget == AUDIOPLAYER && event->key() == Qt::Key_Space) {
+        audioView->togglePaused();
         return;
     }
     if(currentWidget == IMAGEVIEWER && imageViewer->isDisplaying()) {

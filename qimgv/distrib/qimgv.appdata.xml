@@ -6,7 +6,7 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <name>qimgv</name>
-  <summary>Fast and configurable image viewer with optional video support</summary>
+  <summary>Fast and configurable image viewer with video and audio playback</summary>
 
   <description>
     <p>
@@ -21,6 +21,9 @@
       <li>Basic image editing: crop, rotate and resize</li>
       <li>Quickly copy or move images to different folders</li>
       <li>Video playback via libmpv, including H.265, AV1 and ProRes</li>
+      <li>Audio playback with album art for MP3, AAC, FLAC, Ogg Vorbis, Opus,
+          WAV, WMA, DSD and most other formats, with single file, repeat,
+          play folder and shuffle modes</li>
       <li>Modern image formats: AVIF (including animated), JPEG XL, HEIF, WebP, APNG</li>
       <li>Folder view mode</li>
       <li>Ability to run shell scripts on the current image</li>
@@ -65,6 +68,17 @@
   <url type="vcs-browser">https://github.com/duckautomata/qimgv</url>
 
   <releases>
+    <release version="2.1.0" date="2026-10-07">
+      <description>
+        <p>qimgv now plays audio files, in a new audio view with the album art,
+           title, artist and album, a seek bar and volume control. Most formats
+           play, including MP3, AAC, FLAC, Ogg Vorbis, Opus, WAV, WMA and DSD.
+           A playback mode toggle switches between treating a track like any
+           other file, repeating it, playing the folder in order and
+           shuffling it. Audio-only WebM, MP4, MKV and Ogg files now open as
+           audio rather than as video with no picture.</p>
+      </description>
+    </release>
     <release version="2.0.3" date="2026-09-24">
       <description>
         <p>Videos can be zoomed and panned like images. Switching from one video

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Source of common/buttons/audio/play32.png (rsvg-convert -w 32 -h 32) and its @2x (-w 64 -h 64).
+       Only alpha matters: the magenta is replaced by the theme colour at runtime. -->
+  <path fill="#ff00ff" d="M5 4v24l22.5-12z"/>
+</svg>

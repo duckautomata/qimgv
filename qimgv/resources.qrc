@@ -1,6 +1,26 @@
 <RCC>
     <qresource prefix="/">
         <file alias="CHANGELOG.md">../CHANGELOG.md</file>
+        <file>res/icons/common/buttons/audio/mode-folder24.png</file>
+        <file>res/icons/common/buttons/audio/mode-folder24@2x.png</file>
+        <file>res/icons/common/buttons/audio/mode-repeat24.png</file>
+        <file>res/icons/common/buttons/audio/mode-repeat24@2x.png</file>
+        <file>res/icons/common/buttons/audio/mode-shuffle24.png</file>
+        <file>res/icons/common/buttons/audio/mode-shuffle24@2x.png</file>
+        <file>res/icons/common/buttons/audio/mode-single24.png</file>
+        <file>res/icons/common/buttons/audio/mode-single24@2x.png</file>
+        <file>res/icons/common/buttons/audio/next-track24.png</file>
+        <file>res/icons/common/buttons/audio/next-track24@2x.png</file>
+        <file>res/icons/common/buttons/audio/pause32.png</file>
+        <file>res/icons/common/buttons/audio/pause32@2x.png</file>
+        <file>res/icons/common/buttons/audio/play32.png</file>
+        <file>res/icons/common/buttons/audio/play32@2x.png</file>
+        <file>res/icons/common/buttons/audio/prev-track24.png</file>
+        <file>res/icons/common/buttons/audio/prev-track24@2x.png</file>
+        <file>res/icons/common/buttons/audio/volume-muted24.png</file>
+        <file>res/icons/common/buttons/audio/volume-muted24@2x.png</file>
+        <file>res/icons/common/buttons/audio/volume24.png</file>
+        <file>res/icons/common/buttons/audio/volume24@2x.png</file>
         <file>res/icons/common/buttons/contextmenu/fit-width18.png</file>
         <file>res/icons/common/buttons/contextmenu/fit-width18@2x.png</file>
         <file>res/icons/common/buttons/contextmenu/fit-height-stretch18.png</file>
@@ -79,6 +99,8 @@
         <file>res/icons/common/notifications/dir_start20@2x.png</file>
         <file>res/icons/common/notifications/success16.png</file>
         <file>res/icons/common/notifications/success16@2x.png</file>
+        <file>res/icons/common/other/audio-file72.png</file>
+        <file>res/icons/common/other/audio-file72@2x.png</file>
         <file>res/icons/common/other/dropDownArrow.png</file>
         <file>res/icons/common/other/dropDownArrow@2x.png</file>
         <file>res/icons/common/other/empty.png</file>

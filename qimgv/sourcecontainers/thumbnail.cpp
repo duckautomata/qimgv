@@ -2,8 +2,8 @@
 
 #include <QApplication>
 
-Thumbnail::Thumbnail(QString _name, QString _info, int _size, std::shared_ptr<QImage> _image)
-    : mName(_name), mInfo(_info), mImage(_image), mSize(_size), mHasAlphaChannel(false) {
+Thumbnail::Thumbnail(QString _name, QString _info, int _size, std::shared_ptr<QImage> _image, Kind _kind)
+    : mName(_name), mInfo(_info), mImage(_image), mSize(_size), mKind(_kind), mHasAlphaChannel(false) {
     if(_image)
         mHasAlphaChannel = _image->hasAlphaChannel();
 }
@@ -18,6 +18,10 @@ QString Thumbnail::info() {
 
 int Thumbnail::size() {
     return mSize;
+}
+
+Thumbnail::Kind Thumbnail::kind() const {
+    return mKind;
 }
 
 bool Thumbnail::hasAlphaChannel() {

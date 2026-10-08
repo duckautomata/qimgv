@@ -114,7 +114,7 @@ jobs:
           # .iss expects it rather than leaving it under the versioned name.
           mv "qimgv-${{ steps.meta.outputs.file_version }}-win64" dist
 
-      # --- minimal build: no video, no exiv2, no OpenCV --------------------
+      # --- minimal build: no video/audio, no exiv2, no OpenCV --------------
       # Roughly half the size of the full package. Zip only: the installer is
       # the "just give me the app" path, and a second one to test and keep in
       # step would buy little for people who are already happy to unzip.
@@ -223,10 +223,10 @@ jobs:
             |---|---|
             | `qimgv-${{ needs.windows.outputs.file_version }}-win64-setup.exe` | You want it installed like a normal app. **Start here.** |
             | `qimgv-${{ needs.windows.outputs.file_version }}-win64.zip` | You want it portable, with nothing written outside the folder. |
-            | `qimgv-${{ needs.windows.outputs.file_version }}-win64-minimal.zip` | Images only — no video playback, smallest download. |
+            | `qimgv-${{ needs.windows.outputs.file_version }}-win64-minimal.zip` | Images only — no video or audio playback, smallest download. |
 
             All three read the same image formats, including AVIF, HEIF and JPEG XL.
-            The minimal build drops video playback and the OpenCV scaling filters.
+            The minimal build drops video and audio playback and the OpenCV scaling filters.
 
             ### Upgrading
 

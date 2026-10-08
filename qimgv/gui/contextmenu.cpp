@@ -142,7 +142,10 @@ void ContextMenu::setImageEntriesEnabled(bool mode) {
     ui->flipV->setEnabled(mode);
     ui->crop->setEnabled(mode);
     ui->resize->setEnabled(mode);
+    ui->print->setEnabled(mode);
+}
 
+void ContextMenu::setFileEntriesEnabled(bool mode) {
     ui->copy->setEnabled(mode);
     ui->move->setEnabled(mode);
     ui->trash->setEnabled(mode);

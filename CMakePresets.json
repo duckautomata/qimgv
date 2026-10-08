@@ -62,7 +62,7 @@
     {
       "name": "minimal",
       "inherits": "base",
-      "displayName": "Minimal \u2014 no video, no exiv2, no OpenCV",
+      "displayName": "Minimal \u2014 no video/audio, no exiv2, no OpenCV",
       "description": "Smallest possible build. Useful for checking the optional-feature #ifdefs still compile.",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",

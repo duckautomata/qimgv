@@ -6,6 +6,7 @@
 #include "sourcecontainers/imageanimated.h"
 #include "sourcecontainers/imagestatic.h"
 #include "sourcecontainers/video.h"
+#include "sourcecontainers/audio.h"
 
 class ImageFactory {
 public:

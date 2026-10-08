@@ -31,6 +31,27 @@ CMakeLists.txt text
 *.7z         binary
 *.zip        binary
 
+# Audio / video test fixtures
+*.mp3        binary
+*.flac       binary
+*.ogg        binary
+*.oga        binary
+*.opus       binary
+*.spx        binary
+*.m4a        binary
+*.mp4        binary
+*.wma        binary
+*.mka        binary
+*.mkv        binary
+*.webm       binary
+*.wav        binary
+*.aiff       binary
+*.wv         binary
+*.tta        binary
+*.ac3        binary
+*.au         binary
+*.caf        binary
+
 # Keep generated/vendored code out of language stats and diffs
 qimgv/3rdparty/**    linguist-vendored
 qimgv/res/translations/*.ts  linguist-generated=false

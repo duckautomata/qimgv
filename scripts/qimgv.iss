@@ -108,6 +108,9 @@ Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Image\shell\open\command";
 Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Video"; ValueType: string; ValueName: ""; ValueData: "Video"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Video\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExeName},0"
 Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Video\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""
+Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Audio"; ValueType: string; ValueName: ""; ValueData: "Audio"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Audio\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExeName},0"
+Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Audio\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""
 
 ; --- Advertise in "Open with" without touching any default ------------------
 Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "{#AppName}"; Flags: uninsdeletekey; Tasks: openwith
@@ -116,7 +119,7 @@ Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExeName}\shell\open\comm
 ; --- Capabilities: what qimgv offers to handle -----------------------------
 Root: HKCU; Subkey: "Software\qimgv"; Flags: uninsdeletekeyifempty
 Root: HKCU; Subkey: "Software\qimgv\Capabilities"; ValueType: string; ValueName: "ApplicationName"; ValueData: "{#AppName}"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\qimgv\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "Fast, configurable image viewer with optional video support."
+Root: HKCU; Subkey: "Software\qimgv\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "Fast, configurable image viewer with video and audio playback."
 Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".avif"; ValueData: "qimgv.AssocFile.Image"
 Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".avifs"; ValueData: "qimgv.AssocFile.Image"
 Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".bmp"; ValueData: "qimgv.AssocFile.Image"
@@ -165,6 +168,54 @@ Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: s
 Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".mpg"; ValueData: "qimgv.AssocFile.Video"
 Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ts"; ValueData: "qimgv.AssocFile.Video"
 Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".webm"; ValueData: "qimgv.AssocFile.Video"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".aac"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ac3"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".adts"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".aif"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".aifc"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".aiff"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".amr"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ape"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".au"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".awb"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".caf"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".dff"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".dsf"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".dts"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".dtshd"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".eac3"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ec3"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".f4a"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".flac"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".gbs"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".it"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".m4a"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".m4b"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".m4r"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".mka"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".mod"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".mp2"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".mp3"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".mpc"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".mpga"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".nsf"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".oga"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ogg"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".opus"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".s3m"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".snd"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".spc"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".spx"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".tak"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".tta"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".vgm"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".vgz"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".w64"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".wav"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".weba"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".wma"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".wv"; ValueData: "qimgv.AssocFile.Audio"
+Root: HKCU; Subkey: "Software\qimgv\Capabilities\FileAssociations"; ValueType: string; ValueName: ".xm"; ValueData: "qimgv.AssocFile.Audio"
 
 ; --- Tell Windows where those capabilities live ----------------------------
 Root: HKCU; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueName: "{#AppName}"; ValueData: "Software\qimgv\Capabilities"; Flags: uninsdeletevalue

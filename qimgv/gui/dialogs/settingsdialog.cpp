@@ -76,7 +76,9 @@ SettingsDialog::SettingsDialog(QWidget *parent) : QDialog(parent), ui(new Ui::Se
 #endif
 
 #ifndef USE_MPV
+    // Both play through the mpv plugin.
     ui->videoPlaybackGroup->setEnabled(false);
+    ui->audioPlaybackGroup->setEnabled(false);
     // ui->novideoInfoLabel->setHidden(false);
 #else
     // ui->novideoInfoLabel->setHidden(true);
@@ -178,6 +180,9 @@ void SettingsDialog::readSettings() {
     ui->videoPlaybackCheckBox->setChecked(settings->videoPlayback());
     ui->videoPlaybackGroupContents->setEnabled(settings->videoPlayback());
     ui->playSoundsCheckBox->setChecked(settings->playVideoSounds());
+    ui->audioPlaybackCheckBox->setChecked(settings->audioPlayback());
+    ui->audioPlaybackGroupContents->setEnabled(settings->audioPlayback());
+    ui->audioBackdropCheckBox->setChecked(settings->audioBackdrop());
     ui->enablePanelCheckBox->setChecked(settings->panelEnabled());
     ui->thumbnailPanelGroupContents->setEnabled(settings->panelEnabled());
     ui->panelFullscreenOnlyCheckBox->setChecked(settings->panelFullscreenOnly());
@@ -331,6 +336,8 @@ void SettingsDialog::saveSettings() {
 
     settings->setVideoPlayback(ui->videoPlaybackCheckBox->isChecked());
     settings->setPlayVideoSounds(ui->playSoundsCheckBox->isChecked());
+    settings->setAudioPlayback(ui->audioPlaybackCheckBox->isChecked());
+    settings->setAudioBackdrop(ui->audioBackdropCheckBox->isChecked());
     settings->setPanelEnabled(ui->enablePanelCheckBox->isChecked());
     settings->setPanelFullscreenOnly(ui->panelFullscreenOnlyCheckBox->isChecked());
     settings->setSquareThumbnails(ui->squareThumbnailsCheckBox->isChecked());

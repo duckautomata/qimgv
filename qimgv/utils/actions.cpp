@@ -91,4 +91,5 @@ void Actions::init() {
     mActions.insert("print", QVersionNumber(1, 0, 0));
     mActions.insert("toggleFullscreenInfoBar", QVersionNumber(1, 0, 0));
     mActions.insert("pasteFile", QVersionNumber(1, 0, 3));
+    mActions.insert("cycleAudioMode", QVersionNumber(2, 1, 0));
 }

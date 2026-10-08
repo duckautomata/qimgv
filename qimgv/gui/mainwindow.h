@@ -63,6 +63,14 @@ public:
     void showImage(std::unique_ptr<QPixmap> pixmap);
     void showAnimation(std::shared_ptr<QMovie> movie);
     void showVideo(QString file);
+    void showAudio(QString file);
+    bool isShowingAudio();
+    // See ViewerWidget::isAudioPlaying().
+    bool isAudioPlaying();
+    // Plays the current audio file again from the start.
+    void restartAudio();
+    // Shown by the audio view and, while an audio file is open, in the info bar.
+    void setAudioPlaybackMode(AudioPlaybackMode mode);
 
     void setCurrentInfo(int fileIndex, int fileCount, QString filePath, QString fileName, QSize imageSize,
                         qint64 fileSize, bool slideshow, bool shuffle, bool edited);
@@ -107,6 +115,8 @@ private:
 
     PanelPosition panelPosition;
     CurrentInfo info;
+    bool takesMediaKey(Qt::Key key);
+    AudioPlaybackMode audioPlaybackMode = AUDIO_MODE_SINGLE;
 
     void saveWindowGeometry();
     void restoreWindowGeometry();
@@ -193,6 +203,8 @@ signals:
     void draggedOut();
     void setLoopPlayback(bool);
     void playbackFinished();
+    void audioPlaybackFinished(QString file);
+    void audioPlaybackFailed(QString file);
 
 public slots:
     void setupFullUi();

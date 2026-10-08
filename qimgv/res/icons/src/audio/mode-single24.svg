@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <!-- Source of common/buttons/audio/mode-single24.png (rsvg-convert -w 24 -h 24) and its @2x (-w 48 -h 48).
+       Only alpha matters: the magenta is replaced by the theme colour at runtime. -->
+  <path fill="none" stroke="#ff00ff" stroke-width="2" d="M3 12h11"/>
+  <path fill="#ff00ff" d="M13 8.5v7l4.5-3.5zM19 5h2v14h-2z"/>
+</svg>

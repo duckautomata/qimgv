@@ -2,6 +2,19 @@
 
 ActionManager *actionManager = nullptr;
 
+// Bindable since 2.1.0, when ShortcutBuilder learned to name these keys on every platform. Their actions
+// are older than that, so adjustFromVersion() has to hand them to existing users itself.
+// The volume keys can be bound too, but are not by default: they are the system's volume, and taking them
+// for qimgv's own would put that out of reach whenever a video or an audio file is open.
+static QList<std::pair<QString, QString>> const &mediaKeyDefaults() {
+    static QList<std::pair<QString, QString>> const keys = {
+        {"MediaTogglePlayPause", "pauseVideo"}, {"MediaPlay", "pauseVideo"},
+        {"MediaPause", "pauseVideo"},           {"MediaNext", "nextImage"},
+        {"MediaPrevious", "prevImage"},
+    };
+    return keys;
+}
+
 ActionManager::ActionManager(QObject *parent) : QObject(parent) {}
 //------------------------------------------------------------------------------
 ActionManager::~ActionManager() {
@@ -88,6 +101,9 @@ void ActionManager::initDefaults() {
     actionManager->defaults.insert(InputMap::keyNameShift() + "+Left", "prevDirectory");
     actionManager->defaults.insert(InputMap::keyNameShift() + "+F", "toggleFullscreenInfoBar");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+V", "pasteFile");
+    actionManager->defaults.insert("A", "cycleAudioMode");
+    for(auto const &[keys, action] : mediaKeyDefaults())
+        actionManager->defaults.insert(keys, action);
 
 #ifdef __APPLE__
     actionManager->defaults.insert(InputMap::keyNameAlt() + "+Up", "zoomIn");
@@ -198,6 +214,16 @@ void ActionManager::adjustFromVersion(QVersionNumber lastVer) {
         actionManager->resetDefaults("fitHeight");
         actionManager->resetDefaults("fitNormal");
     }
+    // The generic loop below passes over the media keys, whose actions are old. Free keys only: macOS
+    // could always bind them, so they may be taken already.
+    if(lastVer < QVersionNumber(2, 1, 0)) {
+        for(auto const &[keys, action] : mediaKeyDefaults()) {
+            if(!shortcuts.contains(keys)) {
+                shortcuts.insert(keys, action);
+                qDebug() << "[ActionManager] media key [" << keys << "] - assigning to " << action;
+            }
+        }
+    }
     // add new default actions
     QMapIterator<QString, QString> i(defaults);
     while(i.hasNext()) {
@@ -304,7 +330,24 @@ void ActionManager::readShortcuts() {
     actionManager->validateShortcuts();
 }
 //------------------------------------------------------------------------------
+// Media and volume keys reach the active window first, and the system, or another player, gets one only if
+// the window passes it on. So they are only taken while the filter says they are for qimgv -- and passed on,
+// ignored, otherwise or when nothing is bound to them. Every widget's key handler comes through here, which
+// makes this the one place that decides.
 bool ActionManager::processEvent(QInputEvent *event) {
+    auto *keyEvent = dynamic_cast<QKeyEvent *>(event);
+    if(keyEvent && ShortcutBuilder::isMediaKey(Qt::Key(keyEvent->key()))) {
+        Qt::Key const key = Qt::Key(keyEvent->key());
+        bool const taken = (!mediaKeyFilter || mediaKeyFilter(key)) &&
+                           actionManager->invokeActionForShortcut(ShortcutBuilder::fromEvent(event));
+        if(!taken)
+            event->ignore();
+        return taken;
+    }
     return actionManager->invokeActionForShortcut(ShortcutBuilder::fromEvent(event));
+}
+
+void ActionManager::setMediaKeyFilter(std::function<bool(Qt::Key)> filter) {
+    mediaKeyFilter = std::move(filter);
 }
 //------------------------------------------------------------------------------

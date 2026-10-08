@@ -1,5 +1,6 @@
 #include "fileinfoextractor.h"
 
+#include <QBuffer>
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QFile>
@@ -8,7 +9,10 @@
 #include <QLocale>
 #include <QMimeDatabase>
 #include <QSet>
+#include <algorithm>
+#include <iterator>
 
+#include "components/audiometa/audiometadata.h"
 #include "sourcecontainers/documentinfo.h"
 
 #ifdef USE_EXIV2
@@ -16,6 +20,18 @@
 #endif
 
 namespace {
+
+// `prefix` is "audio/" or "video/". Aliases and parents count: databases disagree on which name a format
+// goes by, but agree on what it is a kind of.
+bool isOfKind(QMimeType const &mime, QLatin1String prefix) {
+    if(!mime.isValid())
+        return false;
+    if(mime.name().startsWith(prefix))
+        return true;
+    QStringList const ancestors = mime.allAncestors();
+    return std::any_of(ancestors.cbegin(), ancestors.cend(),
+                       [prefix](QString const &ancestor) { return ancestor.startsWith(prefix); });
+}
 
 QString tr_(char const *s) {
     return QCoreApplication::translate("FileInfo", s);
@@ -26,12 +42,21 @@ QString tr_(char const *s) {
 // text and say what was cut, rather than handing the panel something it cannot
 // lay out.
 constexpr int kMaxValueChars = 220;
+// Names get far less room: the name column is a plain label that widens the
+// whole panel to fit. Only audio tags take names from the file -- free-form
+// keys such as a TXXX frame's description.
+constexpr int kMaxNameChars = 48;
+// Each row is a few widgets the panel builds on the GUI thread, every time a
+// file is shown: a thousand took half a second. Real tags have a few dozen
+// fields; the reader keeps up to a thousand, for files merged or scraped
+// together, and the panel shows the start of those.
+constexpr int kMaxTagFields = 100;
 
-QString capped(QString value) {
+QString capped(QString value, int maxChars = kMaxValueChars) {
     value.replace(QLatin1Char('\n'), QLatin1Char(' '));
     value.replace(QLatin1Char('\r'), QLatin1Char(' '));
-    if(value.size() > kMaxValueChars)
-        value = value.left(kMaxValueChars) + QStringLiteral("...");
+    if(value.size() > maxChars)
+        value = value.left(maxChars) + QStringLiteral("...");
     return value;
 }
 
@@ -147,6 +172,105 @@ void appendCodecFields(QByteArray const &head, QVector<FileInfoField> &out) {
     }
 }
 
+QString formatSectionTitle(DocumentType type) {
+    switch(type) {
+    case VIDEO:
+        return tr_("Video");
+    case AUDIO:
+        return tr_("Audio");
+    default:
+        return tr_("Image");
+    }
+}
+
+// The picture types of ID3v2 APIC frames, which FLAC PICTURE blocks share.
+QString pictureTypeName(int type) {
+    static char const *const names[] = {
+        QT_TRANSLATE_NOOP("FileInfo", "Other"),
+        QT_TRANSLATE_NOOP("FileInfo", "File icon"),
+        QT_TRANSLATE_NOOP("FileInfo", "Other file icon"),
+        QT_TRANSLATE_NOOP("FileInfo", "Front cover"),
+        QT_TRANSLATE_NOOP("FileInfo", "Back cover"),
+        QT_TRANSLATE_NOOP("FileInfo", "Leaflet page"),
+        QT_TRANSLATE_NOOP("FileInfo", "Media"),
+        QT_TRANSLATE_NOOP("FileInfo", "Lead artist"),
+        QT_TRANSLATE_NOOP("FileInfo", "Artist"),
+        QT_TRANSLATE_NOOP("FileInfo", "Conductor"),
+        QT_TRANSLATE_NOOP("FileInfo", "Band"),
+        QT_TRANSLATE_NOOP("FileInfo", "Composer"),
+        QT_TRANSLATE_NOOP("FileInfo", "Lyricist"),
+        QT_TRANSLATE_NOOP("FileInfo", "Recording location"),
+        QT_TRANSLATE_NOOP("FileInfo", "During recording"),
+        QT_TRANSLATE_NOOP("FileInfo", "During performance"),
+        QT_TRANSLATE_NOOP("FileInfo", "Screen capture"),
+        QT_TRANSLATE_NOOP("FileInfo", "Bright coloured fish"),
+        QT_TRANSLATE_NOOP("FileInfo", "Illustration"),
+        QT_TRANSLATE_NOOP("FileInfo", "Band logo"),
+        QT_TRANSLATE_NOOP("FileInfo", "Publisher logo"),
+    };
+    if(type < 0 || type >= int(std::size(names)))
+        return {};
+    return tr_(names[type]);
+}
+
+// Tags, then the embedded picture in a section of its own, so that a long
+// list of tags cannot push it out of sight.
+void appendAudioTags(QString const &path, QVector<FileInfoSection> &out) {
+    AudioMetadata const meta = AudioMetadataReader::read(path, AudioMetadataReader::Tags | AudioMetadataReader::Cover);
+    FileInfoSection tags;
+    tags.title = tr_("Tags");
+    if(!meta.tagTypes.isEmpty())
+        tags.fields.append({tr_("Tag format"), meta.tagTypes.join(QStringLiteral(", "))});
+    // Title, artist and the rest of the common fields are always shown,
+    // wherever in the file they were.
+    int shown = 0;
+    int hidden = 0;
+    for(AudioField const &field : meta.fields) {
+        if(!field.common && shown == kMaxTagFields) {
+            hidden++;
+            continue;
+        }
+        if(!field.common)
+            shown++;
+        tags.fields.append({capped(field.key, kMaxNameChars), capped(field.value)});
+    }
+    if(hidden)
+        tags.fields.append(
+            {tr_("More fields"), QCoreApplication::translate("FileInfo", "%n not shown", nullptr, hidden)});
+    if(!tags.fields.isEmpty())
+        out.append(tags);
+
+    AudioPicture const &picture = meta.cover;
+    if(picture.isNull())
+        return;
+    FileInfoSection cover;
+    cover.title = tr_("Picture");
+    QString const type = pictureTypeName(picture.type);
+    if(!type.isEmpty())
+        cover.fields.append({tr_("Type"), type});
+    if(!picture.description.isEmpty())
+        cover.fields.append({tr_("Description"), capped(picture.description)});
+    // What the tag declares, since that is what this panel reports; the
+    // content is only asked when the tag declares nothing.
+    QString mime = picture.mimeType;
+    if(mime.isEmpty()) {
+        QMimeType const sniffed = QMimeDatabase().mimeTypeForData(picture.data);
+        if(sniffed.isValid() && !sniffed.isDefault())
+            mime = sniffed.name();
+    }
+    if(!mime.isEmpty())
+        cover.fields.append({tr_("MIME type"), capped(mime)});
+    // size() parses the header only; the picture itself is never decoded.
+    QBuffer buffer;
+    buffer.setData(picture.data);
+    buffer.open(QIODevice::ReadOnly);
+    QSize const size = QImageReader(&buffer).size();
+    if(size.isValid())
+        cover.fields.append({tr_("Resolution"), QStringLiteral("%1 x %2").arg(size.width()).arg(size.height())});
+    cover.fields.append({tr_("Size"), humanSize(picture.data.size())});
+    out.append(cover);
+}
+
 #ifdef USE_EXIV2
 // exiv2's own pretty-printer. value().toString() gives "89" for Flash; print()
 // gives "Yes, auto, red-eye reduction". Same for ExposureProgram, Orientation,
@@ -216,35 +340,57 @@ FileInfoResult extractFileInfo(QString const &path) {
     file.fields.append({tr_("Modified"), QLocale().toString(fi.lastModified(), QLocale::ShortFormat)});
     result.sections.append(file);
 
-    FileInfoSection image;
-    image.title = tr_("Image");
-    {
-        // detectFormat() sniffs content rather than trusting the extension, so
-        // a .png that is really a JPEG reports what it actually is.
-        DocumentInfo doc(path);
-        QString const format = doc.format();
-        if(!format.isEmpty())
-            image.fields.append({tr_("Format"), format.toUpper()});
-        QMimeType const mime = doc.mimeType();
-        if(mime.isValid()) {
-            image.fields.append({tr_("MIME type"), mime.name()});
-            if(!mime.comment().isEmpty())
-                image.fields.append({tr_("Kind"), mime.comment()});
-        }
+    // detectFormat() sniffs content rather than trusting the extension, so a
+    // .png that is really a JPEG reports what it actually is. For audio and
+    // video the content decides which of the two a file is; the format is
+    // named by the extension when it is one of theirs.
+    DocumentInfo const doc(path);
+    FileInfoSection media;
+    media.title = formatSectionTitle(doc.type());
+    QString const format = doc.format();
+    if(!format.isEmpty())
+        media.fields.append({tr_("Format"), format.toUpper()});
+    QMimeType mime = doc.mimeType();
+    // The mime database names the container, and Ogg, Matroska, MP4 and ASF
+    // hold either kind of media: an .mp4 of sound alone is "video/mp4, MPEG-4
+    // video" to it, and a .wma "application/vnd.ms-asf, ASF video" to
+    // shared-mime-info. Under the Audio heading only an audio type is shown,
+    // falling back to what the extension says -- audio/x-ms-wma for that .wma.
+    if(doc.type() == AUDIO && !isOfKind(mime, QLatin1String("audio/"))) {
+        QMimeType const byName = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase::MatchExtension);
+        mime = isOfKind(byName, QLatin1String("audio/")) ? byName : QMimeType();
+    }
+    bool const contradicts = doc.type() == VIDEO && mime.name().startsWith(QLatin1String("audio/"));
+    if(mime.isValid() && !contradicts) {
+        media.fields.append({tr_("MIME type"), mime.name()});
+        // comment() repeats the name when the database has no description of
+        // the type, which is common for audio in Qt's built-in one.
+        if(!mime.comment().isEmpty() && mime.comment() != mime.name())
+            media.fields.append({tr_("Kind"), mime.comment()});
+    }
+
+    if(doc.type() == AUDIO) {
+        // The tags are all there is. QImageReader, the header sniffers below
+        // and exiv2 know nothing about audio, and each would still read the
+        // file to find that out.
+        if(!media.fields.isEmpty())
+            result.sections.append(media);
+        appendAudioTags(path, result.sections);
+        return result;
     }
 
     QImageReader reader(path);
     QSize const size = reader.size();
     if(size.isValid())
-        image.fields.append({tr_("Resolution"), QStringLiteral("%1 x %2").arg(size.width()).arg(size.height())});
+        media.fields.append({tr_("Resolution"), QStringLiteral("%1 x %2").arg(size.width()).arg(size.height())});
     if(reader.supportsAnimation() && reader.imageCount() > 1)
-        image.fields.append({tr_("Frames"), QString::number(reader.imageCount())});
+        media.fields.append({tr_("Frames"), QString::number(reader.imageCount())});
 
     QByteArray const head = readHead(path, 4096);
-    appendCodecFields(head, image.fields);
+    appendCodecFields(head, media.fields);
 
-    if(!image.fields.isEmpty())
-        result.sections.append(image);
+    if(!media.fields.isEmpty())
+        result.sections.append(media);
 
 #ifdef USE_EXIV2
     try {

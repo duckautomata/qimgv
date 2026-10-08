@@ -26,7 +26,7 @@
 
 #include <QImageReader>
 
-enum DocumentType { NONE, STATIC, ANIMATED, VIDEO };
+enum DocumentType { NONE, STATIC, ANIMATED, VIDEO, AUDIO };
 
 class DocumentInfo {
 public:
@@ -41,7 +41,8 @@ public:
     DocumentType type() const;
     QMimeType mimeType() const;
 
-    // file extension (guessed from mime-type)
+    // file extension, guessed from the mime type. Audio and video keep their own extension when it is one of
+    // theirs (an .mp4 holding only sound is still "mp4"); audio without one is named by its container
     QString format() const;
     int exifOrientation() const;
 
@@ -60,6 +61,7 @@ private:
     // guesses file type from its contents
     // and sets extension
     void detectFormat();
+    void detectMedia(const QByteArray &mimeName, const QByteArray &suffix);
     void loadExifOrientation();
     bool detectAPNG();
     bool detectAnimatedWebP();

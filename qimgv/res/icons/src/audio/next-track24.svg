@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <!-- Source of common/buttons/audio/next-track24.png (rsvg-convert -w 24 -h 24) and its @2x (-w 48 -h 48).
+       Only alpha matters: the magenta is replaced by the theme colour at runtime. -->
+  <path fill="#ff00ff" d="M3 5v14l7-7zM10 5v14l7-7zM18 5h3v14h-3z"/>
+</svg>

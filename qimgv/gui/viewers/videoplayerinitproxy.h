@@ -7,7 +7,6 @@
 #include "videoplayer.h"
 #include "settings.h"
 #include <QPainter>
-#include <QLibrary>
 #include <QLabel>
 #include <QFileInfo>
 #include <QDebug>
@@ -56,15 +55,11 @@ protected:
     void paintEvent(QPaintEvent *event);
 
 private:
-    QLibrary playerLib;
     std::shared_ptr<VideoPlayer> player;
     bool initPlayer();
     QVBoxLayout layout;
     QLabel *errorLabel = nullptr;
     QObject *eventFilterObj = nullptr;
-
-    QString libFile;
-    QStringList libDirs;
 
     void updateBackgroundColor();
     QColor bgColor;

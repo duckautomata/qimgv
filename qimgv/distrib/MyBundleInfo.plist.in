@@ -67,6 +67,34 @@
       <key>CFBundleTypeRole</key>
       <string>Viewer</string>
     </dict>
+    <dict>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>mp3</string>
+        <string>m4a</string>
+        <string>m4b</string>
+        <string>aac</string>
+        <string>flac</string>
+        <string>ogg</string>
+        <string>oga</string>
+        <string>opus</string>
+        <string>wav</string>
+        <string>aif</string>
+        <string>aiff</string>
+        <string>wma</string>
+        <string>ape</string>
+        <string>wv</string>
+        <string>mpc</string>
+        <string>tta</string>
+        <string>dsf</string>
+        <string>dff</string>
+        <string>mka</string>
+      </array>
+      <key>CFBundleTypeName</key>
+      <string>Audio file</string>
+      <key>CFBundleTypeRole</key>
+      <string>Viewer</string>
+    </dict>
   </array>
 </dict>
 </plist>
