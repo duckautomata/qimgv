@@ -102,14 +102,18 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: deskto
 ; makes qimgv assignable, and leaves the choice with the user.
 
 ; --- ProgIDs the associations point at -------------------------------------
+; Each kind gets its own icon, so a folder of mixed media can be told apart in
+; Explorer: images show the app icon (index 0), video and audio the "qv" and
+; "qa" icons embedded in the exe by resource id. The ids are defined in
+; qimgv/qimgv.rc; change them in both places or not at all.
 Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Image"; ValueType: string; ValueName: ""; ValueData: "Image"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Image\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExeName},0"
 Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Image\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""
 Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Video"; ValueType: string; ValueName: ""; ValueData: "Video"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Video\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExeName},0"
+Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Video\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExeName},-101"
 Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Video\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""
 Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Audio"; ValueType: string; ValueName: ""; ValueData: "Audio"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Audio\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExeName},0"
+Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Audio\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExeName},-102"
 Root: HKCU; Subkey: "Software\Classes\qimgv.AssocFile.Audio\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""
 
 ; --- Advertise in "Open with" without touching any default ------------------

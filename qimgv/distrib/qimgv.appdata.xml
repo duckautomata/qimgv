@@ -68,6 +68,13 @@
   <url type="vcs-browser">https://github.com/duckautomata/qimgv</url>
 
   <releases>
+    <release version="2.1.1" date="2026-11-17">
+      <description>
+        <p>On Windows, audio and video files set to open in qimgv get their own
+           icons in Explorer, so they can be told apart from images at a
+           glance.</p>
+      </description>
+    </release>
     <release version="2.1.0" date="2026-10-07">
       <description>
         <p>qimgv now plays audio files, in a new audio view with the album art,

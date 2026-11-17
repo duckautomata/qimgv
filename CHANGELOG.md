@@ -6,6 +6,15 @@ The heading for each version is what qimgv shows in its "what's new" window
 after an update, so keep them as `## <version>` and keep the prose readable by
 someone who is not following the commit log.
 
+## 2.1.1
+
+- On Windows, files that open in qimgv by default now show in Explorer what
+  kind of file they are: audio files get a red "qa" icon and videos a blue
+  "qv" one, while images keep the grey qimgv icon. Installing 2.1.1 over an
+  earlier version updates the icons of files already set to open in qimgv.
+  The portable zips do not register file types, so this comes with the
+  installer only.
+
 ## 2.1.0
 
 **Audio**

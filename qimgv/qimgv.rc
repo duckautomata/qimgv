@@ -1,1 +1,11 @@
 IDI_ICON1               ICON    DISCARDABLE     "res/icons/common/logo/app/qimgv.ico"
+
+// File-type icons, made by scripts/make-filetype-icons.py. The installer
+// (scripts/qimgv.iss) points each file type's DefaultIcon at one of these as
+// "qimgv.exe,-<id>"; image files use the app icon above, "qimgv.exe,0".
+//
+// Keep the ids stable: installed registry entries refer to them. They are
+// numeric so that they sort after the named IDI_ICON1, which has to stay the
+// first icon in the file to remain the exe's own icon.
+101                     ICON    DISCARDABLE     "res/icons/common/logo/filetype/video.ico"
+102                     ICON    DISCARDABLE     "res/icons/common/logo/filetype/audio.ico"

@@ -51,6 +51,10 @@ default:
 images, videos and audio files are all listed. Or right-click a file →
 **Open with → Choose another app**.
 
+Files you hand to qimgv this way get an icon that says what they are: images
+keep the grey qimgv icon, videos get a blue **qv** and audio files a red
+**qa**.
+
 ## Installing the portable build
 
 Extract the zip anywhere and run `qimgv.exe`. Nothing is written outside that
