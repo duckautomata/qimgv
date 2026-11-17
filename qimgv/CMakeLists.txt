@@ -129,6 +129,10 @@ endif()
 # ---------------------------------------------------------------------------
 if(WIN32)
     set_target_properties(qimgv PROPERTIES WIN32_EXECUTABLE ON)
+    # windres writes no depfile, so without this an edited .ico would not
+    # rebuild the resources.
+    set_source_files_properties(qimgv.rc PROPERTIES OBJECT_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/res/icons/common/logo/app/qimgv.ico;${CMAKE_CURRENT_SOURCE_DIR}/res/icons/common/logo/filetype/video.ico;${CMAKE_CURRENT_SOURCE_DIR}/res/icons/common/logo/filetype/audio.ico")
     if(MSVC)
         target_link_options(qimgv PRIVATE "/ENTRY:mainCRTStartup")
     endif()
